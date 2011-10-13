@@ -23,7 +23,7 @@ public class Parser {
         scn = new Scanner(args[0]);
 
         if (computation()) {
-            System.out.println("Computation successful!");
+            System.out.println("Parser successful!");
         }
     }
 
@@ -220,7 +220,6 @@ public class Parser {
         while (scn.sym == 11 || scn.sym == 12) { // "+" or "-"
             scn.Next();
             rtn = rtn & term();
-            scn.Next();
         }
 
         if (!rtn) {
@@ -254,7 +253,6 @@ public class Parser {
         while (scn.sym == 1 || scn.sym == 2) { // "*" or "/"
             scn.Next();
             rtn = rtn & factor();
-            scn.Next();
         }
 
         if (!rtn) {
@@ -286,6 +284,7 @@ public class Parser {
         } else if (scn.sym == 61) { // ident
             scn.Next();
         } else if (scn.sym == 50) { // "("
+            scn.Next();
             rtn = rtn & expression();
             rtn = rtn & (scn.sym == 35); // ")"
             scn.Next();
