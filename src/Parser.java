@@ -167,15 +167,15 @@ public class Parser {
         rtn = rtn & (scn.sym == 61); // ident
 
         scn.Next();
+
         if (scn.sym == 50) { // "("
             scn.Next();
+
             if (!(scn.sym == 35)) { // ")"
                 rtn = rtn & expression();
-                scn.Next();
                 while (scn.sym == 31) {// ","
                     scn.Next();
                     rtn = rtn & expression();
-                    scn.Next();
                 }
             }
 

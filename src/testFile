@@ -1,1 +1,1 @@
-main var var1, var2, var3 ;{ if (a*2) <= (b-1+ call func) then a <- b else b <- a fi; call print  }.
+main var var1, var2, var3 ;{ if (a*2) <= (b-1+ call func(a,b)) then a <- b else b <- a fi; call print  }.
