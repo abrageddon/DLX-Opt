@@ -78,7 +78,6 @@ public class Scanner {
                 currChar = (char) in.read();
                 if (currChar == '=' || currChar == '-') {
                     punctString += currChar;
-                    currChar = (char) in.read();
                 } else {
                     in.unread(currChar);//replace next non character
                 }
