@@ -75,11 +75,12 @@ public class Scanner {
                 //IS NON-ALPHANUM
                 String punctString = "";
                 punctString += currChar;
-                currChar = (char) in.read();
-                if (currChar == '=' || currChar == '-') {
-                    punctString += currChar;
+                char nextChar = (char) in.read();
+                if ( ( (currChar == '<' || currChar == '>' || currChar == '=' || currChar == '!' ) && nextChar == '=')
+                        || ( currChar == '<' && nextChar == '-') ) {
+                    punctString += nextChar;
                 } else {
-                    in.unread(currChar);//replace next non character
+                    in.unread(nextChar);//replace next non character
                 }
 
                 id = String2Id(punctString);
