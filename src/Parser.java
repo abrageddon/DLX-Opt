@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  *
  * @author Steven Neisius
@@ -25,6 +20,15 @@ public class Parser {
         if (computation()) {
             System.out.println("Parser successful!");
         }
+    }
+
+    public boolean parseFile(String file){
+        scn = new Scanner(file);
+
+        if (computation()) {
+            return true;
+        }
+        return false;
     }
 
     public static void Error(String errorMsg) {
