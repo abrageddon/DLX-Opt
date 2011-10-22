@@ -1,45 +1,38 @@
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
-
 /**
  *
  * @author Steven Neisius
  */
-public class Interpreter {
+public class CodeParser {
 
     private static Scanner scn;
-    private static HashMap<Integer, Integer> vars;
-    private static Queue<Integer> inputs;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.out.println("Usage: java Interpreter <file>");
+            System.out.println("Usage: java TestScanner <file>");
             return;
         }
 
         scn = new Scanner(args[0]);
-        vars = new HashMap<Integer, Integer>();
 
-        inputs = new LinkedList<Integer>();
-        for (int i = 1; i < args.length; i++) {
-            inputs.add(Integer.valueOf(args[i]));
-        }
-
-        Parser parser = new Parser();
-
-        if (parser.parseFile(args[0])){
-            computation();
+        if (computation()) {
+            System.out.println("Parser successful!");
         }
     }
 
+    public boolean parseFile(String file){
+        scn = new Scanner(file);
+
+        if (computation()) {
+            return true;
+        }
+        return false;
+    }
+
     public static void Error(String errorMsg) {
-        System.err.println("Interpreter error: " + errorMsg);
+        System.err.println("Parser error: " + errorMsg);
     }
 
     private static boolean computation() {
@@ -55,7 +48,7 @@ public class Interpreter {
         }
 
         rtn = rtn & (scn.sym == 150);// "{"
-
+        
         scn.Next();
         rtn = rtn & statSequence();
 
@@ -78,13 +71,11 @@ public class Interpreter {
 
         scn.Next();
         rtn = rtn & (scn.sym == 61); // ident
-        vars.put(scn.id, 0);
-
         scn.Next();
+
         while (scn.sym == 31) {// ","
             scn.Next();
             rtn = rtn & (scn.sym == 61); // ident
-            vars.put(scn.id, 0);
 
             scn.Next();
         }
@@ -102,7 +93,7 @@ public class Interpreter {
     private static boolean statSequence() {
         //statSequence = statement { “;” statement }.
         boolean rtn = true;
-
+        
         rtn = rtn & statement();
 
         while (scn.sym == 70) {// ";"
@@ -123,7 +114,7 @@ public class Interpreter {
         if (scn.sym == 101) {// if
             rtn = rtn & ifStatement();
         } else if (scn.sym == 100) { // call
-            funcCall();
+            rtn = rtn & funcCall();
         } else if (scn.sym == 61) { // ident
             rtn = rtn & assignment();
         } else {// empty statement invalid
@@ -140,59 +131,23 @@ public class Interpreter {
         //ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”.
         boolean rtn = true;
 
-
         rtn = rtn & (scn.sym == 101); // if
 
         scn.Next();
 
-        boolean cond = relation();
+        rtn = rtn & relation();
 
 
         rtn = rtn & (scn.sym == 41); // then
 
-        if (cond) {
+        scn.Next();
+
+        rtn = rtn & statSequence();
+
+
+        if (scn.sym == 90) {// else
             scn.Next();
             rtn = rtn & statSequence();
-        } else {
-            while ((scn.sym != 90 && scn.sym != 82)) {
-                scn.Next();
-                if (scn.sym == 101) {
-                    int ifs = 1;
-                    while (ifs != 0) {
-                        scn.Next();
-                        if (scn.sym == 101) {
-                            ifs++;
-                        } else if (scn.sym == 82) {
-                            ifs--;
-                        }
-                    }
-                    scn.Next();
-                }
-            }
-        }
-        //else noExecStats
-        //match ifs++
-
-
-        if (scn.sym == 90 && !cond) {// else
-            scn.Next();
-            rtn = rtn & statSequence();
-        }
-
-        while (scn.sym != 82) {
-            scn.Next();
-            if (scn.sym == 101) {
-                int ifs = 1;
-                while (ifs != 0) {
-                    scn.Next();
-                    if (scn.sym == 101) {
-                        ifs++;
-                    } else if (scn.sym == 82) {
-                        ifs--;
-                    }
-                }
-                scn.Next();
-            }
         }
 
         rtn = rtn & (scn.sym == 82);// fi
@@ -205,27 +160,26 @@ public class Interpreter {
         return rtn;
     }
 
-    private static int funcCall() {
+    private static boolean funcCall() {
         //funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ].
         boolean rtn = true;
-        int func = 0;
-        ArrayList<Integer> funcArgs = new ArrayList<Integer>();
 
         rtn = rtn & (scn.sym == 100); // call
 
         scn.Next();
+
         rtn = rtn & (scn.sym == 61); // ident
-        func = scn.id;
 
         scn.Next();
+
         if (scn.sym == 50) { // "("
             scn.Next();
 
             if (!(scn.sym == 35)) { // ")"
-                funcArgs.add(expression());
+                rtn = rtn & expression();
                 while (scn.sym == 31) {// ","
                     scn.Next();
-                    funcArgs.add(expression());
+                    rtn = rtn & expression();
                 }
             }
 
@@ -237,7 +191,7 @@ public class Interpreter {
         if (!rtn) {
             Error("funcCall");
         }
-        return execFunc(func, funcArgs);
+        return rtn;
     }
 
     private static boolean assignment() {
@@ -245,17 +199,15 @@ public class Interpreter {
         boolean rtn = true;
 
         rtn = rtn & (scn.sym == 61); // ident
-        Integer current = scn.id;
-
-        if (!vars.containsKey(current)) {
-            Error("unknown identifier: " + scn.Id2String(current));
-        }
 
         scn.Next();
+        
         rtn = rtn & (scn.sym == 40); // "<-"
 
         scn.Next();
-        vars.put(current, expression()); // expression
+
+        rtn = rtn & expression(); // expression
+
 
         if (!rtn) {
             Error("assignment");
@@ -263,113 +215,85 @@ public class Interpreter {
         return rtn;
     }
 
-    private static int expression() {
+    private static boolean expression() {
         //expression = term {(“+” | “-”) term}.
-        int value = 0;
+        boolean rtn = true;
 
-        value = term();
+        rtn = rtn & term();
 
         while (scn.sym == 11 || scn.sym == 12) { // "+" or "-"
-            if (scn.sym == 11) {
-                scn.Next();
-                value += term();
-            } else if (scn.sym == 12) {
-                scn.Next();
-                value -= term();
-            }
+            scn.Next();
+            rtn = rtn & term();
         }
-        return value;
+
+        if (!rtn) {
+            Error("expression");
+        }
+        return rtn;
     }
 
     private static boolean relation() {
         //relation = expression relOp expression .
-        int lhs = expression();
+        boolean rtn = true;
 
-        int operation = relOp();
+        rtn = rtn & expression();
 
-        int rhs = expression();
+        rtn = rtn & relOp();
 
-        boolean rtn = false;
+        rtn = rtn & expression();
 
-        switch (operation) {
-            case 20://==
-                rtn = lhs == rhs;
-                break;
-            case 21://!=
-                rtn = lhs != rhs;
-                break;
-            case 22://<
-                rtn = lhs < rhs;
-                break;
-            case 23://>=
-                rtn = lhs >= rhs;
-                break;
-            case 24://<=
-                rtn = lhs <= rhs;
-                break;
-            case 25://>
-                rtn = lhs > rhs;
-                break;
+        if (!rtn) {
+            Error("relation");
         }
-
-
         return rtn;
     }
 
-    private static int term() {
+    private static boolean term() {
         //term = factor { (“*” | “/”) factor}.
-        int value = 0;
+        boolean rtn = true;
 
-        value = factor();
+        rtn = rtn & factor();
 
         while (scn.sym == 1 || scn.sym == 2) { // "*" or "/"
-            if (scn.sym == 1) {
-                scn.Next();
-                value *= factor();
-            } else if (scn.sym == 2) {
-                scn.Next();
-                value /= factor();
-            }
+            scn.Next();
+            rtn = rtn & factor();
         }
 
-        return value;
+        if (!rtn) {
+            Error("term");
+        }
+        return rtn;
     }
 
-    private static int relOp() {
+    private static boolean relOp() {
         //relOp = “==“ | “!=“ | “<“ | “<=“ | “>“ | “>=“.
         boolean rtn = true;
-        int value = 0;
         if (scn.sym < 20 || scn.sym > 25) {
             rtn = false;
-        } else {
-            value = scn.sym;
         }
         scn.Next();
 
         if (!rtn) {
             Error("relOp");
         }
-        return value;
+        return rtn;
     }
 
-    private static int factor() {
+    private static boolean factor() {
         //factor = ident | number | “(“ expression “)” | funcCall .
         boolean rtn = true;
-        int value = 0;
 
         if (scn.sym == 60) { // number
-            value = scn.val;
             scn.Next();
         } else if (scn.sym == 61) { // ident
-            value = vars.get(scn.id);
             scn.Next();
         } else if (scn.sym == 50) { // "("
             scn.Next();
-            value = expression();
+            rtn = rtn & expression();
             rtn = rtn & (scn.sym == 35); // ")"
             scn.Next();
         } else if (scn.sym == 100) { // call
-            value = funcCall();
+            rtn = rtn & funcCall();
         } else {
             rtn = false;
         }
@@ -377,23 +301,7 @@ public class Interpreter {
         if (!rtn) {
             Error("factor");
         }
-        return value;
-    }
 
-    private static int execFunc(Integer func, ArrayList<Integer> funcArgs) {
-        int rtn = 0;
-        String funcName = scn.Id2String(func);
-
-        if (funcName.equals("outputnum")) {
-            rtn = funcArgs.get(0);
-            System.out.print(rtn);
-        } else if (funcName.equals("outputnewline")) {
-            System.out.println();
-        } else if (funcName.equals("inputnum")) {
-            if (!inputs.isEmpty()) {
-                rtn = inputs.remove();
-            }
-        }
         return rtn;
     }
 }
