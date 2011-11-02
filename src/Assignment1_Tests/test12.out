@@ -1,0 +1,15 @@
+openparen 
+begin 
+openparen 
+begin 
+var 
+ident[nested] 
+eql 
+number[44] 
+semi 
+becomes 
+end 
+closeparen 
+end 
+closeparen 
+eof 

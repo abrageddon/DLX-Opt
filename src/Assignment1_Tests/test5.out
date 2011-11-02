@@ -1,0 +1,9 @@
+ident[main22] 
+ident[digit] 
+becomes 
+ident[relOP] 
+eql 
+eql 
+eql 
+eql 
+eof 

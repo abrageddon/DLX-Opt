@@ -1,8 +1,14 @@
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,10 +31,19 @@ public class Parser {
 
         scn = new Scanner(args[0]);
         vars = new HashMap<Integer, Integer>();
-
         inputs = new LinkedList<Integer>();
-        for (int i = 1; i < args.length; i++) {
-            inputs.add(Integer.valueOf(args[i]));
+        try {
+            BufferedReader readIn = new BufferedReader(new FileReader(args[1]));
+                while (readIn.ready()) {
+                    String line = readIn.readLine();
+                    if (!line.isEmpty()){
+                        inputs.add(Integer.valueOf(Integer.valueOf(line)));
+                    }
+                }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+        }catch (IOException ex) {
+                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         CodeParser parser = new CodeParser();
