@@ -1,0 +1,14 @@
+fi 
+ident[foo] 
+openparen 
+closeparen 
+else 
+if 
+ident[a] 
+minus 
+gtr 
+number[44] 
+then 
+call 
+main 
+eof 
