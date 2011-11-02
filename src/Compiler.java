@@ -420,6 +420,9 @@ public class Compiler {
             PutF1(WRL, 0, 0, 0);
         } else if (funcName.equals("inputnum")) {
             //TODO get mem location, read number to it as var
+            x.regno = AllocateReg();
+            load(x);
+            PutF2(RDI, x.regno, 0, 0);
         }
         return x;
     }
