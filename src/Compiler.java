@@ -1,7 +1,5 @@
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  *
@@ -10,13 +8,15 @@ import java.util.HashMap;
 public class Compiler {
 
     private static Scanner scn;
-    private static HashMap<Integer, Integer> vars;
+    private static ArrayList<Integer> vars;
 //    private static Queue<Integer> inputs;
-
     private static int pc;
     private static int[] buf;
-    private static boolean[] R = new boolean [32];
-
+    private static boolean[] R = new boolean[32];
+    private static final int FP = 28;
+    private static final int SP = 29;
+    private static final int GV = 30;
+    private static final int RA = 31;
     // Mnemonic-to-Opcode mapping
     static final String mnemo[] = {
         "ADD", "SUB", "MUL", "DIV", "MOD", "CMP", "ERR", "ERR", "OR", "AND", "BIC", "XOR", "LSH", "ASH", "CHK", "ERR",
@@ -70,48 +70,44 @@ public class Compiler {
     static final int WRH = 52;
     static final int WRL = 53;
     static final int ERR = 63; // error opcode which is insertered by loader
-    
-    private static int basereg = 0;
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            System.out.println("Usage: java Compiler <file>");
+    Compiler(String filename) {
+        if (filename != null && filename.isEmpty()) {
+            Error("Usage: java Compiler <file>");
             return;
         }
 
-        scn = new Scanner(args[0]);
-        vars = new HashMap<Integer, Integer>();
+        scn = new Scanner(filename);
+        vars = new ArrayList<Integer>();
 
         pc = 0;
-        buf = new int[1000];//FIXME size of memory buffer
+        buf = new int[2000];//FIXME size of memory buffer
 
         CodeParser parser = new CodeParser();
 
-        if (parser.parseFile(args[0])) {
+        if (parser.parseFile(filename)) {
             computation();//compile program
-
-            DLX vm = new DLX();//Load VM
-            vm.load(buf);//load program
-            try {
-                vm.execute(); // run program
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            }
         }
     }
 
     public static void Error(String errorMsg) {
-        System.err.println("Interpreter error: " + errorMsg);
+        System.err.println("Compiler error: " + errorMsg);
     }
 
     private static boolean computation() {
         //computation = “main” [ varDecl ] “{” statSequence “}” “.” .
         boolean rtn = true;
 
-        rtn = rtn & (scn.sym == Scanner.mainToken);// "main"
+        for (int i = 0; i < R.length; i++) {
+            R[i] = true;
+        }
+        R[0] = false;//block special registers
+        R[FP] = false;
+        R[SP] = false;
+        R[GV] = false;
+        R[RA] = false;
+
+        CheckFor(Scanner.mainToken);// "main"
 
         scn.Next();
 
@@ -119,15 +115,17 @@ public class Compiler {
             rtn = rtn & varDecl();
         }
 
-        rtn = rtn & (scn.sym == Scanner.openbracketToken);// "{"
+        CheckFor(Scanner.beginToken);// "{"
 
         scn.Next();
         rtn = rtn & statSequence();
 
-        rtn = rtn & (scn.sym == Scanner.closebracketToken);// "}"
+        CheckFor(Scanner.endToken);// "}"
 
         scn.Next();
-        rtn = rtn & (scn.sym == Scanner.periodToken);// "."
+        CheckFor(Scanner.periodToken);// "."
+
+        PutF2(RET, 0, 0, 0);//END PROGRAM!
 
         if (!rtn) {
             Error("computation");
@@ -139,22 +137,22 @@ public class Compiler {
         //varDecl = “var” ident { “,” ident } “;” .
         boolean rtn = true;
 
-        rtn = rtn & (scn.sym == Scanner.varToken); // var
+        CheckFor(Scanner.varToken); // var
 
         scn.Next();
-        rtn = rtn & (scn.sym == Scanner.identToken); // ident
-        vars.put(scn.id, 0);
+        CheckFor(Scanner.identToken); // ident
+        GiveAddress(scn.id);
 
         scn.Next();
-        while (scn.sym == 31) {// ","
+        while (scn.sym == Scanner.commaToken) {// ","
             scn.Next();
-            rtn = rtn & (scn.sym == Scanner.identToken); // ident
-            vars.put(scn.id, 0);
+            CheckFor(Scanner.identToken); // ident
+            GiveAddress(scn.id);
 
             scn.Next();
         }
 
-        rtn = rtn & (scn.sym == Scanner.semiToken);// ";"
+        CheckFor(Scanner.semiToken);// ";"
 
         scn.Next();
 
@@ -232,9 +230,9 @@ public class Compiler {
             CheckFor(Scanner.odToken);
 
         } else if (scn.sym == Scanner.callToken) { // call
-            funcCall();
+            x = funcCall();
         } else if (scn.sym == Scanner.identToken) { // ident
-            rtn = rtn & assignment();
+            x = assignment();
         } else {// empty statement invalid
             rtn = false;
         }
@@ -245,68 +243,7 @@ public class Compiler {
         return rtn;
     }
 
-    private static void ifStatement() {//UNUSED ?
-        //ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”.
-        CheckFor(Scanner.ifToken); // if
-
-        scn.Next();
-
-        Result cond = relation();
-
-        CheckFor(Scanner.thenToken); // then
-
-//        if (cond) {
-//            scn.Next();
-//            rtn = rtn & statSequence();
-//        } else {
-//            while ((scn.sym != Scanner.elseToken && scn.sym != Scanner.fiToken)) {
-//                scn.Next();
-//                if (scn.sym == Scanner.ifToken) {
-//                    int ifs = 1;
-//                    while (ifs != 0) {
-//                        scn.Next();
-//                        if (scn.sym == Scanner.ifToken) {
-//                            ifs++;
-//                        } else if (scn.sym == Scanner.fiToken) {
-//                            ifs--;
-//                        }
-//                    }
-//                    scn.Next();
-//                }
-//            }
-//        }
-        //else noExecStats
-        //match ifs++
-
-
-//        if (scn.sym == Scanner.elseToken && !cond) {// else
-//            scn.Next();
-//            rtn = rtn & statSequence();
-//        }
-
-//        while (scn.sym != Scanner.fiToken) {
-//            scn.Next();
-//            if (scn.sym == Scanner.ifToken) {
-//                int ifs = 1;
-//                while (ifs != 0) {
-//                    scn.Next();
-//                    if (scn.sym == Scanner.ifToken) {
-//                        ifs++;
-//                    } else if (scn.sym == Scanner.fiToken) {
-//                        ifs--;
-//                    }
-//                }
-//                scn.Next();
-//            }
-//        }
-
-        CheckFor(Scanner.fiToken);// fi
-
-        scn.Next();
-
-    }
-
-    private static int funcCall() {
+    private static Result funcCall() {
         //funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ].
         boolean rtn = true;
 
@@ -314,10 +251,10 @@ public class Compiler {
 
         ArrayList<Result> funcArgs = new ArrayList<Result>();
 
-        rtn = rtn & (scn.sym == Scanner.callToken); // call
+        CheckFor(Scanner.callToken); // call
 
         scn.Next();
-        rtn = rtn & (scn.sym == Scanner.identToken); // ident
+        CheckFor(Scanner.identToken); // ident
         int func = scn.id;
 
         scn.Next();
@@ -328,14 +265,17 @@ public class Compiler {
                 funcArgs.add(expression());
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
-                    funcArgs.add(expression());
+                    funcArgs.add(expression());//TODO load variables to memory
                 }
             }
 
-            rtn = rtn & (scn.sym == Scanner.closeparenToken); // ")"
+            CheckFor(Scanner.closeparenToken); // ")"
 
             scn.Next();
         }
+
+        //TODO Jump to subroutine
+        //TODO return path
 
         if (!rtn) {
             Error("funcCall");
@@ -343,27 +283,32 @@ public class Compiler {
         return execFunc(func, funcArgs);
     }
 
-    private static boolean assignment() {
+    private static Result assignment() {
         //assignment = ident “<-” expression.
-        boolean rtn = true;
+        Result x = new Result();
 
-        rtn = rtn & (scn.sym == scn.identToken); // ident
-        Integer current = scn.id;
+        CheckFor(Scanner.identToken); // ident
+        x.address = LookupAddress(scn.id);
 
-        if (!vars.containsKey(current)) {
-            Error("unknown identifier: " + scn.Id2String(current));
+        if (x.address == -1) {
+            Error("unknown identifier: " + scn.Id2String(scn.id));
         }
 
         scn.Next();
-        rtn = rtn & (scn.sym == Scanner.becomesToken); // "<-"
+        CheckFor(Scanner.becomesToken); // "<-"
 
         scn.Next();
-        vars.put(current, expression().value); // expression
+        Result y = expression();
 
-        if (!rtn) {
-            Error("assignment");
+        if (!y.isReg()) {
+            load(y);
         }
-        return rtn;
+        PutF1(STW, y.regno, GV, -x.address);
+
+//        vars.put(current, expression().value); // expression
+        //TODO load value to memory location
+
+        return x;
     }
 
     private static Result expression() {
@@ -427,23 +372,6 @@ public class Compiler {
         return x;
     }
 
-    private static int relOp() {
-        //relOp = “==“ | “!=“ | “<“ | “<=“ | “>“ | “>=“.
-        boolean rtn = true;
-        int value = 0;
-        if (scn.sym < 20 || scn.sym > 25) {
-            rtn = false;
-        } else {
-            value = scn.sym;
-        }
-        scn.Next();
-
-        if (!rtn) {
-            Error("relOp");
-        }
-        return value;
-    }
-
     private static Result factor() {
         //factor = ident | number | “(“ expression “)” | funcCall .
         Result x = new Result();
@@ -454,16 +382,16 @@ public class Compiler {
             x.setConst();
             scn.Next();
         } else if (scn.sym == Scanner.identToken) { // ident
-            x.address = vars.get(scn.id);//FIXME get identifier address
             x.setVar();
+            x.address = LookupAddress(scn.id);
             scn.Next();
         } else if (scn.sym == Scanner.openparenToken) { // "("
             scn.Next();
             x = expression();
-            rtn = rtn & (scn.sym == Scanner.closeparenToken); // ")"
+            CheckFor(Scanner.closeparenToken); // ")"
             scn.Next();
         } else if (scn.sym == Scanner.callToken) { // call
-            x.value = funcCall();
+            x = funcCall();
         } else {
             rtn = false;
         }
@@ -474,33 +402,31 @@ public class Compiler {
         return x;
     }
 
-    private static int execFunc(Integer func, ArrayList<Result> funcArgs) {
-        int rtn = 0;
+    private static Result execFunc(Integer func, ArrayList<Result> funcArgs) {
         String funcName = scn.Id2String(func);
 
         /* RDD a R.a := read a decimal number from the input F2 50
          * WRD b write the contents of R.b to the output in decimal F2 51
          * WRL start a new line on the output F1 53
          */
-
+        Result x = new Result();
 
         if (funcName.equals("outputnum")) {
-            rtn = funcArgs.get(0).value;
-            System.out.print(rtn);
+            if (!funcArgs.get(0).isReg()) {
+                load(funcArgs.get(0));
+            }
+            PutF2(WRD, 0, funcArgs.get(0).regno, 0);
         } else if (funcName.equals("outputnewline")) {
-            System.out.println();
+            PutF1(WRL, 0, 0, 0);
         } else if (funcName.equals("inputnum")) {
-            //TODO inputs
-//            if (!inputs.isEmpty()) {
-//                rtn = inputs.remove();
-//            }
+            //TODO get mem location, read number to it as var
         }
-        return rtn;
+        return x;
     }
 
-    private static void Compute(int op, Result x, Result y) {
+    private static void Compute(int scnOp, Result x, Result y) {
         if (x.isConst() && y.isConst()) {
-            switch (op) {
+            switch (scnOp) {
                 case Scanner.plusToken:
                     x.value += y.value;
                     break;
@@ -521,10 +447,10 @@ public class Compiler {
                 PutF1(ADD, x.regno, 0, 0);
             }
             if (y.isConst()) {
-                PutF1(opCodeImm(op), x.regno, x.regno, y.value);
+                PutF1(opCodeImm(scnOp), x.regno, x.regno, y.value);
             } else {
                 load(y);
-                PutF1(opCode(op), x.regno, x.regno, y.regno);
+                PutF1(opCode(scnOp), x.regno, x.regno, y.regno);
                 Deallocate(y);
             }
         }
@@ -534,19 +460,27 @@ public class Compiler {
         buf[pc++] = op << 26 | a << 21 | b << 16 | c & 0xffff;
     }
 
+    private static void PutF2(int op, int a, int b, int c) {
+        buf[pc++] = op << 26 | a << 21 | b << 16 | c & 0x1f;
+    }
+
+    private static void PutF3(int op, int c) {
+        buf[pc++] = op << 26 | c & 0xffffff;
+    }
+
     private static void CheckFor(int token) {
         if (scn.sym != token) {
-            Error("Syntax Error");
+            Error("CheckFor: Syntax Error: " + scn.Id2String(token));
         }
     }
 
     private static void load(Result x) {
         if (x.isVar()) {
             x.regno = AllocateReg();
-            PutF1(LDW, x.regno, basereg, x.address);
+            PutF1(LDW, x.regno, GV, -x.address);
             x.setReg();
         } else if (x.isConst()) {
-            if (x.address == 0) {
+            if (x.value == 0) {
                 x.regno = 0;
             } else {
                 x.regno = AllocateReg();
@@ -580,23 +514,32 @@ public class Compiler {
     }
 
     private static void Deallocate(Result y) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (y.isReg()) {
+            R[y.regno] = true;
+        }
     }
 
     private static int AllocateReg() {
-        throw new UnsupportedOperationException("Not yet implemented");
+//        R[30] = MemSize - 1;
+        for (int i = 1; i < R.length; i++) {
+            if (R[i] == true) {
+                R[i] = false;
+                return i;
+            }
+        }
+        return 0;
     }
 
     private static int opCodeImm(int op) {
         int regCode = opCode(op);
-        if (regCode != ERR){
+        if (regCode != ERR) {
             return regCode + 16;
         }
         return ERR;
     }
 
     private static int opCode(int op) {
-        switch(op){
+        switch (op) {
             case Scanner.plusToken:
                 return ADD;
             case Scanner.minusToken:
@@ -610,7 +553,7 @@ public class Compiler {
     }
 
     private static int negatedBranchOp(int cond) {
-        switch(cond){
+        switch (cond) {
             case Scanner.eqlToken:
                 return BNE;
             case Scanner.neqToken:
@@ -625,5 +568,22 @@ public class Compiler {
                 return BLE;
         }
         return ERR;
+    }
+
+    private static int LookupAddress(int id) {
+        if (!vars.contains(id)) {
+            return -1;
+        }
+        return vars.indexOf(id);
+    }
+
+    private static void GiveAddress(int id) {
+        if (!vars.contains(id)) {
+            vars.add(id);
+        }
+    }
+
+    int[] getProgram() {
+        return buf;
     }
 }
