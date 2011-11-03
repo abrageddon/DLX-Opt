@@ -9,7 +9,8 @@ import java.io.*;
 public class DLX {
 	// processor state variables
 	static int R[] = new int [32];
-	static int PC, op, a, b, c, format; 
+	static int PC, op, a, b, c, format;
+        static int progEnd;
 	
 	// emulated memory
 	static final int MemSize = 10000; // bytes in memory (divisible by 4)
@@ -26,6 +27,7 @@ public class DLX {
 		}
 		M[i] = -1; // set first opcode of first instruction after program
 		           // to ERR in order to detect 'fall off the edge' errors
+                progEnd = i;
 	}
 	
 	public static void execute() throws IOException {
@@ -573,6 +575,12 @@ public class DLX {
 		try{ System.in.read(); } catch (Exception ee) {;}
 		System.exit(n);
 	}
+
+    void displayProgram() {
+        for (int i = 0 ; i < progEnd ; i++){
+            System.out.print("["+i+"] " + disassemble(M[i]));
+        }
+    }
 	
 
 }

@@ -11,7 +11,7 @@ public class Compiler {
     private static ArrayList<Integer> vars;
 //    private static Queue<Integer> inputs;
     private static int pc;
-    private static int[] buf;
+    private static ArrayList<Integer> buf;
     private static boolean[] R = new boolean[32];
     private static final int FP = 28;
     private static final int SP = 29;
@@ -71,7 +71,7 @@ public class Compiler {
     static final int WRL = 53;
     static final int ERR = 63; // error opcode which is insertered by loader
 
-    Compiler(String filename) {
+    public Compiler(String filename) {
         if (filename != null && filename.isEmpty()) {
             Error("Usage: java Compiler <file>");
             return;
@@ -81,13 +81,9 @@ public class Compiler {
         vars = new ArrayList<Integer>();
 
         pc = 0;
-        buf = new int[2000];//FIXME size of memory buffer
+        buf = new ArrayList<Integer>();//FIXME size of memory buffer
 
-        CodeParser parser = new CodeParser();
-
-        if (parser.parseFile(filename)) {
-            computation();//compile program
-        }
+        computation();//compile program
     }
 
     public static void Error(String errorMsg) {
@@ -192,20 +188,25 @@ public class Compiler {
 
             x = relation();
             CondNegBraFwd(x);
+            Deallocate(x);
             CheckFor(Scanner.thenToken);
+            scn.Next();
+
             statSequence();
 
-            while (scn.sym == Scanner.elseToken) {//elsif??
-                scn.Next();
-                UnCondBraFwd(follow);
-                Fixup(x.fixuplocation);
-                x = relation();
-                CondNegBraFwd(x);
-                CheckFor(Scanner.thenToken);
-                statSequence();
-            }
+//            while (scn.sym == Scanner.elseToken) {//elsif??
+//                scn.Next();
+//                UnCondBraFwd(follow);
+//                Fixup(x.fixuplocation);
+//                x = relation();
+//                CondNegBraFwd(x);
+//                CheckFor(Scanner.thenToken);
+//                statSequence();
+//            }
 
             if (scn.sym == Scanner.elseToken) {
+                scn.Next();
+
                 UnCondBraFwd(follow);
                 Fixup(x.fixuplocation);
                 statSequence();
@@ -215,6 +216,8 @@ public class Compiler {
 
 
             CheckFor(Scanner.fiToken);
+            scn.Next();
+
             FixAll(follow.fixuplocation);//FIXME Works?
 
         } else if (scn.sym == Scanner.whileToken) {
@@ -222,12 +225,21 @@ public class Compiler {
             int looplocation = pc;
 
             x = relation();
+
             CondNegBraFwd(x);
             CheckFor(Scanner.doToken);
+            scn.Next();
+
             statSequence();
-            PutF1(BEQ, 0, 0, looplocation - pc);
+
+            PutF1(BEQ, 0, 0, looplocation - pc);// Why minus PC? isnt this the default loop // -pc
+
             Fixup(x.fixuplocation);
+
+            Deallocate(x);
+
             CheckFor(Scanner.odToken);
+            scn.Next();
 
         } else if (scn.sym == Scanner.callToken) { // call
             x = funcCall();
@@ -262,15 +274,17 @@ public class Compiler {
             scn.Next();
 
             if (!(scn.sym == Scanner.closeparenToken)) { // ")"
+
                 funcArgs.add(expression());
+
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
+
                     funcArgs.add(expression());//TODO load variables to memory
                 }
             }
 
             CheckFor(Scanner.closeparenToken); // ")"
-
             scn.Next();
         }
 
@@ -280,7 +294,10 @@ public class Compiler {
         if (!rtn) {
             Error("funcCall");
         }
-        return execFunc(func, funcArgs);
+
+        x = execFunc(func, funcArgs);
+
+        return x;
     }
 
     private static Result assignment() {
@@ -289,6 +306,7 @@ public class Compiler {
 
         CheckFor(Scanner.identToken); // ident
         x.address = LookupAddress(scn.id);
+        x.setVar();
 
         if (x.address == -1) {
             Error("unknown identifier: " + scn.Id2String(scn.id));
@@ -304,9 +322,7 @@ public class Compiler {
             load(y);
         }
         PutF1(STW, y.regno, GV, -x.address);
-
-//        vars.put(current, expression().value); // expression
-        //TODO load value to memory location
+        Deallocate(y);
 
         return x;
     }
@@ -321,6 +337,7 @@ public class Compiler {
         while (scn.sym == Scanner.plusToken || scn.sym == Scanner.minusToken) { // "+" or "-"
             op = scn.sym;
             scn.Next();
+
             y = term();
             Compute(op, x, y);
         }
@@ -343,8 +360,10 @@ public class Compiler {
             case Scanner.gtrToken://>
                 op = scn.sym;
                 scn.Next();
+
                 y = expression();
                 Compute(CMP, x, y);
+
                 x.setCond();
                 x.cond = op;
                 x.fixuplocation = 0;
@@ -365,6 +384,7 @@ public class Compiler {
         while (scn.sym == Scanner.timesToken || scn.sym == Scanner.divToken) { // "*" or "/"
             op = scn.sym;
             scn.Next();
+
             y = factor();
             Compute(op, x, y);
         }
@@ -387,9 +407,12 @@ public class Compiler {
             scn.Next();
         } else if (scn.sym == Scanner.openparenToken) { // "("
             scn.Next();
+
             x = expression();
+
             CheckFor(Scanner.closeparenToken); // ")"
             scn.Next();
+
         } else if (scn.sym == Scanner.callToken) { // call
             x = funcCall();
         } else {
@@ -405,7 +428,7 @@ public class Compiler {
     private static Result execFunc(Integer func, ArrayList<Result> funcArgs) {
         String funcName = scn.Id2String(func);
 
-        /* RDD a R.a := read a decimal number from the input F2 50
+        /* RDI a R.a := read a decimal number from the input F2 50
          * WRD b write the contents of R.b to the output in decimal F2 51
          * WRL start a new line on the output F1 53
          */
@@ -416,6 +439,7 @@ public class Compiler {
                 load(funcArgs.get(0));
             }
             PutF2(WRD, 0, funcArgs.get(0).regno, 0);
+//            Deallocate(funcArgs.get(0));
         } else if (funcName.equals("outputnewline")) {
             PutF1(WRL, 0, 0, 0);
         } else if (funcName.equals("inputnum")) {
@@ -423,6 +447,7 @@ public class Compiler {
             x.regno = AllocateReg();
             load(x);
             PutF2(RDI, x.regno, 0, 0);
+//            Deallocate(x);
         }
         return x;
     }
@@ -460,15 +485,15 @@ public class Compiler {
     }
 
     private static void PutF1(int op, int a, int b, int c) {
-        buf[pc++] = op << 26 | a << 21 | b << 16 | c & 0xffff;
+        buf.add(pc++, op << 26 | a << 21 | b << 16 | c & 0xffff);
     }
 
     private static void PutF2(int op, int a, int b, int c) {
-        buf[pc++] = op << 26 | a << 21 | b << 16 | c & 0x1f;
+        buf.add(pc++, op << 26 | a << 21 | b << 16 | c & 0x1f);
     }
 
     private static void PutF3(int op, int c) {
-        buf[pc++] = op << 26 | c & 0xffffff;
+        buf.add(pc++, op << 26 | c & 0xffffff);
     }
 
     private static void CheckFor(int token) {
@@ -495,31 +520,32 @@ public class Compiler {
 
     private static void CondNegBraFwd(Result x) {
         x.fixuplocation = pc;
-        PutF1(negatedBranchOp(x.cond), x.regno, 0, 0);
+        PutF1(negatedBranchOp(x.cond), x.regno, 0x1f, 0xffff);
     }
 
     private static void UnCondBraFwd(Result x) {
-        PutF1(BEQ, 0, 0, x.fixuplocation);//Build loked list by storing previous value
+        PutF1(BEQ, 0, 0, x.fixuplocation);//Build linked list by storing previous value
         x.fixuplocation = pc - 1;
     }
 
     private static void Fixup(int loc) {
-        buf[loc] = buf[loc] & 0xffff0000 + (pc - loc);
+        int part = (0xffff0000 + (pc - loc));
+        int fixed = buf.get(loc) & part;
+        buf.set(loc, fixed );
     }
 
     private static void FixAll(int loc) {
         int next;
         while (loc != 0) {
-            next = buf[loc] & 0x0000ffff; //extract next element of linked list
+            next = buf.get(loc) & 0x0000ffff; //extract next element of linked list
+            buf.set(loc, buf.get(loc) | 0x0000ffff);
             Fixup(loc);
             loc = next;
         }
     }
 
     private static void Deallocate(Result y) {
-        if (y.isReg()) {
-            R[y.regno] = true;
-        }
+        R[y.regno] = true;
     }
 
     private static int AllocateReg() {
@@ -551,6 +577,8 @@ public class Compiler {
                 return MUL;
             case Scanner.divToken:
                 return DIV;
+            case CMP:
+                return CMP;
         }
         return ERR;
     }
@@ -577,7 +605,7 @@ public class Compiler {
         if (!vars.contains(id)) {
             return -1;
         }
-        return vars.indexOf(id);
+        return vars.indexOf(id) * 4;
     }
 
     private static void GiveAddress(int id) {
@@ -586,7 +614,11 @@ public class Compiler {
         }
     }
 
-    int[] getProgram() {
-        return buf;
+    public int[] getProgram() {
+        int[] ret = new int[buf.size()];
+        for (int i = 0; i < buf.size(); i++) {
+            ret[i] = buf.get(i);
+        }
+        return ret;
     }
 }

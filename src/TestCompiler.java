@@ -25,6 +25,7 @@ public class TestCompiler {
 
             DLX dlx = new DLX();
             dlx.load(prog);
+            dlx.displayProgram();
             dlx.execute();
 
             System.setIn(origIn);
