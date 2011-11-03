@@ -179,7 +179,7 @@ public class Compiler {
         //statement = assignment | funcCall | ifStatement | whileStatement .
         boolean rtn = true;
 
-        Result x;
+        Result x = new Result();
 
         if (scn.sym == Scanner.ifToken) {// if
             scn.Next();
@@ -227,6 +227,9 @@ public class Compiler {
             x = relation();
 
             CondNegBraFwd(x);
+
+            Deallocate(x);
+
             CheckFor(Scanner.doToken);
             scn.Next();
 
@@ -236,18 +239,20 @@ public class Compiler {
 
             Fixup(x.fixuplocation);
 
-            Deallocate(x);
 
             CheckFor(Scanner.odToken);
             scn.Next();
 
         } else if (scn.sym == Scanner.callToken) { // call
             x = funcCall();
+            Deallocate(x);
         } else if (scn.sym == Scanner.identToken) { // ident
             x = assignment();
+            Deallocate(x);
         } else {// empty statement invalid
             rtn = false;
         }
+
 
         if (!rtn) {
             Error("statement");
@@ -280,7 +285,7 @@ public class Compiler {
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
 
-                    funcArgs.add(expression());//TODO load variables to memory
+                    funcArgs.add(expression());
                 }
             }
 
@@ -435,19 +440,17 @@ public class Compiler {
         Result x = new Result();
 
         if (funcName.equals("outputnum")) {
-            if (!funcArgs.get(0).isReg()) {
-                load(funcArgs.get(0));
+            x = funcArgs.get(0);
+            if (!x.isReg()) {
+                load(x);
             }
             PutF2(WRD, 0, funcArgs.get(0).regno, 0);
-//            Deallocate(funcArgs.get(0));
         } else if (funcName.equals("outputnewline")) {
             PutF1(WRL, 0, 0, 0);
         } else if (funcName.equals("inputnum")) {
-            //TODO get mem location, read number to it as var
             x.regno = AllocateReg();
             load(x);
             PutF2(RDI, x.regno, 0, 0);
-//            Deallocate(x);
         }
         return x;
     }
@@ -531,7 +534,7 @@ public class Compiler {
     private static void Fixup(int loc) {
         int part = (0xffff0000 + (pc - loc));
         int fixed = (buf.get(loc) | 0x0000ffff) & part;
-        buf.set(loc, fixed );
+        buf.set(loc, fixed);
     }
 
     private static void FixAll(int loc) {
@@ -544,18 +547,19 @@ public class Compiler {
     }
 
     private static void Deallocate(Result y) {
-        R[y.regno] = true;
+        if (y.regno > 0 && y.regno < 28){
+            R[y.regno] = true;
+        }
     }
 
     private static int AllocateReg() {
-//        R[30] = MemSize - 1;
-        for (int i = 1; i < R.length; i++) {
+        for (int i = 1; i < R.length-3; i++) {
             if (R[i] == true) {
                 R[i] = false;
                 return i;
             }
         }
-        return 0;
+        return -1;
     }
 
     private static int opCodeImm(int op) {
