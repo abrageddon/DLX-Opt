@@ -520,7 +520,7 @@ public class Compiler {
 
     private static void CondNegBraFwd(Result x) {
         x.fixuplocation = pc;
-        PutF1(negatedBranchOp(x.cond), x.regno, 0x1f, 0xffff);
+        PutF1(negatedBranchOp(x.cond), x.regno, 0, 0);
     }
 
     private static void UnCondBraFwd(Result x) {
@@ -530,7 +530,7 @@ public class Compiler {
 
     private static void Fixup(int loc) {
         int part = (0xffff0000 + (pc - loc));
-        int fixed = buf.get(loc) & part;
+        int fixed = (buf.get(loc) | 0x0000ffff) & part;
         buf.set(loc, fixed );
     }
 
@@ -538,7 +538,6 @@ public class Compiler {
         int next;
         while (loc != 0) {
             next = buf.get(loc) & 0x0000ffff; //extract next element of linked list
-            buf.set(loc, buf.get(loc) | 0x0000ffff);
             Fixup(loc);
             loc = next;
         }
