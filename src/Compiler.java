@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -8,7 +9,9 @@ import java.util.ArrayList;
 public class Compiler {
 
     private static Scanner scn;
-    private static ArrayList<Integer> vars;
+//    private static ArrayList<Integer> vars;
+    private static HashMap<String, Function> funcs;
+    private static String scope;
 //    private static Queue<Integer> inputs;
     private static int pc;
     private static ArrayList<Integer> buf;
@@ -78,7 +81,10 @@ public class Compiler {
         }
 
         scn = new Scanner(filename);
-        vars = new ArrayList<Integer>();
+//        vars = new ArrayList<Integer>();
+
+        funcs = new HashMap<String, Function>();
+        funcs.put("main", new Function(0, false));//main doesnt return a value
 
         pc = 0;
         buf = new ArrayList<Integer>();//FIXME size of memory buffer
@@ -87,11 +93,12 @@ public class Compiler {
     }
 
     public static void Error(String errorMsg) {
-        System.err.println("Compiler error: " + errorMsg);
+        System.err.println("PC = " + pc + " Compiler error: " + errorMsg);
     }
 
     private static boolean computation() {
         //computation = “main” [ varDecl ] “{” statSequence “}” “.” .
+        //TODO computation = “main” [ varDecl ] { funcDecl } “{” statSequence “}” “.” .
         boolean rtn = true;
 
         for (int i = 0; i < R.length; i++) {
@@ -104,16 +111,37 @@ public class Compiler {
         R[RA] = false;
 
         CheckFor(Scanner.mainToken);// "main"
-
+        //Setup Frame Pointer
+        PutF1(ADDI, FP, GV, 0);
+        scope = "main";
         scn.Next();
 
         if (scn.sym == Scanner.varToken) {// "var" [VarDecl]
             rtn = rtn & varDecl();
         }
 
-        CheckFor(Scanner.beginToken);// "{"
+        //Setup Stack Pointer
+        PutF1(ADDI, SP, GV, -(funcs.get(scope).getvarNum() * 4));
 
+        if (scn.sym == Scanner.procToken || scn.sym == Scanner.funcToken) {// funcDecl
+
+            Result start = new Result();
+            start.fixuplocation = 0;
+            //Skip functions when running
+            UnCondBraFwd(start);
+
+            while (scn.sym == Scanner.procToken || scn.sym == Scanner.funcToken) {
+                rtn = rtn & funcDecl();
+            }
+
+            Fixup(start.fixuplocation);
+            scope = "main";//return to global scope
+        }
+
+
+        CheckFor(Scanner.beginToken);// "{"
         scn.Next();
+
         rtn = rtn & statSequence();
 
         CheckFor(Scanner.endToken);// "}"
@@ -137,23 +165,99 @@ public class Compiler {
 
         scn.Next();
         CheckFor(Scanner.identToken); // ident
-        GiveAddress(scn.id);
+        AddVar(scn.id);
 
         scn.Next();
         while (scn.sym == Scanner.commaToken) {// ","
             scn.Next();
             CheckFor(Scanner.identToken); // ident
-            GiveAddress(scn.id);
+            AddVar(scn.id);
 
             scn.Next();
         }
 
         CheckFor(Scanner.semiToken);// ";"
-
         scn.Next();
 
         if (!rtn) {
             Error("varDecl");
+        }
+        return rtn;
+    }
+
+    private static boolean funcDecl() {
+
+        //TODO funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” .
+        boolean rtn = true;
+
+        boolean func = false;
+        if (scn.sym == Scanner.funcToken) { // function
+            func = true;
+        } else if (scn.sym == Scanner.procToken) {
+            func = false;
+        } else {
+            Error("funcDecl: not function or procedure");
+        }
+        scn.Next();
+
+        CheckFor(Scanner.identToken); // ident
+        scope = scn.Id2String(scn.id);
+        funcs.put(scope, new Function(pc, func));
+        scn.Next();
+
+
+        //TODO formalParam = “(“ [ident { “,” ident }] “)”.
+        if (scn.sym == Scanner.openparenToken) {
+            scn.Next();
+            CheckFor(Scanner.identToken); // ident
+            AddParam(scn.id);
+            scn.Next();
+
+            while (scn.sym == Scanner.commaToken) {// ","
+                scn.Next();
+
+                CheckFor(Scanner.identToken); // ident
+                AddParam(scn.id);
+                scn.Next();
+            }
+
+            CheckFor(Scanner.closeparenToken);
+            scn.Next();
+        }
+
+        CheckFor(Scanner.semiToken);// ";"
+        scn.Next();
+
+
+        //TODO funcBody = { varDecl } “{” [ statSequence ] “}”.
+        if (scn.sym == Scanner.varToken) { // var
+
+            rtn = rtn & varDecl();
+
+        }
+
+
+        CheckFor(Scanner.beginToken);// "{"
+        scn.Next();
+
+        rtn = rtn & statSequence();
+
+        CheckFor(Scanner.endToken);// "}"
+        scn.Next();
+
+        CheckFor(Scanner.semiToken);// ";"
+        scn.Next();
+
+        if (!funcs.get(scope).isFunc()){
+            int paramNo = funcs.get(scope).getParamNum();
+            PutF1(ADDI, SP, FP, (paramNo + 1) * 4);
+            PutF1(LDW, RA, FP, 0);
+            PutF1(LDW, FP, FP, 0);
+            PutF1(RET, 0, 0, RA);
+        }
+
+        if (!rtn) {
+            Error("funcDecl");
         }
         return rtn;
     }
@@ -177,11 +281,35 @@ public class Compiler {
 
     private static boolean statement() {
         //statement = assignment | funcCall | ifStatement | whileStatement .
+        //TODO returnStatement : return [expr]
         boolean rtn = true;
 
         Result x = new Result();
 
-        if (scn.sym == Scanner.ifToken) {// if
+        if (scn.sym == Scanner.returnToken) {
+            scn.Next();
+            //TODO return value
+            int paramNo = funcs.get(scope).getParamNum();
+
+            if (funcs.get(scope).isFunc()) {
+                x = expression();
+                PutF1(STW, x.regno, FP, (paramNo + 1) * 4);
+                Deallocate(x);
+            }
+
+            //TODO brach back
+
+            //Set SP just below RV
+            PutF1(ADDI, SP, FP, (paramNo + 2) * 4);
+            //Load RA
+            PutF1(LDW, RA, FP, 0);
+            //Load prev FP
+            PutF1(LDW, FP, FP, 0);
+            //Go To RA
+            PutF1(RET, 0, 0, RA);
+
+
+        } else if (scn.sym == Scanner.ifToken) {// if
             scn.Next();
             Result follow = new Result();
             follow.fixuplocation = 0;
@@ -218,7 +346,7 @@ public class Compiler {
             CheckFor(Scanner.fiToken);
             scn.Next();
 
-            FixAll(follow.fixuplocation);//FIXME Works?
+            FixAll(follow.fixuplocation);
 
         } else if (scn.sym == Scanner.whileToken) {
             scn.Next();
@@ -235,7 +363,7 @@ public class Compiler {
 
             statSequence();
 
-            PutF1(BEQ, 0, 0, looplocation - pc);// Why minus PC? isnt this the default loop // -pc
+            PutF1(BEQ, 0, 0, looplocation - pc);
 
             Fixup(x.fixuplocation);
 
@@ -305,15 +433,49 @@ public class Compiler {
         return x;
     }
 
+    private static Result execFunc(Integer func, ArrayList<Result> funcArgs) {
+        String funcName = scn.Id2String(func);
+
+        /* RDI a R.a := read a decimal number from the input F2 50
+         * WRD b write the contents of R.b to the output in decimal F2 51
+         * WRL start a new line on the output F1 53
+         */
+        Result x = new Result();
+
+        if (funcName.equals("outputnum")) {
+            x = funcArgs.get(0);
+            if (!x.isReg()) {
+                load(x);
+            }
+            PutF2(WRD, 0, funcArgs.get(0).regno, 0);
+        } else if (funcName.equals("outputnewline")) {
+            PutF1(WRL, 0, 0, 0);
+        } else if (funcName.equals("inputnum")) {
+            x.regno = AllocateReg();
+            load(x);
+            PutF2(RDI, x.regno, 0, 0);
+        }
+        return x;
+    }
+
     private static Result assignment() {
         //assignment = ident “<-” expression.
         Result x = new Result();
 
         CheckFor(Scanner.identToken); // ident
-        x.address = LookupAddress(scn.id);
-        x.setVar();
+        if (funcs.get(scope).containsVar(scn.id)) {
+            x.setVar();
+            x.address = GetVarAddress(scn.id);
+        } else if (funcs.get(scope).containsParam(scn.id)) {
+            x.setParam();
+            x.address = GetParamAddress(scn.id);
+        }
+//        else if (funcs.get("main").containsVar(scn.id)) {
+//            x.setVar();
+//            x.address = GetVarAddress(scn.id);
+//        }
 
-        if (x.address == -1) {
+        if (x.address == Integer.MAX_VALUE) {
             Error("unknown identifier: " + scn.Id2String(scn.id));
         }
 
@@ -326,7 +488,7 @@ public class Compiler {
         if (!y.isReg()) {
             load(y);
         }
-        PutF1(STW, y.regno, GV, -x.address);
+        PutF1(STW, y.regno, SP, x.address);
         Deallocate(y);
 
         return x;
@@ -407,8 +569,17 @@ public class Compiler {
             x.setConst();
             scn.Next();
         } else if (scn.sym == Scanner.identToken) { // ident
-            x.setVar();
-            x.address = LookupAddress(scn.id);
+            if (funcs.get(scope).containsVar(scn.id)) {
+                x.setVar();
+                x.address = GetVarAddress(scn.id);
+            } else if (funcs.get(scope).containsParam(scn.id)) {
+                x.setParam();
+                x.address = GetParamAddress(scn.id);
+            }
+//            else if (funcs.get("main").containsVar(scn.id)) {
+//                x.setVar();
+//                x.address = GetVarAddress(scn.id);
+//            }
             scn.Next();
         } else if (scn.sym == Scanner.openparenToken) { // "("
             scn.Next();
@@ -426,31 +597,6 @@ public class Compiler {
 
         if (!rtn) {
             Error("factor");
-        }
-        return x;
-    }
-
-    private static Result execFunc(Integer func, ArrayList<Result> funcArgs) {
-        String funcName = scn.Id2String(func);
-
-        /* RDI a R.a := read a decimal number from the input F2 50
-         * WRD b write the contents of R.b to the output in decimal F2 51
-         * WRL start a new line on the output F1 53
-         */
-        Result x = new Result();
-
-        if (funcName.equals("outputnum")) {
-            x = funcArgs.get(0);
-            if (!x.isReg()) {
-                load(x);
-            }
-            PutF2(WRD, 0, funcArgs.get(0).regno, 0);
-        } else if (funcName.equals("outputnewline")) {
-            PutF1(WRL, 0, 0, 0);
-        } else if (funcName.equals("inputnum")) {
-            x.regno = AllocateReg();
-            load(x);
-            PutF2(RDI, x.regno, 0, 0);
         }
         return x;
     }
@@ -474,7 +620,7 @@ public class Compiler {
         } else {
             load(x);
             if (x.regno == 0) {
-                x.regno = AllocateReg();
+                x.regno = AllocateReg();//TODO if regno zero?
                 PutF1(ADD, x.regno, 0, 0);
             }
             if (y.isConst()) {
@@ -499,16 +645,22 @@ public class Compiler {
         buf.add(pc++, op << 26 | c & 0xffffff);
     }
 
-    private static void CheckFor(int token) {
+    private static boolean CheckFor(int token) {
         if (scn.sym != token) {
             Error("CheckFor: Syntax Error: " + scn.Id2String(token));
+            return false;
         }
+        return true;
     }
 
     private static void load(Result x) {
         if (x.isVar()) {
             x.regno = AllocateReg();
-            PutF1(LDW, x.regno, GV, -x.address);
+            PutF1(LDW, x.regno, SP, x.address);
+            x.setReg();
+        } else if (x.isParam()) {
+            x.regno = AllocateReg();
+            PutF1(LDW, x.regno, FP, (x.address + 4));
             x.setReg();
         } else if (x.isConst()) {
             if (x.value == 0) {
@@ -547,13 +699,13 @@ public class Compiler {
     }
 
     private static void Deallocate(Result y) {
-        if (y.regno > 0 && y.regno < 28){
+        if (y.regno > 0 && y.regno < 28) {
             R[y.regno] = true;
         }
     }
 
     private static int AllocateReg() {
-        for (int i = 1; i < R.length-3; i++) {
+        for (int i = 1; i < R.length - 3; i++) {
             if (R[i] == true) {
                 R[i] = false;
                 return i;
@@ -604,17 +756,36 @@ public class Compiler {
         return ERR;
     }
 
-    private static int LookupAddress(int id) {
-        if (!vars.contains(id)) {
-            return -1;
+     private static int GetVarAddress(int id) {
+        int ret = 0;
+        if (funcs.get(scope).containsVar(id)) {
+            ret = (funcs.get(scope).getVar(id) + 1) * 4;
+        } else {
+            ret = Integer.MAX_VALUE;
+            Error("GetVarAddress: Var does not exist: " + scn.Id2String(id));
         }
-        return vars.indexOf(id) * 4;
+
+        return ret;
     }
 
-    private static void GiveAddress(int id) {
-        if (!vars.contains(id)) {
-            vars.add(id);
+    private static int GetParamAddress(int id) {
+        int ret = 0;
+        if (funcs.get(scope).containsParam(id)) {
+            ret = ( funcs.get(scope).getParam(id) ) * 4;
+        } else {
+            ret = Integer.MAX_VALUE;
+            Error("GetParamAddress: Var does not exist: " + scn.Id2String(id));
         }
+
+        return ret;
+    }
+
+    private static void AddVar(int id) {
+        funcs.get(scope).addVar(id);
+    }
+
+    private static void AddParam(int id) {
+        funcs.get(scope).addParam(id);
     }
 
     public int[] getProgram() {
