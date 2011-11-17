@@ -59,7 +59,7 @@ public class Function {
         return param.size();
     }
 
-    int getvarNum() {
+    int getVarNum() {
         return vars.size();
     }
 

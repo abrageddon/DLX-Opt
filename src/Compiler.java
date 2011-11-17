@@ -121,7 +121,7 @@ public class Compiler {
         }
 
         //Setup Stack Pointer
-        PutF1(ADDI, SP, GV, -(funcs.get(scope).getvarNum() * 4));
+        PutF1(ADDI, SP, GV, -(funcs.get(scope).getVarNum() * 4));
 
         if (scn.sym == Scanner.procToken || scn.sym == Scanner.funcToken) {// funcDecl
 
@@ -248,9 +248,9 @@ public class Compiler {
         CheckFor(Scanner.semiToken);// ";"
         scn.Next();
 
-        if (!funcs.get(scope).isFunc()){
+        if (!funcs.get(scope).isFunc()) {
             int paramNo = funcs.get(scope).getParamNum();
-            PutF1(ADDI, SP, FP, (paramNo + 1) * 4);
+            PutF1(ADDI, SP, FP, (paramNo) * 4);
             PutF1(LDW, RA, FP, 0);
             PutF1(LDW, FP, FP, 0);
             PutF1(RET, 0, 0, RA);
@@ -300,7 +300,7 @@ public class Compiler {
             //TODO brach back
 
             //Set SP just below RV
-            PutF1(ADDI, SP, FP, (paramNo + 2) * 4);
+            PutF1(ADDI, SP, FP, (paramNo + 1) * 4);
             //Load RA
             PutF1(LDW, RA, FP, 0);
             //Load prev FP
@@ -421,9 +421,6 @@ public class Compiler {
             scn.Next();
         }
 
-        //TODO Jump to subroutine
-        //TODO return path
-
         if (!rtn) {
             Error("funcCall");
         }
@@ -442,7 +439,61 @@ public class Compiler {
          */
         Result x = new Result();
 
-        if (funcName.equals("outputnum")) {
+        if (funcs.containsKey(funcName)) {
+            //TODO access functions
+
+            int parmNum = funcs.get(funcName).getParamNum();
+            int varNum = funcs.get(funcName).getVarNum();
+
+            boolean isFunc = funcs.get(funcName).isFunc();
+
+            if (isFunc) {
+                //Put RetVal on stack
+                PutF1(STW, 0, SP, 0);
+            }
+
+            //Update FP
+            PutF1(ADDI, FP, SP, -(((isFunc?1:0) + parmNum) * 4));
+
+            //Put Param, reverse order
+            if (parmNum > 0) {
+                for (int i = 0 ; i < parmNum; i++) {
+                    //if const, then load to register
+                    load(funcArgs.get(i));
+                    //load word to mem
+                    PutF1(STW, funcArgs.get(i).regno , FP , (4 * (i +(isFunc?1:0))));
+
+                    Deallocate(funcArgs.get(i));
+                }
+            }
+
+
+            //Put RA
+            PutF1(ADDI, 1, 0, (pc + 4 + varNum) * 4);
+            PutF1(STW, 1, FP, 0); // TODO update PC value
+
+
+            //Update SP
+            PutF1(ADDI, SP, FP, -((1 + varNum) * 4));
+
+            //Put vars
+            if (varNum > 0) {
+                for (int i = varNum; i > 0; i--) {
+                    PutF1(STW, 0, SP, ((i)*4));
+                }
+            }
+
+
+            //jump to function
+            PutF1(JSR, 0, 0, funcs.get(funcName).getStartLine() * 4);
+
+            //IF func get return val
+            if (isFunc) {
+                //put ret val in x
+                x.setVar();
+            }
+
+        } else if (funcName.equals("outputnum")) {
             x = funcArgs.get(0);
             if (!x.isReg()) {
                 load(x);
@@ -575,7 +626,7 @@ public class Compiler {
             } else if (funcs.get(scope).containsParam(scn.id)) {
                 x.setParam();
                 x.address = GetParamAddress(scn.id);
-            }
+            }//TODO global variables
 //            else if (funcs.get("main").containsVar(scn.id)) {
 //                x.setVar();
 //                x.address = GetVarAddress(scn.id);
@@ -660,7 +711,7 @@ public class Compiler {
             x.setReg();
         } else if (x.isParam()) {
             x.regno = AllocateReg();
-            PutF1(LDW, x.regno, FP, (x.address + 4));
+            PutF1(LDW, x.regno, FP, x.address + 4 );
             x.setReg();
         } else if (x.isConst()) {
             if (x.value == 0) {
@@ -756,7 +807,7 @@ public class Compiler {
         return ERR;
     }
 
-     private static int GetVarAddress(int id) {
+    private static int GetVarAddress(int id) {
         int ret = 0;
         if (funcs.get(scope).containsVar(id)) {
             ret = (funcs.get(scope).getVar(id) + 1) * 4;
@@ -771,7 +822,7 @@ public class Compiler {
     private static int GetParamAddress(int id) {
         int ret = 0;
         if (funcs.get(scope).containsParam(id)) {
-            ret = ( funcs.get(scope).getParam(id) ) * 4;
+            ret = (funcs.get(scope).getParam(id)) * 4;
         } else {
             ret = Integer.MAX_VALUE;
             Error("GetParamAddress: Var does not exist: " + scn.Id2String(id));

@@ -44,6 +44,13 @@ public class DLX {
 			R[0] = 0;
 			disassem(M[PC]); // initializes op, a, b, c
 
+                        System.out.print("PC:"+PC + " : " + disassemble(M[PC]));//DEBUG
+                        System.out.print("MEM:");//DEBUG
+                        for (int i = 0 ; i < 5 ; i++){
+                            System.out.print(M[(R[30]-(i*4))/4] + "|");
+                        }
+                        System.out.println();
+
 			int nextPC = PC + 1;
 			if (format==2) {
 				origc = c; // used for RET
