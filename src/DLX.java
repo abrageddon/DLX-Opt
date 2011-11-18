@@ -44,12 +44,23 @@ public class DLX {
 			R[0] = 0;
 			disassem(M[PC]); // initializes op, a, b, c
 
-                        System.out.print("PC:"+PC + " : " + disassemble(M[PC]));//DEBUG
-                        System.out.print("MEM:");//DEBUG
-                        for (int i = 0 ; i < 5 ; i++){
-                            System.out.print(M[(R[30]-(i*4))/4] + "|");
+//                        /*//DEBUG
+                        System.out.print("\tMEM:");//DEBUG
+                        for (int i = 0 ; i < 50 ; i++){
+                            System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "|":""));
                         }
                         System.out.println();
+                        System.out.print("\tREG:");//DEBUG
+                        for (int i = 0 ; i < 5 ; i++){
+                            System.out.print(R[i] + "|");
+                        }
+                        System.out.print("...|");
+                            System.out.print("FP:"+(10000-R[28])/4 + "|");
+                            System.out.print("SP:"+(10000-R[29])/4 + "|");
+                            System.out.print("RA:"+(R[31]) + "/" + (R[31])/4);
+                        System.out.println();
+                        System.out.print(PC + ":" + disassemble(M[PC]));//DEBUG
+                         //*/
 
 			int nextPC = PC + 1;
 			if (format==2) {

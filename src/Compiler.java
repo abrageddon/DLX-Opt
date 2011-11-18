@@ -113,6 +113,7 @@ public class Compiler {
         CheckFor(Scanner.mainToken);// "main"
         //Setup Frame Pointer
         PutF1(ADDI, FP, GV, 0);
+        PutF1(ADDI, SP, GV, 0);
         scope = "main";
         scn.Next();
 
@@ -120,8 +121,10 @@ public class Compiler {
             rtn = rtn & varDecl();
         }
 
-        //Setup Stack Pointer
-        PutF1(ADDI, SP, GV, -(funcs.get(scope).getVarNum() * 4));
+        //Setup Global Variables
+        for (int i = 0; i < funcs.get(scope).getVarNum(); i++) {
+            Push(new Result());
+        }
 
         if (scn.sym == Scanner.procToken || scn.sym == Scanner.funcToken) {// funcDecl
 
@@ -190,11 +193,11 @@ public class Compiler {
         //TODO funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” .
         boolean rtn = true;
 
-        boolean func = false;
+        boolean isFunc = false;
         if (scn.sym == Scanner.funcToken) { // function
-            func = true;
+            isFunc = true;
         } else if (scn.sym == Scanner.procToken) {
-            func = false;
+            isFunc = false;
         } else {
             Error("funcDecl: not function or procedure");
         }
@@ -202,7 +205,10 @@ public class Compiler {
 
         CheckFor(Scanner.identToken); // ident
         scope = scn.Id2String(scn.id);
-        funcs.put(scope, new Function(pc, func));
+        if (funcs.containsKey(scope)) {
+            Error("Overriding Function: " + scope);
+        }
+        funcs.put(scope, new Function(pc, isFunc));
         scn.Next();
 
 
@@ -236,9 +242,12 @@ public class Compiler {
 
         }
 
-
         CheckFor(Scanner.beginToken);// "{"
         scn.Next();
+
+        //Store Return Addrewss
+        int paramNum = funcs.get(scope).getParamNum();
+        PutF1(STW, RA, FP, (paramNum + 2) * 4);
 
         rtn = rtn & statSequence();
 
@@ -248,13 +257,16 @@ public class Compiler {
         CheckFor(Scanner.semiToken);// ";"
         scn.Next();
 
-        if (!funcs.get(scope).isFunc()) {
-            int paramNo = funcs.get(scope).getParamNum();
-            PutF1(ADDI, SP, FP, (paramNo) * 4);
-            PutF1(LDW, RA, FP, 0);
-            PutF1(LDW, FP, FP, 0);
+
+        if (!isFunc) {
+            //Load RA
+            PutF1(LDW, RA, FP, (paramNum + 2) * 4);
+            //Load prev FP
+            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
+            //Go To RA
             PutF1(RET, 0, 0, RA);
         }
+
 
         if (!rtn) {
             Error("funcDecl");
@@ -266,11 +278,13 @@ public class Compiler {
         //statSequence = statement { “;” statement }.
         boolean rtn = true;
 
-        rtn = rtn & statement();
+        Result x = statement();
+        Deallocate(x);
 
         while (scn.sym == Scanner.semiToken) {// ";"
             scn.Next();
-            rtn = rtn & statement();
+            x = statement();
+            Deallocate(x);
         }
 
         if (!rtn) {
@@ -279,32 +293,33 @@ public class Compiler {
         return rtn;
     }
 
-    private static boolean statement() {
+    private static Result statement() {
         //statement = assignment | funcCall | ifStatement | whileStatement .
         //TODO returnStatement : return [expr]
-        boolean rtn = true;
 
         Result x = new Result();
 
         if (scn.sym == Scanner.returnToken) {
             scn.Next();
             //TODO return value
-            int paramNo = funcs.get(scope).getParamNum();
+            int paramNum = funcs.get(scope).getParamNum();
+            int varNum = funcs.get(scope).getVarNum();
+            boolean isFunc = funcs.get(scope).isFunc();
 
-            if (funcs.get(scope).isFunc()) {
+            if (isFunc) {
+                //Get return value
                 x = expression();
-                PutF1(STW, x.regno, FP, (paramNo + 1) * 4);
-                Deallocate(x);
+                load(x);
+                PutF1(STW, x.regno, FP, 4);
+//                Deallocate(x);
             }
 
-            //TODO brach back
+            //Func brach back
 
-            //Set SP just below RV
-            PutF1(ADDI, SP, FP, (paramNo + 1) * 4);
             //Load RA
-            PutF1(LDW, RA, FP, 0);
+            PutF1(LDW, RA, FP, (paramNum + 2) * 4);
             //Load prev FP
-            PutF1(LDW, FP, FP, 0);
+            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
             //Go To RA
             PutF1(RET, 0, 0, RA);
 
@@ -373,19 +388,11 @@ public class Compiler {
 
         } else if (scn.sym == Scanner.callToken) { // call
             x = funcCall();
-            Deallocate(x);
         } else if (scn.sym == Scanner.identToken) { // ident
             x = assignment();
-            Deallocate(x);
-        } else {// empty statement invalid
-            rtn = false;
         }
 
-
-        if (!rtn) {
-            Error("statement");
-        }
-        return rtn;
+        return x;
     }
 
     private static Result funcCall() {
@@ -447,51 +454,91 @@ public class Compiler {
 
             boolean isFunc = funcs.get(funcName).isFunc();
 
-            if (isFunc) {
-                //Put RetVal on stack
-                PutF1(STW, 0, SP, 0);
-            }
 
-            //Update FP
-            PutF1(ADDI, FP, SP, -(((isFunc?1:0) + parmNum) * 4));
+            //Store old FP
+            Result oldFP = new Result();
+            oldFP.setReg();
+            oldFP.regno = FP;
+            Push(oldFP);
+
+
+
+            //Put RA
+//            Result returnAddress = new Result();
+//            returnAddress.setConst();
+//            //TODO AUTO GENERATE
+//            returnAddress.value = (pc + 4 + 2*parmNum + 2 *varNum) * 4;//FIXME
+            Push(new Result());
+//            Deallocate(returnAddress);
+
+
+
 
             //Put Param, reverse order
             if (parmNum > 0) {
-                for (int i = 0 ; i < parmNum; i++) {
+                for (int i = parmNum - 1; i >= 0; i--) {
                     //if const, then load to register
                     load(funcArgs.get(i));
                     //load word to mem
-                    PutF1(STW, funcArgs.get(i).regno , FP , (4 * (i +(isFunc?1:0))));
+                    Push(funcArgs.get(i));
 
                     Deallocate(funcArgs.get(i));
                 }
             }
 
 
-            //Put RA
-            PutF1(ADDI, 1, 0, (pc + 4 + varNum) * 4);
-            PutF1(STW, 1, FP, 0); // TODO update PC value
+            //Put RetVal on stack
+//            if (isFunc) {
+            Push(new Result());
+//            }
 
-
-            //Update SP
-            PutF1(ADDI, SP, FP, -((1 + varNum) * 4));
+            //Update FP
+            PutF1(ADDI, FP, SP, 0);
 
             //Put vars
             if (varNum > 0) {
-                for (int i = varNum; i > 0; i--) {
-                    PutF1(STW, 0, SP, ((i)*4));
+                for (int i = 0; i < varNum; i++) {
+                    Push(new Result());
                 }
             }
-
 
             //jump to function
             PutF1(JSR, 0, 0, funcs.get(funcName).getStartLine() * 4);
 
+            //Function Happens
+
+            //pop vars
+            PutF1(ADDI, SP, FP, 0);
+
             //IF func get return val
             if (isFunc) {
                 //put ret val in x
-                x.setVar();
+                x.setReg();
+                x.regno = AllocateReg();//just below funcFP
+                Pop(x);
+            } else {
+                //remove empty return val
+                Pop();
             }
+
+            //Pop Parms
+
+            if (parmNum > 0) {
+                for (int i = parmNum - 1; i >= 0; i--) {
+                    Pop();
+                }
+            }
+
+            //POP RA
+            Pop();
+
+            //Restore oldFP
+            oldFP.setReg();
+            oldFP.regno = FP;//just below funcFP
+            Pop(oldFP);
+
+
+
 
         } else if (funcName.equals("outputnum")) {
             x = funcArgs.get(0);
@@ -503,7 +550,7 @@ public class Compiler {
             PutF1(WRL, 0, 0, 0);
         } else if (funcName.equals("inputnum")) {
             x.regno = AllocateReg();
-            load(x);
+            x.setReg();
             PutF2(RDI, x.regno, 0, 0);
         }
         return x;
@@ -514,17 +561,16 @@ public class Compiler {
         Result x = new Result();
 
         CheckFor(Scanner.identToken); // ident
-        if (funcs.get(scope).containsVar(scn.id)) {
-            x.setVar();
-            x.address = GetVarAddress(scn.id);
-        } else if (funcs.get(scope).containsParam(scn.id)) {
+        if (funcs.get(scope).containsParam(scn.id)) {
             x.setParam();
             x.address = GetParamAddress(scn.id);
+        } else if (funcs.get(scope).containsVar(scn.id)) {
+            x.setVar();
+            x.address = GetVarAddress(scn.id);
+        } else if (funcs.get("main").containsVar(scn.id)) {
+            x.setGlobalVar();
+            x.address = GetVarAddress(scn.id);
         }
-//        else if (funcs.get("main").containsVar(scn.id)) {
-//            x.setVar();
-//            x.address = GetVarAddress(scn.id);
-//        }
 
         if (x.address == Integer.MAX_VALUE) {
             Error("unknown identifier: " + scn.Id2String(scn.id));
@@ -539,7 +585,11 @@ public class Compiler {
         if (!y.isReg()) {
             load(y);
         }
-        PutF1(STW, y.regno, SP, x.address);
+        if (x.isVar()) {
+            PutF1(STW, y.regno, FP, -x.address);
+        } else if (x.isGlobalVar()) {
+            PutF1(STW, y.regno, GV, -x.address);
+        }
         Deallocate(y);
 
         return x;
@@ -556,7 +606,17 @@ public class Compiler {
             op = scn.sym;
             scn.Next();
 
+            //Store prev result
+            Push(x);
+            Deallocate(x);
+
             y = term();
+
+            //Get prev result
+            x.regno = AllocateReg();
+            x.setReg();
+            Pop(x);
+
             Compute(op, x, y);
         }
         return x;
@@ -603,7 +663,18 @@ public class Compiler {
             op = scn.sym;
             scn.Next();
 
+
+            //Store prev result
+            Push(x);
+            Deallocate(x);
+
             y = factor();
+
+            //Get prev result
+            x.regno = AllocateReg();
+            x.setReg();
+            Pop(x);
+
             Compute(op, x, y);
         }
 
@@ -620,17 +691,16 @@ public class Compiler {
             x.setConst();
             scn.Next();
         } else if (scn.sym == Scanner.identToken) { // ident
-            if (funcs.get(scope).containsVar(scn.id)) {
-                x.setVar();
-                x.address = GetVarAddress(scn.id);
-            } else if (funcs.get(scope).containsParam(scn.id)) {
+            if (funcs.get(scope).containsParam(scn.id)) {
                 x.setParam();
                 x.address = GetParamAddress(scn.id);
-            }//TODO global variables
-//            else if (funcs.get("main").containsVar(scn.id)) {
-//                x.setVar();
-//                x.address = GetVarAddress(scn.id);
-//            }
+            } else if (funcs.get(scope).containsVar(scn.id)) {
+                x.setVar();
+                x.address = GetVarAddress(scn.id);
+            } else if (funcs.get("main").containsVar(scn.id)) {
+                x.setGlobalVar();
+                x.address = GetVarAddress(scn.id);
+            }
             scn.Next();
         } else if (scn.sym == Scanner.openparenToken) { // "("
             scn.Next();
@@ -670,7 +740,7 @@ public class Compiler {
             }
         } else {
             load(x);
-            if (x.regno == 0) {
+            if (!x.isReg() && x.regno == 0) {
                 x.regno = AllocateReg();//TODO if regno zero?
                 PutF1(ADD, x.regno, 0, 0);
             }
@@ -707,11 +777,15 @@ public class Compiler {
     private static void load(Result x) {
         if (x.isVar()) {
             x.regno = AllocateReg();
-            PutF1(LDW, x.regno, SP, x.address);
+            PutF1(LDW, x.regno, FP, -(x.address));
+            x.setReg();
+        } else if (x.isGlobalVar()) {
+            x.regno = AllocateReg();
+            PutF1(LDW, x.regno, GV, -x.address);
             x.setReg();
         } else if (x.isParam()) {
             x.regno = AllocateReg();
-            PutF1(LDW, x.regno, FP, x.address + 4 );
+            PutF1(LDW, x.regno, FP, (8 + x.address));
             x.setReg();
         } else if (x.isConst()) {
             if (x.value == 0) {
@@ -756,7 +830,7 @@ public class Compiler {
     }
 
     private static int AllocateReg() {
-        for (int i = 1; i < R.length - 3; i++) {
+        for (int i = 1; i < R.length - 4; i++) {
             if (R[i] == true) {
                 R[i] = false;
                 return i;
@@ -809,8 +883,11 @@ public class Compiler {
 
     private static int GetVarAddress(int id) {
         int ret = 0;
+
         if (funcs.get(scope).containsVar(id)) {
-            ret = (funcs.get(scope).getVar(id) + 1) * 4;
+            ret = (funcs.get(scope).getVar(id)) * 4;
+        } else if (!scope.equals("main") && funcs.get("main").containsVar(id)) {
+            ret = (funcs.get("main").getVar(id)) * 4;
         } else {
             ret = Integer.MAX_VALUE;
             Error("GetVarAddress: Var does not exist: " + scn.Id2String(id));
@@ -845,5 +922,24 @@ public class Compiler {
             ret[i] = buf.get(i);
         }
         return ret;
+    }
+
+    private static void Push(Result x) {
+        if (!x.isReg()) {
+            load(x);
+        }
+        PutF1(STW, x.regno, SP, 0);
+        PutF1(ADDI, SP, SP, -4);
+    }
+
+    private static void Pop(Result x) {
+        PutF1(ADDI, SP, SP, 4);
+        if (x.isReg()) {
+            PutF1(LDW, x.regno, SP, 0);
+        }
+    }
+
+    private static void Pop() {
+        PutF1(ADDI, SP, SP, 4);
     }
 }

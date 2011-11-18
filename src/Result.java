@@ -10,6 +10,7 @@ public class Result {
     public static final int Register = 3;
     public static final int Conditon = 4;
     public static final int Parameter = 5;
+    public static final int GlobalVar = 6;
 
     int value;//Const
     int address;//Var
@@ -31,6 +32,9 @@ public class Result {
     public boolean isParam(){
         return (kind == Parameter?true:false);
     }
+    public boolean isGlobalVar(){
+        return (kind == GlobalVar?true:false);
+    }
 
     public void setConst(){
         kind = Constant;
@@ -46,5 +50,9 @@ public class Result {
     }
     public void setParam(){
         kind = Parameter;
+    }
+
+    public void setGlobalVar(){
+        kind = GlobalVar;
     }
 }
