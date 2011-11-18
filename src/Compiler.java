@@ -215,19 +215,21 @@ public class Compiler {
         //TODO formalParam = “(“ [ident { “,” ident }] “)”.
         if (scn.sym == Scanner.openparenToken) {
             scn.Next();
-            CheckFor(Scanner.identToken); // ident
-            AddParam(scn.id);
-            scn.Next();
-
-            while (scn.sym == Scanner.commaToken) {// ","
-                scn.Next();
-
-                CheckFor(Scanner.identToken); // ident
+            if (scn.sym == Scanner.closeparenToken) {
+            } else if (scn.sym == Scanner.identToken) {// ident
                 AddParam(scn.id);
                 scn.Next();
-            }
 
-            CheckFor(Scanner.closeparenToken);
+                while (scn.sym == Scanner.commaToken) {// ","
+                    scn.Next();
+
+                    CheckFor(Scanner.identToken); // ident
+                    AddParam(scn.id);
+                    scn.Next();
+                }
+
+                CheckFor(Scanner.closeparenToken);
+            }
             scn.Next();
         }
 
@@ -261,8 +263,10 @@ public class Compiler {
         if (!isFunc) {
             //Load RA
             PutF1(LDW, RA, FP, (paramNum + 2) * 4);
+            //Pop vars
+            PutF1(ADDI, SP, FP, 0);
             //Load prev FP
-            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
+//            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
             //Go To RA
             PutF1(RET, 0, 0, RA);
         }
@@ -318,8 +322,6 @@ public class Compiler {
 
             //Load RA
             PutF1(LDW, RA, FP, (paramNum + 2) * 4);
-            //Load prev FP
-            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
             //Go To RA
             PutF1(RET, 0, 0, RA);
 
@@ -399,7 +401,7 @@ public class Compiler {
         //funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ].
         boolean rtn = true;
 
-        Result x;
+        Result x = new Result();
 
         ArrayList<Result> funcArgs = new ArrayList<Result>();
 
@@ -408,6 +410,13 @@ public class Compiler {
         scn.Next();
         CheckFor(Scanner.identToken); // ident
         int func = scn.id;
+        String funcName = scn.Id2String(func);
+        int paramNum = 0 ;
+        if (funcs.containsKey(funcName)){
+            paramNum = funcs.get(funcName).getParamNum();
+        } else if ( funcName.equals("outputnum")){
+            paramNum = 1;
+        }
 
         scn.Next();
         if (scn.sym == Scanner.openparenToken) { // "("
@@ -415,12 +424,24 @@ public class Compiler {
 
             if (!(scn.sym == Scanner.closeparenToken)) { // ")"
 
+                int i = 0;
+
                 funcArgs.add(expression());
+
+                //Store prev result
+                Push(funcArgs.get(i));
+                Deallocate(funcArgs.get(i));
 
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
 
                     funcArgs.add(expression());
+                    i++;
+
+                    //Store prev result
+                    Push(funcArgs.get(i));
+                    Deallocate(funcArgs.get(i));
+
                 }
             }
 
@@ -430,6 +451,13 @@ public class Compiler {
 
         if (!rtn) {
             Error("funcCall");
+        }
+
+        for (int i = 0; i < paramNum; i++) //Get prev result
+        {
+            funcArgs.get(i).regno = AllocateReg();
+            funcArgs.get(i).setReg();
+            Pop(funcArgs.get(i));
         }
 
         x = execFunc(func, funcArgs);
@@ -449,7 +477,7 @@ public class Compiler {
         if (funcs.containsKey(funcName)) {
             //TODO access functions
 
-            int parmNum = funcs.get(funcName).getParamNum();
+            int paramNum = funcs.get(funcName).getParamNum();
             int varNum = funcs.get(funcName).getVarNum();
 
             boolean isFunc = funcs.get(funcName).isFunc();
@@ -475,8 +503,8 @@ public class Compiler {
 
 
             //Put Param, reverse order
-            if (parmNum > 0) {
-                for (int i = parmNum - 1; i >= 0; i--) {
+            if (paramNum > 0) {
+                for (int i = 0; i < paramNum; i++) {
                     //if const, then load to register
                     load(funcArgs.get(i));
                     //load word to mem
@@ -510,6 +538,9 @@ public class Compiler {
             //pop vars
             PutF1(ADDI, SP, FP, 0);
 
+            //Load prev FP
+            PutF1(LDW, FP, FP, (paramNum + 3) * 4);
+
             //IF func get return val
             if (isFunc) {
                 //put ret val in x
@@ -523,8 +554,8 @@ public class Compiler {
 
             //Pop Parms
 
-            if (parmNum > 0) {
-                for (int i = parmNum - 1; i >= 0; i--) {
+            if (paramNum > 0) {
+                for (int i = paramNum - 1; i >= 0; i--) {
                     Pop();
                 }
             }
@@ -639,8 +670,19 @@ public class Compiler {
                 op = scn.sym;
                 scn.Next();
 
+                //Store prev result
+                Push(x);
+                Deallocate(x);
+
                 y = expression();
+
+                //Get prev result
+                x.regno = AllocateReg();
+                x.setReg();
+                Pop(x);
+
                 Compute(CMP, x, y);
+
 
                 x.setCond();
                 x.cond = op;
