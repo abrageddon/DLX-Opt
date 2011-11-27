@@ -87,7 +87,7 @@ public class Compiler {
         funcs.put("main", new Function(0, false));//main doesnt return a value
 
         pc = 0;
-        buf = new ArrayList<Integer>();//FIXME size of memory buffer
+        buf = new ArrayList<Integer>();// size of memory buffer
 
         computation();//compile program
     }
@@ -97,8 +97,7 @@ public class Compiler {
     }
 
     private static boolean computation() {
-        //computation = “main” [ varDecl ] “{” statSequence “}” “.” .
-        //TODO computation = “main” [ varDecl ] { funcDecl } “{” statSequence “}” “.” .
+        //computation = “main” [ varDecl ] { funcDecl } “{” statSequence “}” “.” .
         boolean rtn = true;
 
         for (int i = 0; i < R.length; i++) {
@@ -162,6 +161,9 @@ public class Compiler {
 
     private static boolean varDecl() {
         //varDecl = “var” ident { “,” ident } “;” .
+        //TODO varDecl = typeDecl ident { “,” ident } “;” .
+        //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
+
         boolean rtn = true;
 
         CheckFor(Scanner.varToken); // var
@@ -189,8 +191,7 @@ public class Compiler {
     }
 
     private static boolean funcDecl() {
-
-        //TODO funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” .
+        // funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” .
         boolean rtn = true;
 
         boolean isFunc = false;
@@ -212,7 +213,7 @@ public class Compiler {
         scn.Next();
 
 
-        //TODO formalParam = “(“ [ident { “,” ident }] “)”.
+        // formalParam = “(“ [ident { “,” ident }] “)”.
         if (scn.sym == Scanner.openparenToken) {
             scn.Next();
             if (scn.sym == Scanner.closeparenToken) {
@@ -237,7 +238,7 @@ public class Compiler {
         scn.Next();
 
 
-        //TODO funcBody = { varDecl } “{” [ statSequence ] “}”.
+        // funcBody = { varDecl } “{” [ statSequence ] “}”.
         if (scn.sym == Scanner.varToken) { // var
 
             rtn = rtn & varDecl();
@@ -298,16 +299,15 @@ public class Compiler {
     }
 
     private static Result statement() {
-        //statement = assignment | funcCall | ifStatement | whileStatement .
-        //TODO returnStatement : return [expr]
+        //statement = assignment | funcCall | ifStatement | whileStatement | returnStatement.
 
         Result x = new Result();
 
         if (scn.sym == Scanner.returnToken) {
             scn.Next();
-            //TODO return value
+
             int paramNum = funcs.get(scope).getParamNum();
-            int varNum = funcs.get(scope).getVarNum();
+//            int varNum = funcs.get(scope).getVarNum();
             boolean isFunc = funcs.get(scope).isFunc();
 
             if (isFunc) {
@@ -475,7 +475,7 @@ public class Compiler {
         Result x = new Result();
 
         if (funcs.containsKey(funcName)) {
-            //TODO access functions
+            // access functions
 
             int paramNum = funcs.get(funcName).getParamNum();
             int varNum = funcs.get(funcName).getVarNum();
@@ -492,12 +492,7 @@ public class Compiler {
 
 
             //Put RA
-//            Result returnAddress = new Result();
-//            returnAddress.setConst();
-//            //TODO AUTO GENERATE
-//            returnAddress.value = (pc + 4 + 2*parmNum + 2 *varNum) * 4;//FIXME
             Push(new Result());
-//            Deallocate(returnAddress);
 
 
 
@@ -589,6 +584,8 @@ public class Compiler {
 
     private static Result assignment() {
         //assignment = ident “<-” expression.
+        //TODO assignment = ident { “[“ expression “]” } “<-” expression.
+
         Result x = new Result();
 
         CheckFor(Scanner.identToken); // ident
@@ -725,6 +722,8 @@ public class Compiler {
 
     private static Result factor() {
         //factor = ident | number | “(“ expression “)” | funcCall .
+        //TODO factor = ident { “[“ expression “]” } | number | “(“ expression “)” | funcCall .
+
         Result x = new Result();
         boolean rtn = true;
 
