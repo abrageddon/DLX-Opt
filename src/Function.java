@@ -11,6 +11,7 @@ public class Function {
     //var name to local offset in function
 //    private HashMap<String, Integer> paramters;
     private ArrayList<Integer> vars;
+    private ArrayList<Integer> arrays;
     //function returns some value
     private boolean doesRet;
 
@@ -20,6 +21,7 @@ public class Function {
 //        paramters = new HashMap<String, Integer>();
         vars = new ArrayList<Integer>();
         param = new ArrayList<Integer>();
+        arrays = new ArrayList<Integer>();
 
     }
 
@@ -37,9 +39,19 @@ public class Function {
         return vars.contains(id);
     }
 
+    boolean containsArray(int id) {
+        return arrays.contains(id);
+    }
+
     void addVar(int id) {
         if (!vars.contains(id)) {
             vars.add(id);
+        }
+    }
+
+    void addArray(int id) {
+        if (!arrays.contains(id)) {
+            arrays.add(id);
         }
     }
 
@@ -49,6 +61,10 @@ public class Function {
 
     int getVar(int id) {
         return vars.indexOf(id);
+    }
+
+    int getArray(int id) {
+        return arrays.indexOf(id);
     }
 
     boolean containsParam(int id) {
@@ -61,6 +77,10 @@ public class Function {
 
     int getVarNum() {
         return vars.size();
+    }
+
+    int getArrayNum() {
+        return arrays.size();
     }
 
     int getStartLine() {

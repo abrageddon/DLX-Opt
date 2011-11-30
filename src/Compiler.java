@@ -162,17 +162,27 @@ public class Compiler {
     private static boolean varDecl() {
         //varDecl = “var” ident { “,” ident } “;” .
         //TODO varDecl = typeDecl ident { “,” ident } “;” .
-        //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
 
         boolean rtn = true;
 
-        CheckFor(Scanner.varToken); // var
 
-        scn.Next();
-        CheckFor(Scanner.identToken); // ident
-        AddVar(scn.id);
 
-        scn.Next();
+        //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
+        if (scn.sym == Scanner.varToken) { // var
+            scn.Next();
+            CheckFor(Scanner.identToken); // ident
+            AddVar(scn.id);
+
+            scn.Next();
+        } else if (scn.sym == Scanner.arrToken) {// array
+            scn.Next();
+            CheckFor(Scanner.identToken); // ident
+            AddArray(scn.id);
+
+            scn.Next();
+        }
+
+
         while (scn.sym == Scanner.commaToken) {// ","
             scn.Next();
             CheckFor(Scanner.identToken); // ident
@@ -411,10 +421,10 @@ public class Compiler {
         CheckFor(Scanner.identToken); // ident
         int func = scn.id;
         String funcName = scn.Id2String(func);
-        int paramNum = 0 ;
-        if (funcs.containsKey(funcName)){
+        int paramNum = 0;
+        if (funcs.containsKey(funcName)) {
             paramNum = funcs.get(funcName).getParamNum();
-        } else if ( funcName.equals("outputnum")){
+        } else if (funcName.equals("outputnum")) {
             paramNum = 1;
         }
 
@@ -951,6 +961,10 @@ public class Compiler {
 
     private static void AddVar(int id) {
         funcs.get(scope).addVar(id);
+    }
+
+    private static void AddArray(int id) {
+        funcs.get(scope).addArray(id);
     }
 
     private static void AddParam(int id) {
