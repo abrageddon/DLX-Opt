@@ -74,6 +74,7 @@ public class Compiler {
     static final int WRL = 53;
     static final int ERR = 63; // error opcode which is insertered by loader
 
+
     public Compiler(String filename) {
         if (filename != null && filename.isEmpty()) {
             Error("Usage: java Compiler <file>");
@@ -98,6 +99,7 @@ public class Compiler {
 
     private static boolean computation() {
         //computation = “main” [ varDecl ] { funcDecl } “{” statSequence “}” “.” .
+        //TODO computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.” .
         boolean rtn = true;
 
         for (int i = 0; i < R.length; i++) {
@@ -116,12 +118,17 @@ public class Compiler {
         scope = "main";
         scn.Next();
 
-        if (scn.sym == Scanner.varToken) {// "var" [VarDecl]
+        while (scn.sym == Scanner.varToken || scn.sym == Scanner.arrToken) {// { varDecl }
             rtn = rtn & varDecl();
         }
 
+        //TODO make one output
         //Setup Global Variables
         for (int i = 0; i < funcs.get(scope).getVarNum(); i++) {
+            Push(new Result());
+        }
+        //Setup Arrays
+        for (int i = 0; i < funcs.get(scope).getArraysSize(); i++) {
             Push(new Result());
         }
 
@@ -170,25 +177,48 @@ public class Compiler {
         //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
         if (scn.sym == Scanner.varToken) { // var
             scn.Next();
+
             CheckFor(Scanner.identToken); // ident
             AddVar(scn.id);
-
             scn.Next();
+
+
+            //TODO copy down
+            while (scn.sym == Scanner.commaToken) {// ","
+                scn.Next();
+
+                CheckFor(Scanner.identToken); // ident
+                AddVar(scn.id);
+                scn.Next();
+            }
+
         } else if (scn.sym == Scanner.arrToken) {// array
             scn.Next();
-            CheckFor(Scanner.identToken); // ident
-            AddArray(scn.id);
 
+            ArrayList<Integer> arrayDim = new ArrayList<Integer>();
             scn.Next();
-        }
+
+            do {
+                CheckFor(Scanner.openbracketToken); // [
+                scn.Next();
+
+                CheckFor(Scanner.numberToken); // number
+                arrayDim.add(scn.val);//Set dimention
+                scn.Next();
+
+                CheckFor(Scanner.closebracketToken); // ]
+                scn.Next();
+            } while (scn.sym == Scanner.openbracketToken);//while more dimentions
 
 
-        while (scn.sym == Scanner.commaToken) {// ","
-            scn.Next();
-            CheckFor(Scanner.identToken); // ident
-            AddVar(scn.id);
+            while (scn.sym == Scanner.commaToken) {// ","
+                scn.Next();
 
-            scn.Next();
+                //TODO while more idents
+                CheckFor(Scanner.identToken); // ident
+                AddArray(scn.id, arrayDim);
+                scn.Next();
+            }
         }
 
         CheckFor(Scanner.semiToken);// ";"
@@ -249,10 +279,10 @@ public class Compiler {
 
 
         // funcBody = { varDecl } “{” [ statSequence ] “}”.
-        if (scn.sym == Scanner.varToken) { // var
 
+
+        while (scn.sym == Scanner.varToken || scn.sym == Scanner.arrToken) {// { varDecl }
             rtn = rtn & varDecl();
-
         }
 
         CheckFor(Scanner.beginToken);// "{"
@@ -608,6 +638,26 @@ public class Compiler {
         } else if (funcs.get("main").containsVar(scn.id)) {
             x.setGlobalVar();
             x.address = GetVarAddress(scn.id);
+        } else if (funcs.get("main").containsArray(scn.id)) {
+            x.setArray();
+            //[x]...
+            Result[] coord = new Result[funcs.get("main").getArrayDims(scn.id).length];
+            for (int i=0;i<coord.length;i++){
+                coord[i]=new Result();
+                scn.Next();
+
+                CheckFor(Scanner.openbracketToken); // [
+                scn.Next();
+
+                coord[i] = expression();//get dimetion
+                scn.Next();
+
+                CheckFor(Scanner.closebracketToken); // ]
+                scn.Next();
+
+            }
+
+            x.address = GetArrayAddress(scn.id, coord);
         }
 
         if (x.address == Integer.MAX_VALUE) {
@@ -631,6 +681,14 @@ public class Compiler {
         Deallocate(y);
 
         return x;
+    }
+
+    private static int GetArrayAddress(int id, Result[] coord) {
+        int[] maxDim = funcs.get(scope).getArrayDims(scn.id);
+        int offset = funcs.get(scope).getArrayOffset(id);
+        int address = 0 ;
+
+        return offset + address;
     }
 
     private static Result expression() {
@@ -963,8 +1021,8 @@ public class Compiler {
         funcs.get(scope).addVar(id);
     }
 
-    private static void AddArray(int id) {
-        funcs.get(scope).addArray(id);
+    private static void AddArray(int id, ArrayList<Integer> arrayDim) {
+        funcs.get(scope).addArray(id, arrayDim);
     }
 
     private static void AddParam(int id) {

@@ -1,17 +1,18 @@
 
 import java.util.ArrayList;
+import java.util.HashMap;
 //import java.util.HashMap;
 
 public class Function {
     //Setup Args Order
 
     private int startLine;
-
     private ArrayList<Integer> param;
     //var name to local offset in function
 //    private HashMap<String, Integer> paramters;
     private ArrayList<Integer> vars;
     private ArrayList<Integer> arrays;
+    private HashMap<Integer, ArrayList<Integer>> arraysDims;
     //function returns some value
     private boolean doesRet;
 
@@ -49,9 +50,10 @@ public class Function {
         }
     }
 
-    void addArray(int id) {
+    void addArray(int id, ArrayList<Integer> arrayDim) {
         if (!arrays.contains(id)) {
             arrays.add(id);
+            arraysDims.put(id, arrayDim);
         }
     }
 
@@ -85,5 +87,45 @@ public class Function {
 
     int getStartLine() {
         return startLine;
+    }
+
+    int getArraysSize() {
+        int totalSize = 0;
+
+        for (Integer id : arrays) {
+            int arraySize = 0;
+            if (arraysDims.containsKey(id)) {
+                arraySize = 1;
+                for (Integer dim : arraysDims.get(id)) {
+                    arraySize *= dim;
+                }
+            }
+            totalSize += arraySize;
+        }
+        
+        return totalSize;
+    }
+
+    int getArrayOffset(int id) {
+        int offset = 0;
+        int i=0;
+        while (arrays.get(i) != id){
+            int arraySize = 1;
+            for (int dim=0;dim<arraysDims.get(i).size();dim++){
+                arraySize *=arraysDims.get(i).get(dim);
+            }
+            offset += arraySize;
+        }
+
+        return offset;
+    }
+
+    int[] getArrayDims(int id) {
+        int[] dims = new int[arraysDims.get(id).size()];
+        for (int i=0; i<dims.length; i++){
+            dims[i]=arraysDims.get(id).get(i);
+        }
+
+        return dims;
     }
 }
