@@ -74,7 +74,6 @@ public class Compiler {
     static final int WRL = 53;
     static final int ERR = 63; // error opcode which is insertered by loader
 
-
     public Compiler(String filename) {
         if (filename != null && filename.isEmpty()) {
             Error("Usage: java Compiler <file>");
@@ -127,7 +126,7 @@ public class Compiler {
         for (int i = 0; i < funcs.get(scope).getVarNum(); i++) {
             Push(new Result());
         }
-        //Setup Arrays
+        //Setup Global Arrays
         for (int i = 0; i < funcs.get(scope).getArraysSize(); i++) {
             Push(new Result());
         }
@@ -172,8 +171,6 @@ public class Compiler {
 
         boolean rtn = true;
 
-
-
         //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
         if (scn.sym == Scanner.varToken) { // var
             scn.Next();
@@ -182,8 +179,6 @@ public class Compiler {
             AddVar(scn.id);
             scn.Next();
 
-
-            //TODO copy down
             while (scn.sym == Scanner.commaToken) {// ","
                 scn.Next();
 
@@ -196,10 +191,8 @@ public class Compiler {
             scn.Next();
 
             ArrayList<Integer> arrayDim = new ArrayList<Integer>();
-            scn.Next();
 
-            do {
-                CheckFor(Scanner.openbracketToken); // [
+            while (scn.sym == Scanner.openbracketToken) {// [
                 scn.Next();
 
                 CheckFor(Scanner.numberToken); // number
@@ -208,13 +201,16 @@ public class Compiler {
 
                 CheckFor(Scanner.closebracketToken); // ]
                 scn.Next();
-            } while (scn.sym == Scanner.openbracketToken);//while more dimentions
+            } //while more dimentions
 
+            CheckFor(Scanner.identToken); // ident
+            AddArray(scn.id, arrayDim);
+            scn.Next();
 
             while (scn.sym == Scanner.commaToken) {// ","
                 scn.Next();
 
-                //TODO while more idents
+                //while more idents
                 CheckFor(Scanner.identToken); // ident
                 AddArray(scn.id, arrayDim);
                 scn.Next();
@@ -475,6 +471,7 @@ public class Compiler {
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
 
+                    //TODO fix
                     funcArgs.add(expression());
                     i++;
 
@@ -603,9 +600,6 @@ public class Compiler {
             oldFP.regno = FP;//just below funcFP
             Pop(oldFP);
 
-
-
-
         } else if (funcName.equals("outputnum")) {
             x = funcArgs.get(0);
             if (!x.isReg()) {
@@ -632,39 +626,29 @@ public class Compiler {
         if (funcs.get(scope).containsParam(scn.id)) {
             x.setParam();
             x.address = GetParamAddress(scn.id);
+            scn.Next();
         } else if (funcs.get(scope).containsVar(scn.id)) {
             x.setVar();
             x.address = GetVarAddress(scn.id);
+            scn.Next();
         } else if (funcs.get("main").containsVar(scn.id)) {
             x.setGlobalVar();
             x.address = GetVarAddress(scn.id);
+            scn.Next();
         } else if (funcs.get("main").containsArray(scn.id)) {
-            x.setArray();
             //[x]...
-            Result[] coord = new Result[funcs.get("main").getArrayDims(scn.id).length];
-            for (int i=0;i<coord.length;i++){
-                coord[i]=new Result();
-                scn.Next();
 
-                CheckFor(Scanner.openbracketToken); // [
-                scn.Next();
+            int identID = scn.id;
+            Result[] coord = readCoord(identID);
 
-                coord[i] = expression();//get dimetion
-                scn.Next();
-
-                CheckFor(Scanner.closebracketToken); // ]
-                scn.Next();
-
-            }
-
-            x.address = GetArrayAddress(scn.id, coord);
+            x = GetArrayAddress(identID, coord);
+            x.setGlobalArray();
         }
 
         if (x.address == Integer.MAX_VALUE) {
             Error("unknown identifier: " + scn.Id2String(scn.id));
         }
 
-        scn.Next();
         CheckFor(Scanner.becomesToken); // "<-"
 
         scn.Next();
@@ -677,18 +661,90 @@ public class Compiler {
             PutF1(STW, y.regno, FP, -x.address);
         } else if (x.isGlobalVar()) {
             PutF1(STW, y.regno, GV, -x.address);
+        } else if (x.isGlobalArray()) {
+            PutF1(STX, y.regno, GV, x.regno);
         }
         Deallocate(y);
 
         return x;
     }
 
-    private static int GetArrayAddress(int id, Result[] coord) {
-        int[] maxDim = funcs.get(scope).getArrayDims(scn.id);
-        int offset = funcs.get(scope).getArrayOffset(id);
-        int address = 0 ;
+    private static Result[] readCoord(int identID) {
+        Result[] coord;
+        if (funcs.get("main").containsArray(identID)) {
+            coord = new Result[funcs.get("main").getArrayDims(identID).length];
+        } else {
+            coord = new Result[funcs.get(scope).getArrayDims(identID).length];
+        }
+        scn.Next();
+        for (int i = 0; i < coord.length; i++) {
+            coord[i] = new Result();
 
-        return offset + address;
+            CheckFor(Scanner.openbracketToken); // [
+            scn.Next();
+
+            coord[i] = expression(); //get dimetion espression
+
+            CheckFor(Scanner.closebracketToken); // ]
+            scn.Next();
+        }
+        return coord;
+    }
+
+    private static Result GetArrayAddress(int id, Result[] coord) {
+        int[] maxDim = funcs.get(scope).getArrayDims(id);
+        Result offset = new Result();
+
+        offset.setConst();
+        offset.value = funcs.get(scope).getArrayOffset(id) + (funcs.get(scope).getVarNum() * 4);
+
+        Result address = addAddress(0, maxDim, coord);
+        load(address);//add offset to this reg
+
+        //add offset to the calculated address
+        Compute(Scanner.minusToken, address, offset);
+
+        //TODO make address negative
+
+
+        return address;
+    }
+
+    private static Result addAddress(int dim, int[] maxDim, Result[] coord) {
+        if (dim >= maxDim.length) {
+            return new Result();
+        }
+
+        Result address = new Result();
+
+        if (dim == maxDim.length - 1) {//last dim
+            //TODO make neg
+            address = coord[dim];
+
+            Result neg = new Result();
+            neg.setConst();
+            neg.value = -4;
+
+            Compute(Scanner.timesToken, address, neg);
+            return address;//just use regular value
+        }
+
+
+        Result tailDataSize = new Result();
+        tailDataSize.setConst();
+        tailDataSize.value = 1;
+
+        for (int i = dim + 1; i < maxDim.length; i++) {
+            tailDataSize.value *= maxDim[i];
+        }
+
+        Result subAddress = addAddress(dim + 1, maxDim, coord);
+
+        Compute(Scanner.timesToken, address, tailDataSize);
+
+        Compute(Scanner.minusToken, address, subAddress);
+
+        return address;
     }
 
     private static Result expression() {
@@ -790,6 +846,7 @@ public class Compiler {
 
     private static Result factor() {
         //factor = ident | number | “(“ expression “)” | funcCall .
+
         //TODO factor = ident { “[“ expression “]” } | number | “(“ expression “)” | funcCall .
 
         Result x = new Result();
@@ -803,14 +860,23 @@ public class Compiler {
             if (funcs.get(scope).containsParam(scn.id)) {
                 x.setParam();
                 x.address = GetParamAddress(scn.id);
+                scn.Next();
             } else if (funcs.get(scope).containsVar(scn.id)) {
                 x.setVar();
                 x.address = GetVarAddress(scn.id);
+                scn.Next();
             } else if (funcs.get("main").containsVar(scn.id)) {
                 x.setGlobalVar();
                 x.address = GetVarAddress(scn.id);
+                scn.Next();
+            } else if (funcs.get("main").containsArray(scn.id)) {
+                //TODO get coord
+                int identID = scn.id;
+                Result[] coord = readCoord(identID);
+                x = GetArrayAddress(identID, coord);
+                x.setGlobalArray();
             }
-            scn.Next();
+
         } else if (scn.sym == Scanner.openparenToken) { // "("
             scn.Next();
 
@@ -848,9 +914,10 @@ public class Compiler {
                     break;
             }
         } else {
+            //TODO load array vals properly
             load(x);
             if (!x.isReg() && x.regno == 0) {
-                x.regno = AllocateReg();//TODO if regno zero?
+                x.regno = AllocateReg();//if regno zero?
                 PutF1(ADD, x.regno, 0, 0);
             }
             if (y.isConst()) {
@@ -891,6 +958,12 @@ public class Compiler {
         } else if (x.isGlobalVar()) {
             x.regno = AllocateReg();
             PutF1(LDW, x.regno, GV, -x.address);
+            x.setReg();
+        } else if (x.isGlobalArray()) {
+            x.regno = AllocateReg();
+            Result array = new Result();
+            //TODO calculate array to reg
+            PutF1(LDX, x.regno, GV, array.regno);
             x.setReg();
         } else if (x.isParam()) {
             x.regno = AllocateReg();

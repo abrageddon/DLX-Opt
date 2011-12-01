@@ -23,6 +23,7 @@ public class Function {
         vars = new ArrayList<Integer>();
         param = new ArrayList<Integer>();
         arrays = new ArrayList<Integer>();
+        arraysDims = new HashMap<Integer, ArrayList<Integer>>();
 
     }
 
@@ -117,11 +118,13 @@ public class Function {
             offset += arraySize;
         }
 
-        return offset;
+        return offset * 4;
     }
 
     int[] getArrayDims(int id) {
-        int[] dims = new int[arraysDims.get(id).size()];
+        ArrayList<Integer> aDim = arraysDims.get(id);
+        int arraySize = aDim.size();
+        int[] dims = new int[arraySize];
         for (int i=0; i<dims.length; i++){
             dims[i]=arraysDims.get(id).get(i);
         }
