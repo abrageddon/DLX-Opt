@@ -516,6 +516,7 @@ public class Compiler {
 
             int paramNum = funcs.get(funcName).getParamNum();
             int varNum = funcs.get(funcName).getVarNum();
+            int arraySize = funcs.get(funcName).getArraysSize();
 
             boolean isFunc = funcs.get(funcName).isFunc();
 
@@ -558,6 +559,12 @@ public class Compiler {
             //Put vars
             if (varNum > 0) {
                 for (int i = 0; i < varNum; i++) {
+                    Push(new Result());
+                }
+            }
+
+            if (arraySize > 0) {
+                for (int i = 0; i < arraySize; i++) {
                     Push(new Result());
                 }
             }
@@ -631,6 +638,14 @@ public class Compiler {
             x.setVar();
             x.address = GetVarAddress(scn.id);
             scn.Next();
+        } else if (funcs.get(scope).containsArray(scn.id)) {
+            //[x]...
+
+            int identID = scn.id;
+            Result[] coord = readCoord(identID);
+
+            x = GetArrayAddress(identID, coord);
+            x.setArray();
         } else if (funcs.get("main").containsVar(scn.id)) {
             x.setGlobalVar();
             x.address = GetVarAddress(scn.id);
@@ -661,6 +676,8 @@ public class Compiler {
             PutF1(STW, y.regno, FP, -x.address);
         } else if (x.isGlobalVar()) {
             PutF1(STW, y.regno, GV, -x.address);
+        } else if (x.isArray()) {
+            PutF1(STX, y.regno, FP, x.regno);
         } else if (x.isGlobalArray()) {
             PutF1(STX, y.regno, GV, x.regno);
         }
@@ -692,19 +709,29 @@ public class Compiler {
     }
 
     private static Result GetArrayAddress(int id, Result[] coord) {
-        int[] maxDim = funcs.get(scope).getArrayDims(id);
+        int[] maxDim;
+        String arrayScope = scope;
+        if (!funcs.get(arrayScope).containsArray(id)) {
+            arrayScope = "main";
+        }
+        maxDim = funcs.get(arrayScope).getArrayDims(id);
         Result offset = new Result();
 
         offset.setConst();
-        offset.value = funcs.get(scope).getArrayOffset(id) + (funcs.get(scope).getVarNum() * 4);
+        offset.value = (funcs.get(arrayScope).getArrayOffset(id) + funcs.get(arrayScope).getVarNum()) * 4;
 
         Result address = addAddress(0, maxDim, coord);
         load(address);//add offset to this reg
 
+        //Negate address
+        Result neg = new Result();
+        neg.setConst();
+        neg.value = -4;
+
+        Compute(Scanner.timesToken, address, neg);
         //add offset to the calculated address
         Compute(Scanner.minusToken, address, offset);
 
-        //TODO make address negative
 
 
         return address;
@@ -721,14 +748,10 @@ public class Compiler {
             //TODO make neg
             address = coord[dim];
 
-            Result neg = new Result();
-            neg.setConst();
-            neg.value = -4;
-
-            Compute(Scanner.timesToken, address, neg);
             return address;//just use regular value
         }
 
+        address = coord[dim];
 
         Result tailDataSize = new Result();
         tailDataSize.setConst();
@@ -740,12 +763,17 @@ public class Compiler {
 
         Result subAddress = addAddress(dim + 1, maxDim, coord);
 
+//        Result neg = new Result();
+//        neg.setConst();
+//        neg.value = -4;
+
+//        Compute(Scanner.timesToken, tailDataSize, neg);
+
         Compute(Scanner.timesToken, address, tailDataSize);
 
-        Compute(Scanner.minusToken, address, subAddress);
+        Compute(Scanner.plusToken, address, subAddress);
 
         return address;
->>>>>>> 70f24fa74f9f78d56fe407129276a91e37c4a5a0
     }
 
     private static Result expression() {
@@ -866,6 +894,12 @@ public class Compiler {
                 x.setVar();
                 x.address = GetVarAddress(scn.id);
                 scn.Next();
+            } else if (funcs.get(scope).containsArray(scn.id)) {
+                //TODO get coord
+                int identID = scn.id;
+                Result[] coord = readCoord(identID);
+                x = GetArrayAddress(identID, coord);
+                x.setArray();
             } else if (funcs.get("main").containsVar(scn.id)) {
                 x.setGlobalVar();
                 x.address = GetVarAddress(scn.id);
@@ -960,23 +994,27 @@ public class Compiler {
             x.regno = AllocateReg();
             PutF1(LDW, x.regno, GV, -x.address);
             x.setReg();
-        } else if (x.isGlobalArray()) {
-            x.regno = AllocateReg();
-            Result array = new Result();
+        } else if (x.isArray()) {
             //TODO calculate array to reg
-            PutF1(LDX, x.regno, GV, array.regno);
+
+            PutF1(LDX, x.regno, FP, x.regno);
+            x.setReg();
+        } else if (x.isGlobalArray()) {
+            //TODO calculate array to reg
+
+            PutF1(LDX, x.regno, GV, x.regno);
             x.setReg();
         } else if (x.isParam()) {
             x.regno = AllocateReg();
             PutF1(LDW, x.regno, FP, (8 + x.address));
             x.setReg();
         } else if (x.isConst()) {
-            if (x.value == 0) {
-                x.regno = 0;
-            } else {
-                x.regno = AllocateReg();
-                PutF1(ADDI, x.regno, 0, x.value);
-            }
+//            if (x.value == 0) {
+//                x.regno = 0;
+//            } else {
+            x.regno = AllocateReg();
+            PutF1(ADDI, x.regno, 0, x.value);
+//            }
             x.setReg();
         }
     }

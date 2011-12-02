@@ -112,10 +112,11 @@ public class Function {
         int i=0;
         while (arrays.get(i) != id){
             int arraySize = 1;
-            for (int dim=0;dim<arraysDims.get(i).size();dim++){
-                arraySize *=arraysDims.get(i).get(dim);
+            for (int dim=0;dim<arraysDims.get(id).size();dim++){
+                arraySize *=arraysDims.get(id).get(dim);
             }
             offset += arraySize;
+            i++;
         }
 
         return offset * 4;

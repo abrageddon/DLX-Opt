@@ -24,6 +24,7 @@ public class Result {
     int address;//Var
     int regno;//Reg
     int cond, fixuplocation;//Cond
+//    int addressReg;
 
     public boolean isConst(){
         return (kind == Constant?true:false);
