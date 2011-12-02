@@ -3,6 +3,12 @@
  * @author Steven Neisius
  */
 public class Result {
+
+    public Result() {
+        //Default = const 0 register
+        this.kind = Register;
+        this.regno = 0;
+    }
     int kind;//Const, Var, Reg, Cond
 
     public static final int Constant = 1;
@@ -11,7 +17,8 @@ public class Result {
     public static final int Conditon = 4;
     public static final int Parameter = 5;
     public static final int GlobalVar = 6;
-    public static final int Array = 6;
+    public static final int Array = 7;
+    public static final int GlobalArray = 8;
 
     int value;//Const
     int address;//Var
@@ -39,6 +46,9 @@ public class Result {
     public boolean isArray(){
         return (kind == Array?true:false);
     }
+    public boolean isGlobalArray(){
+        return (kind == GlobalArray?true:false);
+    }
 
     public void setConst(){
         kind = Constant;
@@ -57,6 +67,9 @@ public class Result {
     }
     public void setArray(){
         kind = Array;
+    }
+    public void setGlobalArray(){
+        kind = GlobalArray;
     }
 
     public void setGlobalVar(){
