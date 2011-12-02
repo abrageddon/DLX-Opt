@@ -688,6 +688,8 @@ public class Compiler {
         int offset = funcs.get(scope).getArrayOffset(id);
         int address = 0 ;
 
+        //TODO get address
+
         return offset + address;
     }
 
