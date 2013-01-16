@@ -240,6 +240,6 @@ compare: preconf xcompare xvcg install
 
 stamp-config: config
 	/bin/sh config
-	/usr/bin/touch stamp-config
+	/bin/touch stamp-config
 
 
