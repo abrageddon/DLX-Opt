@@ -1,0 +1,15 @@
+(
+{
+(
+{
+var
+ident:nested
+==
+number:44
+;
+<-
+}
+)
+}
+)
+<EOF>

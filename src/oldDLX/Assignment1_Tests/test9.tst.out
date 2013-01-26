@@ -1,0 +1,16 @@
+var
+ident:ident
+<
+-
+number:4
+;
+var
+ident:ident2
+<=
+-
+number:5
+;
+var
+ident:ident34543tendi
+==
+SCAN_ERROR

@@ -1,0 +1,15 @@
+var
+ident:digit
+;
+var
+ident:letter
+;
+var
+ident:relop
+;
+ident:digit
+<-
+ident:expression
++
+ident:statement
+SCAN_ERROR

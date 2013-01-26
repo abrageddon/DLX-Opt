@@ -1,0 +1,12 @@
+ident:plus
+ident:minus
+ident:add
+ident:times
+ident:division
++
+-
+/
+*
+*
+*
+<EOF>

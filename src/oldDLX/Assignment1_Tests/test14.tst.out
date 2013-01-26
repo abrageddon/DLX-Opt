@@ -1,0 +1,9 @@
+fi
+ident:foo
+(
+)
+else
+if
+ident:a
+-
+SCAN_ERROR
