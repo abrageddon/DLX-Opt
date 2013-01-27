@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.junit.Test;
 
 import front.Parser;
+import front.Parser.ParserException;
+import front.Scanner.ScannerException;
 
 public class ParserTest {
 
@@ -17,8 +19,13 @@ public class ParserTest {
 		for (String testFile : testFiles) {
 
 			Parser parser = new Parser(testFilesFolder + "/" + testFile);
-			parser.parse();
-//			scanner.close();
+			try {
+				parser.parse();
+			} catch (ParserException | ScannerException e) {
+				e.printStackTrace();
+			} finally {
+				parser.terminate();
+			}
 		}
 		
 	}

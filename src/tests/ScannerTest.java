@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import org.junit.Test;
 
 import front.Scanner;
+import front.Scanner.ScannerException;
 import front.Tokens;
 
 public class ScannerTest {
@@ -18,7 +19,7 @@ public class ScannerTest {
 		String[] testFiles = TestUtils.listFiles(testFilesFolder, "tst");
 		
 		for (String testFile : testFiles) {
-			// init source file and scanner
+			// init output file and scanner
 			PrintStream out = null;
 			try {
 				out = new PrintStream(
@@ -30,20 +31,38 @@ public class ScannerTest {
 			scanner.open(testFilesFolder + "/" + testFile);
 
 			// scan and print
-			Tokens t = scanner.getNextToken();
-			while (t != Tokens.EOF && t != Tokens.SCAN_ERROR) {
-				if (t == Tokens.NUMBER || t == Tokens.IDENT) {
-					out.println(t.lexeme + ":" + scanner.getCurrentLexeme());
-				} else {
-					out.println(t.lexeme);
-				}
-				t = scanner.getNextToken();
+			try {
+				do {
+					scanner.next();
+					if (scanner.currentToken == Tokens.NUMBER ||
+							scanner.currentToken == Tokens.IDENT) {
+						out.println(scanner.currentToken.lexeme + ":" +
+							scanner.currentLexeme);
+					} else {
+						out.println(scanner.currentToken.lexeme);
+					}
+					
+				} while (scanner.currentToken != Tokens.EOF);
+//				
+//				scanner.next();
+//				while (scanner.currentToken != Tokens.EOF) {
+//					if (scanner.currentToken == Tokens.NUMBER ||
+//							scanner.currentToken == Tokens.IDENT) {
+//						out.println(scanner.currentToken.lexeme + ":" +
+//							scanner.currentLexeme);
+//					} else {
+//						out.println(scanner.currentToken.lexeme);
+//					}
+//					scanner.next();
+//				}
+//				out.println(scanner.currentToken.lexeme);
+			} catch (ScannerException e) {
+				e.printStackTrace();
+			} finally {
+				// close output file and scanner
+				out.close();
+				scanner.close();
 			}
-			out.println(t.lexeme);
-
-			// close source file and scanner
-			out.close();
-			scanner.close();
 		}
 	}
 

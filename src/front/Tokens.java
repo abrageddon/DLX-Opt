@@ -44,7 +44,7 @@ public enum Tokens {
 	IDENT("ident"),
 	NUMBER("number"),
 
-	SCAN_ERROR("SCAN_ERROR"),
+//	SCAN_ERROR("SCAN_ERROR"),
 
 	EOF("<EOF>");
 	
@@ -53,4 +53,5 @@ public enum Tokens {
 	Tokens(String lexeme) {
 		this.lexeme = lexeme;
 	}
+		
 }

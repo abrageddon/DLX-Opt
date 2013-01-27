@@ -1,5 +1,6 @@
 package front;
 
+import front.Scanner.ScannerException;
 import front.symbolTable.FunctionSymbol;
 import front.symbolTable.ParamSymbol;
 import front.symbolTable.Symbol;
@@ -12,10 +13,9 @@ import front.symbolTable.VarType;
 
 public class Parser {
 
-	private Scanner scanner;
+	public Scanner scanner;
 	private SymbolTable symTable;
 	private String sourceFile;
-//	public Tokens sym; // Stores the current input from getSym()
 	
 	public Parser(String srcFile) {
 		symTable = new SymbolTable();
@@ -26,25 +26,33 @@ public class Parser {
 		sourceFile = srcFile;
 	}
 	
-	public void parse() {
+	public void parse() throws ParserException, ScannerException {
 		scanner.open(sourceFile);
 		scanner.next(); // scan the input symbol
 		computation();
 	}
-		
-	public void printError(String str) {
-		System.err.println("Parsing: " + sourceFile + " Error: " + str);
-		System.err.println("Current token: " + scanner.currentToken + 
-						   " Current lexemme: " + scanner.currentLexeme);
-		new Exception().printStackTrace();
-		System.exit(0);		
+
+	public void terminate() {
+		scanner.close();
 	}
+
+//	public void printError(String str) {
+//		System.err.println("Parsing: " + sourceFile + "\n" +
+//							"\t Error: " + str + "\n" +
+//							"\t Current token: " + scanner.currentToken + "\n" +
+//				   			"\t Current lexemme: " + scanner.currentLexeme + "\n" +
+//				   			"\t On line: " + scanner.getLineNumber());
+//
+//		new Exception().printStackTrace();
+//		System.exit(0);		
+//	}
 	
 	/**
 	 * Recursive descent parser modular design using accept/expect functions.
+	 * @throws ScannerException 
 	 * @throws IOException 
 	 */
-	private boolean accept(Tokens t) {
+	private boolean accept(Tokens t) throws ScannerException {
 		if (scanner.currentToken == t) {
 			scanner.next();
 			return true;
@@ -52,12 +60,9 @@ public class Parser {
 		return false;
 	}
 
-//	private boolean expect(Tokens t) throws ParserException {
-	private boolean expect(Tokens t) {
-		if (accept(t))
-			return true;
-		printError("Expected " + t.lexeme);
-		return false;
+	private void expect(Tokens t) throws ParserException, ScannerException {
+		if (!accept(t))
+			throw new ParserException("Expected " + t.lexeme);
 	}
 
 	private boolean peek(Tokens t) {
@@ -67,16 +72,14 @@ public class Parser {
 		return false;
 	}
 
-	private boolean assume(Tokens t) {
-		if (peek(t))
-			return true;
-		printError("Expected " + t.lexeme);
-		return false;
+	private void assume(Tokens t) throws ParserException {
+		if (!peek(t))
+			throw new ParserException("Expected " + t.lexeme);
 	}
 
 	
 	// computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.”
-	public void computation() {
+	public void computation() throws ParserException, ScannerException {
 		expect(Tokens.MAIN);
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
@@ -93,7 +96,7 @@ public class Parser {
 	}
 	
 	// funcBody = { varDecl } “{” [ statSequence ] “}”
-	private void funcBody() {
+	private void funcBody() throws ParserException, ScannerException {
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
@@ -105,7 +108,7 @@ public class Parser {
 	}
 	
 	// formalParam = “(“ [ident { “,” ident }] “)”
-	private void formalParam() {
+	private void formalParam() throws ParserException, ScannerException {
 		expect(Tokens.L_PAREN);
 		if (peek(Tokens.IDENT)) {
 			String ident = ident();
@@ -119,7 +122,7 @@ public class Parser {
 	}
 	
 	// funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” 
-	private void funcDecl() {
+	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
 			String ident = ident();
 			insertSymbol(new FunctionSymbol(ident)); // TODO add params to function
@@ -132,12 +135,12 @@ public class Parser {
 			symTable.decreaseScope();
 			expect(Tokens.SEMI_COLON);
 		} else {
-			printError("funcDecl parsing error");
+			throw new ParserException("funcDecl parsing error");
 		}
 	}
 	
 	// varDecl = typeDecl ident { “,” ident } “;”
-	private void varDecl() {
+	private void varDecl() throws ParserException, ScannerException {
 		Type type = typeDecl();
 		String ident = ident();
 		insertSymbol(new VarSymbol(ident, type));
@@ -149,7 +152,7 @@ public class Parser {
 	}
 
 	// typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }
-	private Type typeDecl() {
+	private Type typeDecl() throws ParserException, ScannerException {
 //		String typeStr = null;
 		if ( accept(Tokens.ARRAY)) {
 			ArrayType type = new ArrayType();
@@ -180,7 +183,7 @@ public class Parser {
 	}
 
 	// statSequence = statement { “;” statement }
-	private void statSequence() {
+	private void statSequence() throws ParserException, ScannerException {
 		statement();
 		while (accept(Tokens.SEMI_COLON)) {
 			statement();
@@ -188,7 +191,7 @@ public class Parser {
 	}
 	
 	// statement = assignment | funcCall | ifStatement | whileStatement | returnStatement
-	private void statement() {
+	private void statement() throws ParserException, ScannerException {
 		if (currentIsFirstOf(NonTerminals.ASSIGNMENT)) {
 			assignment();
 		} else if (currentIsFirstOf(NonTerminals.FUNC_CALL)) {
@@ -200,12 +203,12 @@ public class Parser {
 		} else if (currentIsFirstOf(NonTerminals.RETURN_STATEMENT)) {
 			returnStatement();
 		} else {
-			printError("Statement parsing error");
+			throw new ParserException("Statement parsing error");
 		}
 	}
 
 	// returnStatement = “return” [ expression ] 
-	private void returnStatement() {
+	private void returnStatement() throws ParserException, ScannerException {
 		expect(Tokens.RETURN);
 		if(currentIsFirstOf(NonTerminals.EXPRESSION)) {
 			expression();
@@ -213,7 +216,7 @@ public class Parser {
 	}
 
 	// whileStatement = “while” relation “do” statSequence “od”
-	private void whileStatement() {
+	private void whileStatement() throws ParserException, ScannerException {
 		expect(Tokens.WHILE);
 		relation();
 		expect(Tokens.DO);
@@ -222,7 +225,7 @@ public class Parser {
 	}
 
 	// ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”
-	private void ifStatement() {
+	private void ifStatement() throws ParserException, ScannerException {
 		expect(Tokens.IF);
 		relation();
 		expect(Tokens.THEN);
@@ -234,7 +237,7 @@ public class Parser {
 	}
 
 	// funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ]
-	private void funcCall() {
+	private void funcCall() throws ParserException, ScannerException {
 		// TODO check if function is defined; check number of parameters
 		expect(Tokens.CALL);
 		String ident = ident();
@@ -251,7 +254,7 @@ public class Parser {
 	}
 	
 	// assignment = “let” designator “<-” expression
-	private void assignment() {
+	private void assignment() throws ParserException, ScannerException {
 		expect(Tokens.LET);
 		designator();
 		expect(Tokens.ASSIGN);
@@ -259,19 +262,19 @@ public class Parser {
 	}
 	
 	// relation = expression relOp expression
-	private void relation() {
+	private void relation() throws ParserException, ScannerException {
 		expression();
 		if (accept(Tokens.EQUAL) || accept(Tokens.NOT_EQUAL) ||
 				accept(Tokens.LESS_THAN) || accept(Tokens.LESS_THAN_EQ) ||
 				accept(Tokens.GRT_THAN) || accept(Tokens.GRT_THAN_EQ)) {
 			expression();
 		} else {
-			printError("realation parsin error");
+			throw new ParserException("Relation parsing error");
 		}
 	}
 	
 	// expression = term {(“+” | “-”) term}	
-	private void expression() {
+	private void expression() throws ParserException, ScannerException {
 		term();
 		while (accept(Tokens.ADD) || accept(Tokens.SUB)) {
 			term();
@@ -279,16 +282,15 @@ public class Parser {
 	}
 	
 	// term = factor { (“*” | “/”) factor}
-	private void term() {
+	private void term() throws ParserException, ScannerException {
 		factor();
 		while (accept(Tokens.MULT) || accept(Tokens.DIV)) {
 			factor();
 		}
-		
 	}
 	
 	// factor = designator | number | “(“ expression “)” | funcCall
-	private void factor() {
+	private void factor() throws ParserException, ScannerException {
 		if (currentIsFirstOf(NonTerminals.DESIGNATOR)) {
 			designator();
 		} else if (currentIsFirstOf(NonTerminals.FUNC_CALL)) {
@@ -302,7 +304,7 @@ public class Parser {
 	}
 	
 	// designator = ident{ "[" expression "]" }
-	private void designator() {
+	private void designator() throws ParserException, ScannerException {
 		String ident = ident();
 		tryResolve(ident, SymbolKind.VAR);
 		while (accept(Tokens.L_SQ_BRKT)) {
@@ -315,7 +317,7 @@ public class Parser {
 	
 	// ident is actually a terminal symbol, not a nonterminal
 	// function added here just for expressiveness
-	private String ident() {
+	private String ident() throws ParserException, ScannerException {
 		assume(Tokens.IDENT);
 		String ident = scanner.currentLexeme;
 		accept(Tokens.IDENT);
@@ -324,7 +326,7 @@ public class Parser {
 
 	// number is actually a terminal symbol, not a nonterminal
 	// function added here just for expressiveness
-	private String number() {
+	private String number() throws ParserException, ScannerException {
 		assume(Tokens.NUMBER);
 		String number = scanner.currentLexeme;
 		accept(Tokens.NUMBER);
@@ -336,15 +338,40 @@ public class Parser {
 		return (nonTerminal.firstSet.contains(scanner.currentToken));
 	}
 	
-	private void insertSymbol(Symbol s) {
+	private void insertSymbol(Symbol s) throws ParserException {
 		if (!symTable.insert(s)) {
-			printError("Symbol already defined " + s.ident);
+			throw new ParserException("Symbol already defined " + s.ident);
 		}
 	}
 	
-	private void tryResolve(String ident, SymbolKind kind) {
+	private void tryResolve(String ident, SymbolKind kind) throws ParserException {
 		if (!symTable.resolve(ident, kind)) {
-			printError("Symbol not found " + ident);
+			throw new ParserException("Symbol not found " + ident);
+		}
+	}
+	
+	
+	// Helper classes
+	
+	public class ParserException extends Exception {
+		private static final long serialVersionUID = 1L;
+
+		String message;
+
+		ParserException() {
+			super();
+			message = 	"\n Exception while parsing: " + sourceFile + "\n" +
+						"\t Symbol: " + scanner.currentToken + "(" + scanner.currentLexeme + ")" + "\n" +
+						"\t Line:   " + scanner.getLineNumber() + "\n";
+		}
+
+		ParserException(String error) {
+			this();
+			message += "\t Error: " + error; 
+		}
+		
+		public String getMessage() {
+			return message;
 		}
 	}
 

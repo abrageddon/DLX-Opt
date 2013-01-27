@@ -19,6 +19,7 @@ public class Scanner {
 
 	public void open(String sourceFile) {
 		try {
+			this.sourceFile = sourceFile;
 			in = new LineNumberReader(new FileReader(sourceFile));
 			in.setLineNumber(1);
 			nextChar = in.read(); 
@@ -49,8 +50,7 @@ public class Scanner {
 		return in.getLineNumber();
 	}
 	
-	
-	public void next() {
+	public void next() throws ScannerException {
 		currentToken = getNextToken();
 	}
 	
@@ -58,11 +58,12 @@ public class Scanner {
 	 * Returns the next input token
 	 * 
 	 * @return
+	 * @throws ScannerException 
 	 */
-	public Tokens getNextToken() {
+	public Tokens getNextToken() throws ScannerException {
 		// skipWhitespaceAndComments();
 		skipWhitespace();
-	    Tokens token = Tokens.SCAN_ERROR;
+	    Tokens token = null;
 	    currentLexeme = "";
   
 	    switch(nextChar) {
@@ -108,14 +109,16 @@ public class Scanner {
                   	break;
         // = // ==
       	case('=') : getNextChar();
-    	   		  if (nextChar != '=') 
-      				  return Tokens.SCAN_ERROR;
+    	   		  if (nextChar != '=') {
+    	   			  throw new ScannerException();
+    	   		  }
       			  token = Tokens.EQUAL;
     	   		  break;
         // !=
       	case('!') : getNextChar();
-      			  	if (nextChar != '=') 
-      			  		return Tokens.SCAN_ERROR;
+      			  	if (nextChar != '=') { 
+      			  		throw new ScannerException();
+      			  	}
       			  	token = Tokens.NOT_EQUAL;
       			  	break;
         //array
@@ -154,9 +157,12 @@ public class Scanner {
         //while
       	case('w') : return scanKeyword(Tokens.WHILE);   
       	//default (ident)
-      	default: if (isLetter())
-    	       	  	return scanIdent();
-      	         //else error falls through
+      	default: 
+      		if (isLetter()) {
+      			return scanIdent();
+      		} else {
+      			throw new ScannerException("Expected a-z letter.");
+      		}
 	    }
 	    //got the token. Advance to start of next token and return.
 	    getNextChar();
@@ -173,7 +179,7 @@ public class Scanner {
 	
 	//Scans in Identifiers
 	private Tokens scanIdent() {
-		while (isNumber() || isLetter()) { 
+		while (isNumber() || isLetter()) {
 			getNextChar(); 
 		}
 		return Tokens.IDENT;
@@ -239,7 +245,8 @@ public class Scanner {
 		}		
 	}
 	
-
+	// Helper methods
+	
 	//skips whitespace, will not move cursor if not already on whitespace
 	private void skipWhitespace() 
 	{
@@ -265,6 +272,30 @@ public class Scanner {
 	}
 */
 	
-	// Helper methods
+	// Helper classes
+	
+	public class ScannerException extends Exception {
+		private static final long serialVersionUID = 1L;
+
+		String message;
+
+		ScannerException() {
+			super();
+			message = 	"\n Exception while scanning: " + sourceFile + "\n" +
+						"\t Token: " + currentToken + "(" + currentLexeme + ")" + "\n" +
+						"\t Char:   " + (char) nextChar + "\n" +
+						"\t Line:   " + getLineNumber() + "\n";
+		}
+
+		ScannerException(String error) {
+			this();
+			message += "\t Error: " + error; 
+		}
+		
+		public String getMessage() {
+			return message;
+		}
+	}
+
 	
 }
