@@ -1,6 +1,0 @@
-(
-ident:expression
-)
-ident:term
-ident:func
-<EOF>

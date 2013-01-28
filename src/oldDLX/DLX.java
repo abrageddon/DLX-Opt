@@ -22,7 +22,7 @@ public class DLX {
 	public static void main(String argv[]) {
 	}
 
-	public static void load(int program[]) {
+	public void load(int program[]) {
 		int i;
 		for (i = 0; i < program.length; i++) {
 			M[i] = program[i];
@@ -32,7 +32,7 @@ public class DLX {
                 progEnd = i;
 	}
 	
-	public static void execute() throws IOException {
+	public void execute() throws IOException {
 		int origc = 0; // used for F2 instruction RET
 		for (int i = 0; i < 32; i++) { R[i] = 0; };
 		PC = 0; R[30] = MemSize - 1;

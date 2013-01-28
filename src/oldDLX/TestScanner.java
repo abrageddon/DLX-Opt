@@ -1,8 +1,6 @@
 package oldDLX;
 
 
-import java.util.*;
-
 public class TestScanner {
 
     public static void main(String args[]) {

@@ -1,9 +1,0 @@
-ident[main22] 
-ident[digit] 
-becomes 
-ident[relop] 
-eql 
-eql 
-eql 
-eql 
-eof 

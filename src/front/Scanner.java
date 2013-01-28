@@ -107,6 +107,13 @@ public class Scanner {
                   	else if (nextChar == '-')
                   		token = Tokens.ASSIGN;
                   	break;
+        // > // >=
+        case('>') : getNextChar();
+                    if (nextChar != '=') 
+                        return Tokens.GRT_THAN;
+                    else
+                        token = Tokens.GRT_THAN_EQ;
+                    break;
         // = // ==
       	case('=') : getNextChar();
     	   		  if (nextChar != '=') {

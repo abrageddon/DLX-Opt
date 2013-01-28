@@ -1,6 +1,0 @@
-openparen 
-ident[expression] 
-closeparen 
-ident[term] 
-ident[func] 
-eof 
