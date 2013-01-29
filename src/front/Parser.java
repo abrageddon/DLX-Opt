@@ -1,5 +1,11 @@
 package front;
 
+
+import java.util.ArrayList;
+import java.util.List;
+
+import ir.cfg.BasicBlock;
+import ir.cfg.CFG;
 import front.Scanner.ScannerException;
 import front.symbolTable.FunctionSymbol;
 import front.symbolTable.ParamSymbol;
@@ -16,6 +22,10 @@ public class Parser {
 	public Scanner scanner;
 	private SymbolTable symTable;
 	private String sourceFile;
+	
+	// CFG
+	public List<CFG> CFGs = new ArrayList<CFG>();
+	public CFG cfg;
 	
 	public Parser(String srcFile) {
 		symTable = new SymbolTable();
@@ -81,6 +91,7 @@ public class Parser {
 	// computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.”
 	public void computation() throws ParserException, ScannerException {
 		expect(Tokens.MAIN);
+		
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
@@ -88,9 +99,16 @@ public class Parser {
 			funcDecl();
 		}
 		expect(Tokens.L_BRACE);
+		cfg = new CFG("main");
+		CFGs.add(cfg);
 		symTable.increaseScope();
 		statSequence();
 		symTable.decreaseScope();
+
+		CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
+		CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
+		cfg.setCurrentBB(cfg.exitBB);
+		
 		expect(Tokens.R_BRACE);
 		expect(Tokens.PERIOD);
 	}
@@ -125,6 +143,7 @@ public class Parser {
 	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
 			String ident = ident();
+			CFGs.add(cfg = new CFG("ident"));
 			insertSymbol(new FunctionSymbol(ident)); // TODO add params to function
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
@@ -210,6 +229,11 @@ public class Parser {
 	// returnStatement = “return” [ expression ] 
 	private void returnStatement() throws ParserException, ScannerException {
 		expect(Tokens.RETURN);
+
+		CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
+		CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
+		cfg.setCurrentBB(cfg.exitBB);
+
 		if(currentIsFirstOf(NonTerminals.EXPRESSION)) {
 			expression();
 		}
@@ -218,22 +242,75 @@ public class Parser {
 	// whileStatement = “while” relation “do” statSequence “od”
 	private void whileStatement() throws ParserException, ScannerException {
 		expect(Tokens.WHILE);
+		
+		BasicBlock condBB = new BasicBlock("while-cond");
+		BasicBlock bodyBB = new BasicBlock("while-body");
+		BasicBlock nextBB = new BasicBlock("while-next");
+		
+		CFG.addBranch(cfg.currentBB, condBB); // current => cond
+		CFG.addLinearLink(cfg.currentBB, condBB); // current -> cond
+		cfg.setCurrentBB(condBB);
+		cfg.setCurrentJoinBB(condBB);
+		
 		relation();
+		
 		expect(Tokens.DO);
+		
+		CFG.addBranch(condBB, bodyBB); // cond => body
+		CFG.addLinearLink(condBB, bodyBB); // cond -> body
+		cfg.setCurrentBB(bodyBB);
+		
 		statSequence();
+		
+		CFG.addBranch(cfg.currentBB, condBB); // body => cond
+		CFG.addLinearLink(cfg.currentBB, nextBB); // body -> next
+		
 		expect(Tokens.OD);
+		
+		CFG.addBranch(condBB, nextBB); // cond => next
+		cfg.setCurrentBB(nextBB);
 	}
 
 	// ifStatement = “if” relation “then” statSequence [ “else” statSequence ] “fi”
 	private void ifStatement() throws ParserException, ScannerException {
 		expect(Tokens.IF);
+
+		BasicBlock condBB = new BasicBlock("if-cond");
+		BasicBlock thenBB = new BasicBlock("then");
+		BasicBlock elseBB = new BasicBlock("else");
+		BasicBlock joinBB = new BasicBlock("fi-join");
+		
+		CFG.addBranch(cfg.currentBB, condBB); // current => cond
+		CFG.addLinearLink(cfg.currentBB, condBB); // current -> cond
+		cfg.setCurrentBB(condBB);
+		
 		relation();
+		
 		expect(Tokens.THEN);
+
+		CFG.addBranch(condBB, thenBB); // cond => then
+		CFG.addLinearLink(condBB, thenBB); // cond -> then
+		cfg.setCurrentBB(thenBB);
+		
 		statSequence();
+		
+		CFG.addBranch(cfg.currentBB, joinBB); // then => join
+		CFG.addLinearLink(cfg.currentBB, elseBB); // then -> else
+		
+		// always have an else BB, even if empty
+		CFG.addBranch(condBB, elseBB); // cond => else
+		cfg.setCurrentBB(elseBB);
+		
 		if (accept(Tokens.ELSE)) {
 			statSequence();
 		}
+		
 		expect(Tokens.FI);
+
+		CFG.addBranch(cfg.currentBB, joinBB); // else => join
+		CFG.addLinearLink(cfg.currentBB, joinBB); // else -> join
+		cfg.setCurrentBB(joinBB);
+		cfg.setCurrentJoinBB(joinBB);
 	}
 
 	// funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ]
