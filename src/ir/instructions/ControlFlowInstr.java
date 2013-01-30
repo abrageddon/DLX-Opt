@@ -6,5 +6,8 @@ public class ControlFlowInstr extends Instruction {
 	public ControlFlowInstr(ArithmeticBinary cmp) {
 		this.cmp = cmp;
 	}
-	
+
+	public String toString(){
+		return cmp.toString();
+	}
 }

@@ -8,5 +8,8 @@ public class ArithmeticBinary extends Instruction {
 	public ArithmeticBinary(Instruction left, Instruction right) {
 		
 	}
-	
+
+//	public String toString(){
+//		return left +" ArithmeticBinary "+right;
+//	}
 }

@@ -6,4 +6,7 @@ public class BranchEqual extends ControlFlowInstr {
 		super(cmp);
 	}
 
+	public String toString(){
+		return "BranchEqual";
+	}
 }

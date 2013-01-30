@@ -6,4 +6,7 @@ public class Branch extends ControlFlowInstr {
 		super(cmp);
 	}
 
+	public String toString(){
+		return "Branch";
+	}
 }

@@ -6,6 +6,12 @@ public class Mul extends ArithmeticBinary {
 		super(left, right);
 	}
 
-	
+
+	public String toString(){
+		if (left == null || right == null){
+			return "MUL";
+		}
+		return left.toString() +" * "+right.toString();
+	}
 	
 }

@@ -2,6 +2,7 @@ package front;
 
 import ir.cfg.BasicBlock;
 import ir.cfg.CFG;
+import ir.instructions.Instruction;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -73,9 +74,15 @@ public class VCGPrinter {
 						if (currentBlock.label.equals("exit") || currentBlock.label.equals("start")){
 							out.print("shape: ellipse color: aquamarine ");
 						}else if (currentBlock.label.equals("while-cond")){
-							out.print("\n"+currentBlock.instructions+"\" shape: rhomb color: pink ");
+							for (Instruction instruction:currentBlock.instructions){
+								out.print("\n"+ instruction.toString());
+							}
+							out.print("\" shape: rhomb color: pink ");
 						}else if (currentBlock.label.equals("while-body") || currentBlock.label.equals("while-next")){
-							out.print("\n"+currentBlock.instructions+"\" ");
+							for (Instruction instruction:currentBlock.instructions){
+								out.print("\n"+ instruction.toString());
+							}
+							out.print("\" ");
 						}
 						//close
 						out.println("}");
@@ -87,10 +94,6 @@ public class VCGPrinter {
 					//Edges
 					// TODO only add edges once
 					for (BasicBlock node:nodeMap.keySet()){
-						//in edges
-						for (BasicBlock source: node.pred){
-							out.println("edge: { sourcename:\""+nodeMap.get(source)+"\" targetname:\""+nodeMap.get(node)+"\" class: 1}");
-						}
 						//out edges
 						for (BasicBlock dest: node.pred){
 							out.println("edge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\" class: 1}");

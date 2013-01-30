@@ -28,5 +28,9 @@ public class Symbol {
 		return kind.equals(SymbolKind.VAR) ||
 				kind.equals(SymbolKind.PARAM);
 	}
+
+	public String toString(){
+		return ident;
+	}
 }
 

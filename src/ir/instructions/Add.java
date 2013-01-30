@@ -5,5 +5,11 @@ public class Add extends ArithmeticBinary {
 	public Add(Instruction left, Instruction right) {
 		super(left, right);
 	}
-	
+
+	public String toString(){
+		if (left == null || right == null){
+			return "ADD";
+		}
+		return left.toString() + " + " + right.toString();
+	}
 }

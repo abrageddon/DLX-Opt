@@ -5,5 +5,8 @@ public class Cmp extends ArithmeticBinary {
 	public Cmp(Instruction left, Instruction right) {
 		super(left, right);
 	}
-	
+
+	public String toString(){
+		return "CMP";
+	}
 }
