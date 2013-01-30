@@ -1,4 +1,4 @@
-package ir;
+package ir.instructions;
 
 public class Instruction {
 

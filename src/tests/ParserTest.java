@@ -33,7 +33,7 @@ public class ParserTest {
 	@Test
 	public void parseFile() throws IOException {
 
-		String testFile = "src/testCases/test1-3.tst";
+		String testFile = "src/testCases/temp_test1-0.tst";
 		Parser parser = new Parser(testFile);
 		try {
 			parser.parse();

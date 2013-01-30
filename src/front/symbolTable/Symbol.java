@@ -23,5 +23,10 @@ public class Symbol {
 	public enum SymbolKind {
 		VAR, FUNCTION, PARAM;
 	}
+	
+	public boolean isSSA() {
+		return kind.equals(SymbolKind.VAR) ||
+				kind.equals(SymbolKind.PARAM);
+	}
 }
 

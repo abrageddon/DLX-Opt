@@ -6,11 +6,29 @@ import java.util.List;
 
 import ir.cfg.BasicBlock;
 import ir.cfg.CFG;
+import ir.instructions.Add;
+import ir.instructions.BranchEqual;
+import ir.instructions.BranchGreater;
+import ir.instructions.BranchGreaterEqual;
+import ir.instructions.BranchLesser;
+import ir.instructions.BranchLesserEqual;
+import ir.instructions.BranchNotEqual;
+import ir.instructions.Cmp;
+import ir.instructions.ControlFlowInstr;
+import ir.instructions.Div;
+import ir.instructions.Index;
+import ir.instructions.ArithmeticBinary;
+import ir.instructions.Immediate;
+import ir.instructions.LoadAddress;
+import ir.instructions.LoadValue;
+import ir.instructions.Mul;
+import ir.instructions.Instruction;
+import ir.instructions.Scalar;
+import ir.instructions.Sub;
 import front.Scanner.ScannerException;
 import front.symbolTable.FunctionSymbol;
 import front.symbolTable.ParamSymbol;
 import front.symbolTable.Symbol;
-import front.symbolTable.Symbol.SymbolKind;
 import front.symbolTable.SymbolTable;
 import front.symbolTable.VarSymbol;
 import front.symbolTable.ArrayType;
@@ -314,11 +332,11 @@ public class Parser {
 	}
 
 	// funcCall = “call” ident [ “(“ [expression { “,” expression } ] “)” ]
-	private void funcCall() throws ParserException, ScannerException {
+	private Instruction funcCall() throws ParserException, ScannerException {
 		// TODO check if function is defined; check number of parameters
 		expect(Tokens.CALL);
 		String ident = ident();
-		tryResolve(ident, SymbolKind.FUNCTION);
+		tryResolve(ident);
 		if (accept(Tokens.L_PAREN)) {
 			if (currentIsFirstOf(NonTerminals.EXPRESSION)) {
 				expression();
@@ -327,7 +345,9 @@ public class Parser {
 				}
 			}
 			expect(Tokens.R_PAREN);
-		}		
+		}
+		
+		return null;
 	}
 	
 	// assignment = “let” designator “<-” expression
@@ -339,54 +359,121 @@ public class Parser {
 	}
 	
 	// relation = expression relOp expression
-	private void relation() throws ParserException, ScannerException {
-		expression();
-		if (accept(Tokens.EQUAL) || accept(Tokens.NOT_EQUAL) ||
-				accept(Tokens.LESS_THAN) || accept(Tokens.LESS_THAN_EQ) ||
-				accept(Tokens.GRT_THAN) || accept(Tokens.GRT_THAN_EQ)) {
-			expression();
-		} else {
+	private ControlFlowInstr relation() throws ParserException, ScannerException {
+		Instruction left = expression();
+		Tokens token = relOp();
+		Instruction right = expression();
+		ArithmeticBinary cmp = (ArithmeticBinary) issue(new Cmp(left, right));
+		switch (token) {
+		case EQUAL:
+			return (ControlFlowInstr) issue(new BranchEqual(cmp));
+		case NOT_EQUAL:
+			return (ControlFlowInstr) issue(new BranchNotEqual(cmp));
+		case LESS_THAN:
+			return (ControlFlowInstr) issue(new BranchLesser(cmp));
+		case LESS_THAN_EQ:
+			return (ControlFlowInstr) issue(new BranchLesserEqual(cmp));
+		case GRT_THAN:
+			return (ControlFlowInstr) issue(new BranchGreater(cmp));
+		case GRT_THAN_EQ:
+			return (ControlFlowInstr) issue(new BranchGreaterEqual(cmp));
+		default:
 			throw new ParserException("Relation parsing error");
 		}
 	}
 	
 	// expression = term {(“+” | “-”) term}	
-	private void expression() throws ParserException, ScannerException {
-		term();
-		while (accept(Tokens.ADD) || accept(Tokens.SUB)) {
-			term();
+	private Instruction expression() throws ParserException, ScannerException {
+		Instruction left = term();
+		while (peek(Tokens.ADD) || peek(Tokens.SUB)) {
+			if (accept(Tokens.ADD)) {
+				Instruction right = term();
+				left = issue(new Add(left, right));
+			} else if (accept(Tokens.SUB)) {
+				Instruction right = term();
+				left = issue(new Sub(left, right));
+			}
 		}
+		return left;
 	}
 	
 	// term = factor { (“*” | “/”) factor}
-	private void term() throws ParserException, ScannerException {
-		factor();
-		while (accept(Tokens.MULT) || accept(Tokens.DIV)) {
-			factor();
+	private Instruction term() throws ParserException, ScannerException {
+		Instruction left = factor();
+		while (peek(Tokens.MULT) || peek(Tokens.DIV)) {
+			if (accept(Tokens.MULT)) {
+				Instruction right = factor();
+				left = issue(new Mul(left, right));
+			} else if (accept(Tokens.DIV)) {
+				Instruction right = factor();
+				left = issue(new Div(left, right));
+			}
 		}
+		return left;
 	}
 	
 	// factor = designator | number | “(“ expression “)” | funcCall
-	private void factor() throws ParserException, ScannerException {
+	private Instruction factor() throws ParserException, ScannerException {
+		Instruction ret = null;
+		
 		if (currentIsFirstOf(NonTerminals.DESIGNATOR)) {
-			designator();
+			ret = designator();
+
+			if (ret instanceof Scalar) {
+			// if scalar, update state vectors
+			// TODO
+			} else if (ret instanceof Index) {
+			// if array address, issue load
+				ret = issue(new LoadValue((Index)ret));
+			}
 		} else if (currentIsFirstOf(NonTerminals.FUNC_CALL)) {
-			funcCall();
+			ret = funcCall(); // TODO
 		} else if (accept(Tokens.L_PAREN)) {
-			expression();
+			ret = expression(); // should be already issued
 			expect(Tokens.R_PAREN);
 		} else {
-			expect(Tokens.NUMBER)	;
+			String number = number();
+			ret = new Immediate(number); // TODO issue smth?
 		}
+		
+		return ret;
 	}
 	
 	// designator = ident{ "[" expression "]" }
-	private void designator() throws ParserException, ScannerException {
+	private Instruction designator() throws ParserException, ScannerException {
+
 		String ident = ident();
-		tryResolve(ident, SymbolKind.VAR);
+		Symbol sym = tryResolve(ident);
+		
+		if (sym.isSSA()) {
+			return new Scalar(sym);
+		}
+		
+		Instruction addr = issue(new LoadAddress(sym)); // load array base address
 		while (accept(Tokens.L_SQ_BRKT)) {
-			expression();
+			Instruction offset = expression();
 			expect(Tokens.R_SQ_BRKT);
+	        addr = issue(new Index(addr, offset)); // index into array
+		}
+		
+		return addr; // return computed address for array indexing
+	}
+	
+	public Tokens relOp() throws ScannerException, ParserException {
+		if (accept(Tokens.EQUAL)) {
+			return Tokens.EQUAL;
+		} else if (accept(Tokens.NOT_EQUAL)) {
+			return Tokens.NOT_EQUAL;
+		} else if (accept(Tokens.LESS_THAN)) {
+			return Tokens.LESS_THAN;
+		} else if (accept(Tokens.LESS_THAN_EQ)) {
+			return Tokens.LESS_THAN_EQ;
+		} else if (accept(Tokens.GRT_THAN)) {
+			return Tokens.GRT_THAN;
+		} else if (accept(Tokens.GRT_THAN_EQ)) {
+			return Tokens.GRT_THAN_EQ;
+		} else {
+			throw new ParserException("Relation operator parsing error");
 		}
 	}
 	
@@ -420,14 +507,29 @@ public class Parser {
 			throw new ParserException("Symbol already defined " + s.ident);
 		}
 	}
+
+//	private boolean tryResolveSymbol(String ident, SymbolKind kind) {
+//		if (symTable.resolve(ident, kind)) {
+//			return true;
+//		}
+//		return false;
+//	}
+
 	
-	private void tryResolve(String ident, SymbolKind kind) throws ParserException {
-		if (!symTable.resolve(ident, kind)) {
+//	private void tryResolve(String ident, SymbolKind kind) throws ParserException {
+//		if (!symTable.resolve(ident, kind)) {
+//			throw new ParserException("Symbol not found " + ident);
+//		}
+//	}
+
+	private Symbol tryResolve(String ident) throws ParserException {
+		Symbol sym = symTable.resolve(ident);
+		if (sym == null) {
 			throw new ParserException("Symbol not found " + ident);
 		}
+		return sym;
 	}
-	
-	
+
 	// Helper classes
 	
 	public class ParserException extends Exception {
@@ -442,7 +544,7 @@ public class Parser {
 						"\t Line:   " + scanner.getLineNumber() + "\n";
 		}
 
-		ParserException(String error) {
+		public ParserException(String error) {
 			this();
 			message += "\t Error: " + error; 
 		}
@@ -452,6 +554,15 @@ public class Parser {
 		}
 	}
 
+	
+	public Instruction issue(Instruction instr) {
+		
+		// issue instruction into BB
+		cfg.currentBB.instructions.add(instr);
+		
+		// return back the instruction
+		return instr;
+	}
 }
 
 
