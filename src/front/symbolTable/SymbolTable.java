@@ -2,6 +2,7 @@ package front.symbolTable;
 import java.util.LinkedList;
 import java.util.List;
 
+import front.Parser.ParserException;
 import front.symbolTable.Symbol.SymbolKind;
 
 public class SymbolTable {
@@ -53,7 +54,20 @@ public class SymbolTable {
 		
 		return false;
 	}
-	
+
+	public Symbol resolve(String ident) {
+		
+		for (List<Symbol> sc : scopes) {
+			for (Symbol sym : sc) {
+				if (sym.ident.equals(ident)) {
+					return sym;
+				}
+			}
+		}
+		
+		return null;
+	}
+
 //	public boolean resolveSymbol(Symbol symbol) {
 //		
 //		switch (symbol.kind) {
