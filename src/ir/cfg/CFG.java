@@ -70,15 +70,23 @@ public class CFG {
 		private BasicBlock currentBB;
 		
 		public TopDownLiniarIterator() {
-			 currentBB = startBB;
+			 currentBB = null;
 		}
 		
 		public boolean hasNext() {
+			if (currentBB == null && startBB != null){
+				return true;
+			}
 			return currentBB.next != null;
 		}
 
 		public BasicBlock next() {
-			currentBB = currentBB.next;
+			//not sure if this is the best fix but it was cutting off the start node
+			if (currentBB == null){
+				currentBB = startBB;
+			}else{
+				currentBB = currentBB.next;
+			}
 			return currentBB;
 		}
 

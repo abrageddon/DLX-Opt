@@ -10,7 +10,7 @@ import front.Scanner.ScannerException;
 
 public class ParserTest {
 
-//	@Test
+	@Test
 	public void parseFiles() throws IOException {
 		
 		String testFilesFolder = "src/testCases";
@@ -21,6 +21,7 @@ public class ParserTest {
 			Parser parser = new Parser(testFilesFolder + "/" + testFile);
 			try {
 				parser.parse();
+				System.out.println(parser.CFGs);
 			} catch (ParserException | ScannerException e) {
 				e.printStackTrace();
 			} finally {
