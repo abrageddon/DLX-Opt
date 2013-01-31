@@ -17,7 +17,7 @@ public class ParserTest {
 		String[] testFiles = TestUtils.listFiles(testFilesFolder, "tst");
 		
 		for (String testFile : testFiles) {
-
+			System.out.println(" -> " + testFile);
 			Parser parser = new Parser(testFilesFolder + "/" + testFile);
 			try {
 				parser.parse();
