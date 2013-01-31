@@ -20,7 +20,7 @@ public class VCGPrinter {
 	@Test
 	public void generateCFGs() throws IOException {
 		String testFilesFolder = "src/testCases";
-		String[] testFiles = TestUtils.listFiles(testFilesFolder, "1-11.tst");
+		String[] testFiles = TestUtils.listFiles(testFilesFolder, "3-1.tst");
 		
 		for (String testFile : testFiles) {
 			// init output file and scanner
@@ -34,20 +34,20 @@ public class VCGPrinter {
 			}
 			
 			out.println("graph: { title: \"CFG_GRAPH\"\n" +
-					"	layoutalgorithm: dfs\n" +
-					"	display_edge_labels: yes\n" +
-					"	manhatten_edges: yes\n" +
+//					"    layoutalgorithm: dfs\n" +
+					"    display_edge_labels: yes\n" +
+					"    manhatten_edges: yes\n" +
 					"\n" +
-					"node.color: lightyellow\n" +
-					"node.textcolor: blue\n"+
-					"edge.color: blue\n"+
-					"edge.arrowsize: 15\n"+
-					"edge.thickness: 4\n"+
-					"stretch: 43\n"+
-					"shrink: 100\n"+
-					"classname 1 : \"CFG Edges (blue)\"\n"+
-					"classname 2 : \"Const Lists (red)\"\n"+
-					"classname 3 : \"Live Variable Lists (green)\"");
+					"    node.color: lightyellow\n" +
+					"    node.textcolor: blue\n"+
+					"    edge.color: blue\n"+
+					"    edge.arrowsize: 15\n"+
+					"    edge.thickness: 4\n"+
+					"    stretch: 43\n"+
+					"    shrink: 100\n"+
+					"    classname 1 : \"CFG Edges (blue)\"\n"+
+					"    classname 2 : \"Const Lists (red)\"\n"+
+					"    classname 3 : \"Live Variable Lists (green)\"\n");
 			
 
 			// parse
@@ -68,17 +68,24 @@ public class VCGPrinter {
 						nodeMap.put(currentBlock, nodeNumber);
 						
 						// basic name label
-						out.print("node: { title:\""+nodeNumber+"\"label: \""+currentBlock.label);
+						out.print("    node: { title:\""+nodeNumber+"\" label: \""+currentBlock.label);
 						
 						//special formats
 						if (currentBlock.label.equals("exit") || currentBlock.label.equals("start")){
-							out.print("shape: ellipse color: aquamarine ");
-						}else if (currentBlock.label.equals("while-cond")){
+							for (Instruction instruction:currentBlock.instructions){
+								out.print("\n"+ instruction.toString());
+							}
+							out.print("\" shape: ellipse color: aquamarine ");
+						}else if (currentBlock.label.equals("while-cond") || currentBlock.label.equals("if-cond")){
 							for (Instruction instruction:currentBlock.instructions){
 								out.print("\n"+ instruction.toString());
 							}
 							out.print("\" shape: rhomb color: pink ");
-						}else if (currentBlock.label.equals("while-body") || currentBlock.label.equals("while-next")){
+						}else if (currentBlock.label.equals("while-body") 
+								|| currentBlock.label.equals("while-next") 
+								|| currentBlock.label.equals("then") 
+								|| currentBlock.label.equals("else") 
+								|| currentBlock.label.equals("fi-join")){
 							for (Instruction instruction:currentBlock.instructions){
 								out.print("\n"+ instruction.toString());
 							}
@@ -90,13 +97,26 @@ public class VCGPrinter {
 						//next
 						++nodeNumber;
 					}
+					out.println();
 					
 					//Edges
 					// TODO only add edges once
 					for (BasicBlock node:nodeMap.keySet()){
 						//out edges
-						for (BasicBlock dest: node.pred){
-							out.println("edge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\" class: 1}");
+						for (BasicBlock dest: node.succ){
+							if (node.label.equals("if-cond") && dest.label.equals("then")){
+								out.println("    bentnearedge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\"  label: \"true\" class: 1}");
+							}else if (node.label.equals("if-cond") && dest.label.equals("else")){
+								out.println("    bentnearedge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\"  label: \"false\" class: 1}");
+							}else if (node.label.equals("while-cond") && dest.label.equals("while-body")){
+								out.println("    bentnearedge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\"  label: \"true\" class: 1}");
+							}else if (node.label.equals("while-cond") && dest.label.equals("while-next")){
+								out.println("    bentnearedge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\"  label: \"false\" class: 1}");
+							}else if (node.label.equals("while-body") && dest.label.equals("while-cond")){
+								out.println("    backedge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\" class: 1}");
+							}else {
+								out.println("    edge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\" class: 1}");
+							}
 						}
 						//backedges
 					}

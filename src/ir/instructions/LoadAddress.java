@@ -8,5 +8,8 @@ public class LoadAddress extends Instruction {
 		// assert (sym is Array)
 		// loads sym's base address
 	}
-	
+
+	public String toString(){
+		return "LOAD_ADDRESS";
+	}
 }

@@ -445,9 +445,9 @@ public class Parser {
 		String ident = ident();
 		Symbol sym = tryResolve(ident);
 		
-		if (sym.isSSA()) {
-			return new Scalar(sym);
-		}
+//		if (sym.isSSA()) { // FIXME was causing problems with arrays
+//			return new Scalar(sym);
+//		}
 		
 		Instruction addr = issue(new LoadAddress(sym)); // load array base address
 		while (accept(Tokens.L_SQ_BRKT)) {
