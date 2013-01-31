@@ -53,8 +53,7 @@ public class CFG {
 	}
 	
 	public String toString() {
-	
-		return label + "\n" + liniarPassPrint();
+		return "#" + label + "#" + "\n" + liniarPassPrint();
 	}
 
 	public Iterator<BasicBlock> topDownIterator() {
