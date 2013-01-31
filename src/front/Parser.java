@@ -249,9 +249,9 @@ public class Parser {
 		expect(Tokens.RETURN);
 
 		CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
-		CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
-		cfg.setCurrentBB(cfg.exitBB);
-
+//		CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
+//		cfg.setCurrentBB(cfg.exitBB);
+		
 		if(currentIsFirstOf(NonTerminals.EXPRESSION)) {
 			expression();
 		}
@@ -312,7 +312,9 @@ public class Parser {
 		
 		statSequence();
 		
-		CFG.addBranch(cfg.currentBB, joinBB); // then => join
+		if (!cfg.currentBB.succ.contains(cfg.exitBB)) {
+			CFG.addBranch(cfg.currentBB, joinBB); // then => join			
+		}
 		CFG.addLinearLink(cfg.currentBB, elseBB); // then -> else
 		
 		// always have an else BB, even if empty
@@ -324,8 +326,9 @@ public class Parser {
 		}
 		
 		expect(Tokens.FI);
-
-		CFG.addBranch(cfg.currentBB, joinBB); // else => join
+		if (!cfg.currentBB.succ.contains(cfg.exitBB)) {
+			CFG.addBranch(cfg.currentBB, joinBB); // else => join
+		}
 		CFG.addLinearLink(cfg.currentBB, joinBB); // else -> join
 		cfg.setCurrentBB(joinBB);
 		cfg.setCurrentJoinBB(joinBB);
