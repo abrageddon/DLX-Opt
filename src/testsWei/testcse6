@@ -1,0 +1,25 @@
+// CSE test
+// Replace binary (x + y)
+// Notify value in storeIntoArray (a[0] = x + y)
+// Should print 30
+// Should print 30
+
+main
+procedure foo();
+var x, y, z;
+array[5] a;
+{
+	let x <- 10;
+	let y <- 20;
+	let z <- x + y;
+	let a[0] <- x + y;
+	
+	call OutputNum(z);
+	call OutputNewLine();
+	
+	call OutputNum(a[0]);
+	call OutputNewLine();
+};
+{
+	call foo();
+}.

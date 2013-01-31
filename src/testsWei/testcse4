@@ -1,0 +1,27 @@
+// CSE test
+// Replace binary (a + b)
+// Notify phi (call OutputNum(y) - y is a phi)
+// Should print 30
+// Should print 30
+main
+procedure foo();
+var a, b, x, y, z;
+{
+	let a <- 10;
+	let b <- 20;
+	let x <- a + b;
+	if a == 10 then
+		let y <- a + b;
+	else
+		let y <- a - b;
+	fi;
+	
+	call OutputNum(x);
+	call OutputNewLine();
+	
+	call OutputNum(y);
+	call OutputNewLine();
+};
+{
+	call foo();
+}.

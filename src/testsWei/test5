@@ -1,0 +1,12 @@
+main
+var ret;
+
+function sum(a, b, c);
+{
+  return a + b + c;
+};
+{
+  let ret <- call sum(1, 2, 4);
+  call OutputNum(ret);
+  call OutputNewLine();
+}.

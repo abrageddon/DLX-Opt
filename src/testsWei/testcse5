@@ -1,0 +1,24 @@
+// CSE test
+// Replace binary (x + y)
+// Notify index in loadFromArray (a[x + y])
+// Should print 30
+// Should print 30
+main
+procedure foo();
+var x, y, z;
+array[5] a;
+{
+	let x <- 1;
+	let y <- 2;
+	let z <- x + y;
+	let a[x + y] <- 30;
+	
+	call OutputNum(z);
+	call OutputNewLine();
+	
+	call OutputNum(a[x+y]);
+	call OutputNewLine();
+};
+{
+	call foo();
+}.

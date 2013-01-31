@@ -1,0 +1,15 @@
+main
+var result;
+function fib(n);
+{
+    if n <= 2 then
+    	return 1;
+    else 
+    	return call fib(n-1) + call fib(n-2);
+    fi;
+};
+{
+	let result <- call fib(20);
+	call OutputNum(result);
+  call OutputNewLine();
+}.

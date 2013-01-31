@@ -1,0 +1,16 @@
+main
+var result;
+function min(x, y);
+var i, sum;
+{	
+	if x < y then
+		return x;
+	else
+		return y;
+	fi;
+};
+{
+	let result <- call min(1000, 2000);
+	call OutputNum(result);
+  	call OutputNewLine();
+}.

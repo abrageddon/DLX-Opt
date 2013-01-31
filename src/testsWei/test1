@@ -1,0 +1,19 @@
+main 
+var a, b, c, d , e, f;
+{
+	if 10 < 20 then 
+		let a <- 100;
+	else
+		let b <- 200;
+		if 30 < 40 then
+			let c <- 300;
+		else
+			let d <- 400;
+		fi;
+		let e <- 500;
+	fi;
+	let f <- 600;
+	
+	call OutputNum(a);
+	call OutputNewLine();
+}.

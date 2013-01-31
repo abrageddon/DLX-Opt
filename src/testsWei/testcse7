@@ -1,0 +1,30 @@
+// CSE test
+// Replace binary (a + b)
+// The entry block does not immediately dominates the block
+// that y = a + b, but it dominates its dominator, so it also dominates that
+// Should print 30
+// Should print 30
+main
+procedure foo();
+var a, b, x, y, z;
+{
+	let a <- 10;
+	let b <- 20;
+	let x <- a + b;
+	if a < b then
+		if a > 0 then
+			let y <- a + b;
+		fi
+	else
+		let y <- a - b;
+	fi;
+	
+	call OutputNum(x);
+	call OutputNewLine();
+	
+	call OutputNum(y);
+	call OutputNewLine();
+};
+{
+	call foo();
+}.

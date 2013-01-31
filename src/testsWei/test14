@@ -1,0 +1,11 @@
+main
+procedure foo(a, b);
+{
+  while a > 0 do
+    let a <- b;
+    let b <- b - 1;
+  od;
+};
+{
+	call foo(10, 20);
+}.

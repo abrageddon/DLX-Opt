@@ -1,0 +1,16 @@
+main 
+{
+	if 10 < 20 then 
+		let a <- 100;
+		if 30 < 40 then
+			let b <- 200;
+		else
+			let c <- 300;
+		fi; 
+		let d <- 400;
+	else
+		let e <- 500;
+	fi;
+	let f <- 600;
+}
+.

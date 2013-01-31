@@ -1,0 +1,19 @@
+main
+var a, b, c, d, e;
+{
+	let a <- 10;
+	let b <- a;
+	let c <- b;
+	let d <- b + c;	
+	
+	if 1 < 2 then
+		let d <- d + e;
+		let a <- d;
+	else
+		let d <-e;
+	fi;
+	
+	call OutputNum(a);
+    call OutputNewLine();
+}
+.

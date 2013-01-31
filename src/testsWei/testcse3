@@ -1,0 +1,21 @@
+// CSE test
+// Replace binary (a + b)
+// Notify write (OutputNum(y))
+// Should print 30
+// Should print 30
+main
+procedure foo();
+var a, b, x, y, z;
+{
+	let a <- 10;
+	let b <- 20;
+	let x <- a + b;
+	let y <- a + b;
+	call OutputNum(x);
+	call OutputNewLine();
+	call OutputNum(y);
+	call OutputNewLine();
+};
+{
+	call foo();
+}.

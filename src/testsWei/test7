@@ -1,0 +1,18 @@
+main 
+procedure foo();
+	var result; 
+
+{
+	let result <- call add(10, 11);
+	call OutputNum(result);
+	call OutputNewLine()
+};
+
+function add(x, y);
+{
+	return x + y
+};
+
+{
+	call foo()
+}.
