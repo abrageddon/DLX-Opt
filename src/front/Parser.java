@@ -161,7 +161,7 @@ public class Parser {
 	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
 			String ident = ident();
-			CFGs.add(cfg = new CFG("ident"));
+			CFGs.add(cfg = new CFG(ident));
 			insertSymbol(new FunctionSymbol(ident)); // TODO add params to function
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
