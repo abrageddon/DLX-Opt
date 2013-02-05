@@ -10,15 +10,19 @@ import front.Scanner.ScannerException;
 
 public class ParserTest {
 
-//	@Test
-	public void parseFiles() throws IOException {
+	@Test
+	public void testParseFiles() throws IOException {
+		parseFiles("src/testCases", "tst");
+		parseFiles("src/testsMichael", "txt");
+	}
+	
+	public void parseFiles(String dir, String ext) throws IOException {
 		
-		String testFilesFolder = "src/testCases";
-		String[] testFiles = TestUtils.listFiles(testFilesFolder, "tst");
+		String[] testFiles = TestUtils.listFiles(dir, ext);
 		
 		for (String testFile : testFiles) {
 			System.out.println(" -> " + testFile);
-			Parser parser = new Parser(testFilesFolder + "/" + testFile);
+			Parser parser = new Parser(dir + "/" + testFile);
 			try {
 				parser.parse();
 				System.out.println(parser.CFGs);
@@ -31,7 +35,7 @@ public class ParserTest {
 		
 	}
 	
-	@Test
+//	@Test
 	public void parseFile() throws IOException {
 
 		String testFile = "src/testCases/temp_test1-0.tst";

@@ -32,9 +32,8 @@ public class SymbolTable {
 	
 	
 	public boolean insert(Symbol symbol) {
-		
 //		if (!resolve(symbol.ident, symbol.kind)) {
-		if (resolve(symbol.ident) == null) {
+		if (!resolve(symbol, currentScope)) {
 			scopes.get(currentScope).add(symbol);
 			return true;
 		}
@@ -42,19 +41,40 @@ public class SymbolTable {
 		return false;
 	}
 
-//	public boolean resolve(String ident, SymbolKind kind) {
-//		
-//		for (List<Symbol> sc : scopes) {
-//			for (Symbol sym : sc) {
-//				if (sym.ident.equals(ident) &&
-//					(sym.kind.equals(kind)) || sym.kind.equals(SymbolKind.PARAM)) {
-//					return true;
-//				}
-//			}
-//		}
-//		
-//		return false;
-//	}
+	public boolean resolve(Symbol symbol, int scope) {
+		for (Symbol sym : scopes.get(scope)) {
+				if (sym.ident.equals(symbol.ident) &&
+					(sym.kind.equals(symbol.kind))) {
+					return true;
+				}
+			}
+		
+		return false;
+	}
+
+	public boolean resolve(Symbol symbol) {
+		for (List<Symbol> sc : scopes) {
+			for (Symbol sym : sc) {
+				if (sym.ident.equals(symbol.ident) &&
+					(sym.kind.equals(symbol.kind))) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	public Symbol resolve(String ident, int scope) {
+		
+		for (Symbol sym : scopes.get(scope)) {
+			if (sym.ident.equals(ident)) {
+				return sym;
+			}
+		}
+	
+		return null;
+	}
 
 	public Symbol resolve(String ident) {
 		
