@@ -228,7 +228,8 @@ public class Scanner {
 	
 	//Is it a letter?
 	private boolean isLetter() {
-		return nextChar >= 'a' && nextChar <= 'z';
+		return (nextChar >= 'a' && nextChar <= 'z') ||
+				(nextChar >= 'A' && nextChar <= 'Z');
 	}
 	
 	//Is it whitespace?

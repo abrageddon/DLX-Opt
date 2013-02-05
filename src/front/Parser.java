@@ -50,6 +50,11 @@ public class Parser {
 		symTable.insert(new FunctionSymbol("inputnum"));
 		symTable.insert(new FunctionSymbol("outputnum"));
 		symTable.insert(new FunctionSymbol("outputnewline"));
+		
+		symTable.insert(new FunctionSymbol("InputNum"));
+		symTable.insert(new FunctionSymbol("OutputNum"));
+		symTable.insert(new FunctionSymbol("OutputNewLine"));
+		
 		scanner = new Scanner();
 		sourceFile = srcFile;
 	}
