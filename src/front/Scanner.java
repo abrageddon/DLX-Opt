@@ -52,6 +52,17 @@ public class Scanner {
 	
 	public void next() throws ScannerException {
 		currentToken = getNextToken();
+		while (isCommentMarker(currentToken)) {
+			while(nextChar != '\r' && nextChar != '\n') { 
+				getNextChar();
+			}
+			currentToken = getNextToken();
+		}
+	}
+	
+	private boolean isCommentMarker(Tokens token) {
+		return token.equals(Tokens.COMM_SLASH) || 
+				token.equals(Tokens.COMM_SHARP);
 	}
 	
 	/**
@@ -60,8 +71,7 @@ public class Scanner {
 	 * @return
 	 * @throws ScannerException 
 	 */
-	public Tokens getNextToken() throws ScannerException {
-		// skipWhitespaceAndComments();
+	private Tokens getNextToken() throws ScannerException {
 		skipWhitespace();
 	    Tokens token = null;
 	    currentLexeme = "";
@@ -84,7 +94,13 @@ public class Scanner {
 	    case('+') : token = Tokens.ADD; 				break;
 	    case('-') : token = Tokens.SUB; 				break;
 	    case('*') : token = Tokens.MULT; 				break;
-	    case('/') : token = Tokens.DIV; 				break;
+//	    case('/') : token = Tokens.DIV; 				break;
+	    case('/') : getNextChar();
+				    if (nextChar != '/')
+			      		return Tokens.DIV;
+			      	if (nextChar == '/')
+			      		token = Tokens.COMM_SLASH;
+	    case('#') : token = Tokens.COMM_SHARP; 			break;			      	
 
 	    //numbers
 	    case('0') :
@@ -261,24 +277,6 @@ public class Scanner {
 		while(isWhitespace())
 			getNextChar();
 	}
-
-	/*		
-	//skips whitespace AND comments
-	private void skipWhitespaceAndComments() {
-		do
-			skipWhitespace();
-		while(gotoCommentEnd());
-			
-	}
-	//used by skipWhitespaceAndComments()
-	private boolean gotoCommentEnd() {
-		if (nextChar != '#')
-			return false;		
-		while(nextChar != '\r' && nextChar != '\n') 
-			getNextChar();
-		return true;
-	}
-*/
 	
 	// Helper classes
 	

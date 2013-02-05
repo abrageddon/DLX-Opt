@@ -45,7 +45,8 @@ public enum Tokens {
 	NUMBER("number"),
 
 //	SCAN_ERROR("SCAN_ERROR"),
-
+	COMM_SLASH("//"),
+	COMM_SHARP("#"),
 	EOF("<EOF>");
 	
 	public final String lexeme; // used as a content holder for IDENT and NUMBER
