@@ -145,7 +145,7 @@ public class Parser {
 		if(currentIsFirstOf(NonTerminals.STAT_SEQUENCE)) {
 			statSequence();
 		}
-		expect(Tokens.R_BRACE);
+		expect(Tokens.R_BRACE);// TODO needs exit block if doesn't end in return earlier
 	}
 	
 	// formalParam = “(“ [ident { “,” ident }] “)”

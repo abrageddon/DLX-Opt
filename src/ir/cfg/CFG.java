@@ -1,6 +1,8 @@
 package ir.cfg;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Stack;
 
 public class CFG {
 
@@ -54,6 +56,37 @@ public class CFG {
 	
 	public String toString() {
 		return "#" + label + "#" + "\n" + liniarPassPrint();
+	}
+	
+	public void calculateDepths(){
+	    Integer depth = 0;
+        HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
+        Stack<BasicBlock> currentLevel = new Stack<BasicBlock>();
+        Stack<BasicBlock> nextLevel = new Stack<BasicBlock>();
+        currentLevel.push(startBB);
+        
+        while (! (nextLevel.isEmpty() && currentLevel.isEmpty()) ){
+            // assign depths and visit
+            for (BasicBlock block: currentLevel){
+                block.depth=depth;
+                visited.add(block);
+            }
+            
+            // add next level nodes
+            while(!currentLevel.isEmpty()){
+                BasicBlock node = currentLevel.pop();
+                for (BasicBlock edgeNode: node.succ){
+                    if (!visited.contains(edgeNode)){
+                        nextLevel.add(edgeNode);
+                    }else if (!edgeNode.label.equals("while-cond")){
+                        nextLevel.add(edgeNode);
+                    }
+                }
+            }
+            currentLevel = nextLevel;
+            nextLevel = new Stack<BasicBlock>();
+            depth++;
+        }
 	}
 
 	public Iterator<BasicBlock> topDownIterator() {

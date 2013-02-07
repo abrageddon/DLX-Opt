@@ -9,7 +9,8 @@ import java.util.List;
 
 public class BasicBlock {
 
-	public String label;
+    public String label;
+    public Integer depth;
 	
 	public List<BasicBlock> succ;
 	public List<BasicBlock> pred;
