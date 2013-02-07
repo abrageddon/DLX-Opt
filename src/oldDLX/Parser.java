@@ -42,6 +42,7 @@ public class Parser {
                         inputs.add(Integer.valueOf(Integer.valueOf(line)));
                     }
                 }
+                readIn.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
         }catch (IOException ex) {
