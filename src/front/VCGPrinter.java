@@ -20,7 +20,7 @@ public class VCGPrinter {
 	@Test
 	public void generateCFGs() throws IOException {
 		String testFilesFolder = "src/testCases";
-		String[] testFiles = TestUtils.listFiles(testFilesFolder, "3-1.tst");
+		String[] testFiles = TestUtils.listFiles(testFilesFolder, ".tst");
 		
 		for (String testFile : testFiles) {
 			// init output file and scanner
@@ -94,7 +94,7 @@ public class VCGPrinter {
 						//close
 						out.println("}");
 						
-						//next
+						//next node
 						++nodeNumber;
 					}
 					out.println();
@@ -118,7 +118,6 @@ public class VCGPrinter {
 								out.println("    edge: { sourcename:\""+nodeMap.get(node)+"\" targetname:\""+nodeMap.get(dest)+"\" class: 1}");
 							}
 						}
-						//backedges
 					}
 				}
 				

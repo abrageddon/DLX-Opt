@@ -66,27 +66,20 @@ public class CFG {
 	
 	public class TopDownLiniarIterator implements Iterator<BasicBlock> {
 
-		private BasicBlock currentBB;
+		private BasicBlock nextBB;
 		
 		public TopDownLiniarIterator() {
-			 currentBB = null;
+			nextBB = startBB;
 		}
 		
 		public boolean hasNext() {
-			if (currentBB == null && startBB != null){
-				return true;
-			}
-			return currentBB.next != null;
+			return nextBB != null;
 		}
 
 		public BasicBlock next() {
-			//not sure if this is the best fix but it was cutting off the start node
-			if (currentBB == null){
-				currentBB = startBB;
-			}else{
-				currentBB = currentBB.next;
-			}
-			return currentBB;
+			BasicBlock ret = nextBB;
+			nextBB = nextBB.next;
+			return ret;
 		}
 
 		public void remove() {
@@ -96,18 +89,20 @@ public class CFG {
 
 	public class BottomUpLiniarIterator implements Iterator<BasicBlock> {
 
-		private BasicBlock currentBB;
+		private BasicBlock prevBB;
 
 		public BottomUpLiniarIterator() {
-			 currentBB = exitBB;
+			prevBB = exitBB;
 		}
 
 		public boolean hasNext() {
-			return currentBB.prev != null;
+			return prevBB != null;
 		}
 
 		public BasicBlock next() {
-			return currentBB.prev;
+			BasicBlock ret = prevBB;
+			prevBB = prevBB.prev;
+			return ret;
 		}
 
 		public void remove() {
