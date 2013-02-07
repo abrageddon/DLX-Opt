@@ -33,21 +33,47 @@ public class VCGPrinter {
 				System.err.println("init:Source file " + testFile + "not found");
 			}
 			
-			out.println("graph: { title: \"CFG_GRAPH\"\n" +
+			out.println("graph: { title: \"Control Flow Graph\"\n" +
 //					"    layoutalgorithm: dfs\n" +
 					"    display_edge_labels: yes\n" +
-					"    manhatten_edges: yes\n" +
+					"    manhatten_edges: no\n" +
 					"\n" +
-					"    node.color: lightyellow\n" +
-					"    node.textcolor: blue\n"+
-					"    edge.color: blue\n"+
-					"    edge.arrowsize: 15\n"+
-					"    edge.thickness: 4\n"+
-					"    stretch: 43\n"+
-					"    shrink: 100\n"+
+//					"    node.color: lightyellow\n" +
+//					"    node.textcolor: blue\n"+
+//					"    edge.color: blue\n"+
+//					"    edge.arrowsize: 15\n"+
+//					"    edge.thickness: 4\n"+
+//					"    stretch: 43\n"+
+//					"    shrink: 100\n"+
 					"    classname 1 : \"CFG Edges (blue)\"\n"+
 					"    classname 2 : \"Const Lists (red)\"\n"+
-					"    classname 3 : \"Live Variable Lists (green)\"\n");
+					"    classname 3 : \"Live Variable Lists (green)\"\n"+
+					"		yspace: 34"+
+					"       xspace: 30"+
+					"       xlspace: 10"+
+					       // scaling: 0.75
+					"       portsharing: no"+
+					"       finetuning: no"+
+					"       equalydist: yes"+
+					"       orientation: toptobottom"+
+					"       lateedgelabels: no"+
+					"       dirtyedgelabels: no"+
+					"       linearsegments: no"+
+					"       nearedges: yes"+
+					"       fstraightphase: yes"+
+					"       straightphase: yes"+
+					"       priorityphase: yes"+
+					"       crossingphase2: yes"+
+					"       crossingoptimization: yes"+
+					"       crossingweight: bary"+
+					"       arrowmode: fixed"+
+					"       node.borderwidth: 3"+
+					"       node.color: 19"+
+					"       node.bordercolor: 11"+
+					"       edge.color: 7"+
+					"       edge.arrowsize: 8"+
+					"       edge.arrowcolor: 31\n"
+					);
 			
 
 			// parse
