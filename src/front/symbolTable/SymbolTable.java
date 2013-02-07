@@ -2,9 +2,6 @@ package front.symbolTable;
 import java.util.LinkedList;
 import java.util.List;
 
-import front.Parser.ParserException;
-import front.symbolTable.Symbol.SymbolKind;
-
 public class SymbolTable {
 	private LinkedList<LinkedList<Symbol>> scopes;
 	private int currentScope = 0; //scope = 0 -> global scope
