@@ -1,8 +1,9 @@
 package ir.cfg;
 
-//import ir.Instruction;
-
 import ir.instructions.Instruction;
+import ir.instructions.Local;
+import ir.instructions.Param;
+import ir.instructions.Scalar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +19,33 @@ public class BasicBlock {
 	public BasicBlock prev;
 	public BasicBlock next;
 	
-	public List<Instruction> instructions;
+	private List<Instruction> instructions;
+	
+	// entry SSA state and exit SSA state
+	public List<Scalar> entryState;
+	public List<Scalar> exitState;
 	
 	public BasicBlock(String lbl) {
 		label = lbl;
-		instructions = new ArrayList<Instruction>();
 		succ = new ArrayList<BasicBlock>();
 		pred = new ArrayList<BasicBlock>();
+		
+		instructions = new ArrayList<Instruction>();
+		
+		entryState = new ArrayList<Scalar>();
+		exitState = new ArrayList<Scalar>();
+	}
+	
+	public void addInstruction(Instruction instr) {
+		instructions.add(instr);
+	}
+	
+	public List<Instruction> getInstructions() {
+		return instructions;
+	}
+ 	
+	public Instruction getFirstInstruction() {
+		return instructions.get(0);
 	}
 	
 	public String toString() {

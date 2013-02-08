@@ -31,6 +31,7 @@ public class SymbolTable {
 	public boolean insert(Symbol symbol) {
 //		if (!resolve(symbol.ident, symbol.kind)) {
 		if (!resolve(symbol, currentScope)) {
+			symbol.scope = currentScope;
 			scopes.get(currentScope).add(symbol);
 			return true;
 		}

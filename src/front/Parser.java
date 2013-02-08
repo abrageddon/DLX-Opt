@@ -13,17 +13,22 @@ import ir.instructions.BranchGreaterEqual;
 import ir.instructions.BranchLesser;
 import ir.instructions.BranchLesserEqual;
 import ir.instructions.BranchNotEqual;
+import ir.instructions.Call;
 import ir.instructions.Cmp;
 import ir.instructions.ControlFlowInstr;
 import ir.instructions.Div;
 import ir.instructions.Index;
-import ir.instructions.ArithmeticBinary;
 import ir.instructions.Immediate;
 import ir.instructions.LoadAddress;
 import ir.instructions.LoadValue;
+import ir.instructions.Local;
+import ir.instructions.Move;
 import ir.instructions.Mul;
 import ir.instructions.Instruction;
+import ir.instructions.Param;
+import ir.instructions.Return;
 import ir.instructions.Scalar;
+import ir.instructions.StoreValue;
 import ir.instructions.Sub;
 import front.Scanner.ScannerException;
 import front.symbolTable.FunctionSymbol;
@@ -44,6 +49,10 @@ public class Parser {
 	// CFG
 	public List<CFG> CFGs = new ArrayList<CFG>();
 	public CFG cfg;
+	public CFG mainCfg;
+	
+//	private int mainInstructionCnt;
+	private int instructionCnt;
 	
 	public Parser(String srcFile) {
 		symTable = new SymbolTable();
@@ -114,16 +123,20 @@ public class Parser {
 	// computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.”
 	public void computation() throws ParserException, ScannerException {
 		expect(Tokens.MAIN);
+		mainCfg = cfg = new CFG("main");
+		CFGs.add(mainCfg);
 		
+		instructionCnt = 0;		
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
+//		mainInstructionCnt = instructionCnt;
 		while(currentIsFirstOf(NonTerminals.FUNC_DECL)) {
 			funcDecl();
 		}
 		expect(Tokens.L_BRACE);
-		cfg = new CFG("main");
-		CFGs.add(cfg);
+		cfg = mainCfg;
+//		instructionCnt = mainInstructionCnt;
 		symTable.increaseScope();
 		statSequence();
 		symTable.decreaseScope();
@@ -153,10 +166,14 @@ public class Parser {
 		expect(Tokens.L_PAREN);
 		if (peek(Tokens.IDENT)) {
 			String ident = ident();
-			insertSymbol(new ParamSymbol(ident));
+			ParamSymbol par = new ParamSymbol(ident);
+			insertSymbol(par);
+			issue(new Param(par));
 			while (accept(Tokens.COMMA)) {
 				ident = ident();
-				insertSymbol(new ParamSymbol(ident));
+				par = new ParamSymbol(ident);
+				insertSymbol(par);
+				issue(new Param(par));
 			}
 		}
 		expect(Tokens.R_PAREN);
@@ -165,8 +182,10 @@ public class Parser {
 	// funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” 
 	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
+//			instructionCnt = 0;
 			String ident = ident();
-			CFGs.add(cfg = new CFG(ident));
+			cfg = new CFG(ident);
+			CFGs.add(cfg);
 			insertSymbol(new FunctionSymbol(ident)); // TODO add params to function
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
@@ -174,6 +193,11 @@ public class Parser {
 			}
 			expect(Tokens.SEMI_COLON);
 			funcBody();
+			
+			CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
+			CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
+			cfg.setCurrentBB(cfg.exitBB);
+			
 			symTable.decreaseScope();
 			expect(Tokens.SEMI_COLON);
 		} else {
@@ -185,10 +209,14 @@ public class Parser {
 	private void varDecl() throws ParserException, ScannerException {
 		Type type = typeDecl();
 		String ident = ident();
-		insertSymbol(new VarSymbol(ident, type));
+		VarSymbol varSymbol = new VarSymbol(ident, type);
+		insertSymbol(varSymbol);
+		issue(new Local(varSymbol));
 		while (accept(Tokens.COMMA)) {
 			ident = ident();
-			insertSymbol(new VarSymbol(ident, type));
+			varSymbol = new VarSymbol(ident, type);
+			insertSymbol(varSymbol);
+			issue(new Local(varSymbol));
 		}
 		expect(Tokens.SEMI_COLON);
 	}
@@ -258,7 +286,8 @@ public class Parser {
 //		cfg.setCurrentBB(cfg.exitBB);
 		
 		if(currentIsFirstOf(NonTerminals.EXPRESSION)) {
-			expression();
+			Instruction ret = expression();
+			issue(new Return(ret));
 		}
 	}
 
@@ -275,7 +304,8 @@ public class Parser {
 		cfg.setCurrentBB(condBB);
 		cfg.setCurrentJoinBB(condBB);
 		
-		relation();
+		ControlFlowInstr rel = relation();
+		rel.setTargetBB(bodyBB);
 		
 		expect(Tokens.DO);
 		
@@ -307,7 +337,8 @@ public class Parser {
 		CFG.addLinearLink(cfg.currentBB, condBB); // current -> cond
 		cfg.setCurrentBB(condBB);
 		
-		relation();
+		ControlFlowInstr rel = relation();
+		rel.setTargetBB(thenBB);
 		
 		expect(Tokens.THEN);
 
@@ -344,26 +375,39 @@ public class Parser {
 		// TODO check if function is defined; check number of parameters
 		expect(Tokens.CALL);
 		String ident = ident();
-		tryResolve(ident);
+		Symbol fnct = tryResolve(ident);
 		if (accept(Tokens.L_PAREN)) {
+			// TODO verify that arguments number match formal parameters
 			if (currentIsFirstOf(NonTerminals.EXPRESSION)) {
 				expression();
 				while (accept(Tokens.COMMA)) {
-					expression();	
+					expression();
 				}
 			}
 			expect(Tokens.R_PAREN);
 		}
 		
-		return null;
+		return issue(new Call(fnct));
 	}
 	
 	// assignment = “let” designator “<-” expression
-	private void assignment() throws ParserException, ScannerException {
+	private Instruction assignment() throws ParserException, ScannerException {
 		expect(Tokens.LET);
-		designator();
+		Instruction designator = designator();
 		expect(Tokens.ASSIGN);
-		expression();
+		Instruction expression = expression();
+
+		if (designator instanceof Scalar) {
+			// if scalar, update state vectors
+			// TODO need a mechanism to link the returned scalar with it's position in the sate
+			// vector to be able to replace it's value in the state vector with the returned expr
+			// cfg.currentBB.exitState.get(((Scalar)ret).symbol.slot);
+			return issue(new Move(expression, designator));
+		} else if (designator instanceof Index) {
+			// if array address, issue store
+			return issue(new StoreValue((Index)designator, expression));
+		}
+		return null;
 	}
 	
 	// relation = expression relOp expression
@@ -371,7 +415,7 @@ public class Parser {
 		Instruction left = expression();
 		Tokens token = relOp();
 		Instruction right = expression();
-		ArithmeticBinary cmp = (ArithmeticBinary) issue(new Cmp(left, right));
+		Cmp cmp = (Cmp) issue(new Cmp(left, right));
 		switch (token) {
 		case EQUAL:
 			return (ControlFlowInstr) issue(new BranchEqual(cmp));
@@ -428,8 +472,7 @@ public class Parser {
 			ret = designator();
 
 			if (ret instanceof Scalar) {
-			// if scalar, update state vectors
-			// TODO
+				return ret;
 			} else if (ret instanceof Index) {
 			// if array address, issue load
 				ret = issue(new LoadValue((Index)ret));
@@ -453,9 +496,19 @@ public class Parser {
 		String ident = ident();
 		Symbol sym = tryResolve(ident);
 		
-//		if (sym.isSSA()) { // FIXME was causing problems with arrays
-//			return new Scalar(sym);
-//		}
+		if (sym.isSSA()) {
+			// TODO this little trick here works only because we have 
+			// a maximum depth of two in function declarations (no inner functions)
+			// I'm sure that there is a more elegant way to implement this 
+			if (sym.scope == 0) { // global/main
+				return mainCfg.frame.get(sym.slot);
+			} else { // function declaration
+				// look it up in the function frame
+				return cfg.frame.get(sym.slot);	
+			}
+		}
+		
+		assume(Tokens.L_SQ_BRKT);
 		
 		Instruction addr = issue(new LoadAddress(sym)); // load array base address
 		while (accept(Tokens.L_SQ_BRKT)) {
@@ -531,6 +584,7 @@ public class Parser {
 //	}
 
 	private Symbol tryResolve(String ident) throws ParserException {
+		// TODO should also check the kind of the symbol? 
 		Symbol sym = symTable.resolve(ident);
 		if (sym == null) {
 			throw new ParserException("Symbol not found " + ident);
@@ -566,7 +620,15 @@ public class Parser {
 	public Instruction issue(Instruction instr) {
 		
 		// issue instruction into BB
-		cfg.currentBB.instructions.add(instr);
+		instr.setInstrNumber(instructionCnt++);
+		cfg.currentBB.addInstruction(instr);
+
+		// store parameters and local declared variables in the CFG current frame
+		if (instr instanceof Local || instr instanceof Param) {
+			// link symbol to slot in current frame
+			((Scalar)instr).symbol.slot = cfg.frame.size();
+			cfg.frame.add((Scalar)instr);
+		}
 		
 		// return back the instruction
 		return instr;
