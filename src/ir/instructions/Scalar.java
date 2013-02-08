@@ -9,11 +9,9 @@ public class Scalar extends Instruction {
 	public Scalar(Symbol symbol) {
 		this.symbol = symbol;
 	}
-
-	public String toString(){
-		if (symbol == null){
-			return "SCALAR";
-		}
-		return symbol.toString();
+	
+	public String toString() {
+		assert symbol != null;
+		return super.toString() + " : " + symbol.toString();
 	}
 }

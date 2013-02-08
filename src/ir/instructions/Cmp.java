@@ -6,7 +6,13 @@ public class Cmp extends ArithmeticBinary {
 		super(left, right);
 	}
 
-	public String toString(){
-		return "CMP";
+	protected String getOperator() {
+		return " CMP ";
 	}
+	
+//	public String toString(){
+//		return "CMP " +
+//				"(" + left.getInstrNumber() + ")" +
+//				"(" + right.getInstrNumber() + ")" ;
+//	}
 }

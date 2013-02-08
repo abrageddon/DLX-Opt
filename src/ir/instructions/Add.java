@@ -6,10 +6,15 @@ public class Add extends ArithmeticBinary {
 		super(left, right);
 	}
 
-	public String toString(){
-		if (left == null || right == null){
-			return "ADD";
-		}
-		return left.toString() + " + " + right.toString();
+	protected String getOperator() {
+		return " ADD ";
 	}
+
+	
+//	public String toString(){
+//		if (left == null || right == null){
+//			return "ADD";
+//		}
+//		return left.toString() + " + " + right.toString();
+//	}
 }

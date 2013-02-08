@@ -2,11 +2,15 @@ package ir.instructions;
 
 public class BranchGreater extends ControlFlowInstr {
 
-	public BranchGreater(ArithmeticBinary cmp) {
+	public BranchGreater(Cmp cmp) {
 		super(cmp);
 	}
 
-	public String toString(){
-		return "BranchGreater";
+	protected String getOperator() {
+		return "BGT";
 	}
+	
+//	public String toString(){
+//		return "BGT" + super.toString();
+//	}
 }

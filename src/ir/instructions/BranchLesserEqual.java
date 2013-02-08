@@ -2,11 +2,15 @@ package ir.instructions;
 
 public class BranchLesserEqual extends ControlFlowInstr {
 
-	public BranchLesserEqual(ArithmeticBinary cmp) {
+	public BranchLesserEqual(Cmp cmp) {
 		super(cmp);
 	}
 
-	public String toString(){
-		return "BranchLesserEqual";
+	protected String getOperator() {
+		return "BLE";
 	}
+	
+//	public String toString(){
+//		return "BLE" + super.toString();
+//	}
 }

@@ -12,7 +12,7 @@ public class Immediate extends Instruction {
 		this(Integer.valueOf(value));
 	}
 
-	public String toString(){
-		return value.toString();
+	public String toString() {
+		return "#" + value.toString();
 	}
 }

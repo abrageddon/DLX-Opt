@@ -6,10 +6,14 @@ public class Sub extends ArithmeticBinary {
 		super(left, right);
 	}
 
-	public String toString(){
-		if (left == null || right == null){
-			return "SUB";
-		}
-		return left.toString() +" - "+ right.toString();
+	protected String getOperator() {
+		return " SUB ";
 	}
+
+//	public String toString(){
+//		if (left == null || right == null){
+//			return "SUB";
+//		}
+//		return left.toString() +" - "+ right.toString();
+//	}
 }

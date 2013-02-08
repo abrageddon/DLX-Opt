@@ -1,12 +1,18 @@
 package ir.instructions;
 
+import ir.cfg.BasicBlock;
+
 public class Branch extends ControlFlowInstr {
 
-	public Branch(ArithmeticBinary cmp) {
-		super(cmp);
+	public Branch(BasicBlock target) {
+		super(target);
+	}
+
+	protected String getOperator() {
+		return "BRA";
 	}
 
 	public String toString(){
-		return "Branch";
+		return ((Instruction)this).toString() + ":" + " BRA to " + targetBB.label;
 	}
 }

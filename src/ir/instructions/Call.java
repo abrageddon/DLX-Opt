@@ -1,9 +1,16 @@
 package ir.instructions;
 
-public class Call extends Instruction {
+import front.symbolTable.Symbol;
 
-	public String toString(){
-		return "CALL";
+public class Call extends Instruction {
+	public Symbol function;
+	
+	public Call(Symbol fnct) {
+		this.function = fnct;
+	}
+	
+	public String toString() {
+		return super.toString() + " : CALL " + function.ident;
 	}
 	
 }
