@@ -14,4 +14,11 @@ public class VarSymbol extends Symbol {
 		super.ident = ident;
 		super.kind = SymbolKind.VAR;
 	}
-} 
+
+	public boolean isSSA() {
+		if (type instanceof ArrayType) {
+			return false;
+		}
+		return true;
+	}
+}

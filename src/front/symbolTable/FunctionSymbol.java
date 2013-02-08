@@ -6,4 +6,8 @@ public class FunctionSymbol extends Symbol {
 		super.ident = ident;
 		super.kind = SymbolKind.FUNCTION;
 	}
+
+	public boolean isSSA() {
+		return false;
+	}
 }

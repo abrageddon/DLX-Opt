@@ -1,6 +1,6 @@
 package front.symbolTable;
 
-public class Symbol {
+public abstract class Symbol {
 
 	public String ident;
 	public SymbolKind kind;
@@ -24,11 +24,8 @@ public class Symbol {
 		VAR, FUNCTION, PARAM;
 	}
 	
-	public boolean isSSA() {
-		return kind.equals(SymbolKind.VAR) ||
-				kind.equals(SymbolKind.PARAM);
-	}
-
+	abstract public boolean isSSA();
+	
 	public String toString(){
 		return ident;
 	}
