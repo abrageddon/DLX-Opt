@@ -1,7 +1,11 @@
 package ir.cfg;
 
+import ir.instructions.Scalar;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 public class CFG {
@@ -14,12 +18,18 @@ public class CFG {
 	public BasicBlock currentBB;
 	public BasicBlock currentJoinBB;
 
+	// Store frame in the CFG since each CFG corresponds to a single function
+	public List<Scalar> frame;
+	
 	public CFG(String lbl) {
 		label = lbl;
 		startBB = new BasicBlock("start");
 		exitBB = new BasicBlock("exit");
 		currentBB = startBB;
 //		addBranch(startBB, exitBB);//FIXME not sure why this was in here. caused unconditional link from start of program to exit.
+				
+		frame = new ArrayList<Scalar>();
+
 	}
 
 	public void setCurrentBB(BasicBlock current) {
