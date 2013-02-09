@@ -4,9 +4,12 @@ import front.symbolTable.Symbol;
 
 public class LoadAddress extends Instruction {
 
-	public LoadAddress(Symbol sym) {
+	public Symbol symbol;
+	
+	public LoadAddress(Symbol symbol) {
 		// assert (sym is Array)
 		// loads sym's base address
+		this.symbol  = symbol;
 	}
 
 	public String toString(){

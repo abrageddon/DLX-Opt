@@ -21,7 +21,7 @@ public class Parser {
 	public CFG cfg;
 	public CFG mainCfg;
 	
-//	private int mainInstructionCnt;
+	private int mainInstructionCnt;
 	private int instructionCnt;
 	
 	public Parser(String srcFile) {
@@ -100,13 +100,13 @@ public class Parser {
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
-//		mainInstructionCnt = instructionCnt;
+		mainInstructionCnt = instructionCnt;
 		while(currentIsFirstOf(NonTerminals.FUNC_DECL)) {
 			funcDecl();
 		}
 		expect(Tokens.L_BRACE);
 		cfg = mainCfg;
-//		instructionCnt = mainInstructionCnt;
+		instructionCnt = mainInstructionCnt;
 		symTable.increaseScope();
 		statSequence();
 		symTable.decreaseScope();
@@ -152,7 +152,7 @@ public class Parser {
 	// funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” 
 	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
-//			instructionCnt = 0;
+			instructionCnt = 0;
 			String ident = ident();
 			cfg = new CFG(ident);
 			CFGs.add(cfg);
@@ -165,7 +165,7 @@ public class Parser {
 			funcBody();
 			
 			CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
-			CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
+			CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit			
 			cfg.setCurrentBB(cfg.exitBB);
 			
 			symTable.decreaseScope();
@@ -251,7 +251,9 @@ public class Parser {
 	private void returnStatement() throws ParserException, ScannerException {
 		expect(Tokens.RETURN);
 
-		CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
+		// This lines are not needed anymore since we always link the 
+		// last block to the exit block, even in case of procedures
+//		CFG.addBranch(cfg.currentBB, cfg.exitBB); // current => exit
 //		CFG.addLinearLink(cfg.currentBB, cfg.exitBB); // current -> exit
 //		cfg.setCurrentBB(cfg.exitBB);
 		
@@ -368,14 +370,20 @@ public class Parser {
 		Instruction expression = expression();
 
 		if (designator instanceof Scalar) {
+			if (designator instanceof Global) {
+//			if (((Scalar)designator).symbol instanceof VarSymbol) {
+				 // if global store to global address
+	  			 // TODO clean up!
+				Instruction value = issue(new StoreValue(((Scalar)designator).symbol, expression));
+				return value;
+//				return issue(new LoadValue(sym));
+			}
 			// if scalar, update state vectors
-			// TODO need a mechanism to link the returned scalar with it's position in the sate
-			// vector to be able to replace it's value in the state vector with the returned expr
-			// cfg.currentBB.exitState.get(((Scalar)ret).symbol.slot);
 			return issue(new Move(expression, designator));
 		} else if (designator instanceof Index) {
 			// if array address, issue store
-			return issue(new StoreValue((Index)designator, expression));
+//			return issue(new StoreValue(((LoadValue)((Index)designator).base).symbol, expression));
+			return issue(new StoreValue((Index) designator, expression));
 		}
 		return null;
 	}
@@ -442,6 +450,10 @@ public class Parser {
 			ret = designator();
 
 			if (ret instanceof Scalar) {
+				if (ret instanceof Global) {
+					Instruction value = issue(new LoadValue(((Scalar) ret).symbol));
+					return value;
+				}
 				return ret;
 			} else if (ret instanceof Index) {
 			// if array address, issue load
@@ -470,24 +482,54 @@ public class Parser {
 			// TODO this little trick here works only because we have 
 			// a maximum depth of two in function declarations (no inner functions)
 			// I'm sure that there is a more elegant way to implement this 
-			if (sym.scope == 0) { // global/main
-				return mainCfg.frame.get(sym.slot);
-			} else { // function declaration
+//			if (sym.scope == 0) { // global/main
+//				return mainCfg.frame.get(sym.slot);
+//			} else { // function declaration
 				// look it up in the function frame
-				return cfg.frame.get(sym.slot);	
-			}
+				// is either a local or a parameter
+				return cfg.frame.get(sym.slot);
+//			}
 		}
+		
+		// load global value, non array type
+		if (sym instanceof VarSymbol && sym.scope == 0 &&
+				!(((VarSymbol) sym).type instanceof ArrayType)) {
+//			Instruction value = issue(new LoadValue(sym));
+//			return value;
+			 return new Global(sym);
+		}
+		
 		
 		assume(Tokens.L_SQ_BRKT);
+		// load array base address
+		Instruction base = issue(new LoadValue(sym));
 		
-		Instruction addr = issue(new LoadAddress(sym)); // load array base address
+		// compute offset
+		List<Instruction> indexes = new ArrayList<Instruction>();
 		while (accept(Tokens.L_SQ_BRKT)) {
-			Instruction offset = expression();
+			// build offset
+			Instruction idxNumber = expression();
 			expect(Tokens.R_SQ_BRKT);
-	        addr = issue(new Index(addr, offset)); // index into array
+			Instruction idxInstr = issue(new Mul(idxNumber, new Immediate(4)));
+			indexes.add(idxInstr);
+//	        addr = issue(new Index(addr, offset)); // index into array
 		}
 		
-		return addr; // return computed address for array indexing
+		ArrayType type = (ArrayType) ((VarSymbol)sym).type;
+		Instruction offset = null;
+//		System.out.println(type.dim);
+		if (type.dim > 1) {
+			for (int i = 0; i < type.dim - 1; i++) {
+				Instruction mul = issue(new Mul(indexes.get(i), 
+						new Immediate(type.dimSize.get(i))));
+				offset = issue(new Add(mul, indexes.get(i+1)));
+			}
+		} else {
+			offset = indexes.get(0);
+		}
+		
+		Instruction adda = issue(new Index(base, offset)); // index into array
+		return adda; // return computed address for array indexing
 	}
 	
 	public Tokens relOp() throws ScannerException, ParserException {

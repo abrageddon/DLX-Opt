@@ -26,10 +26,7 @@ public class CFG {
 		startBB = new BasicBlock("start");
 		exitBB = new BasicBlock("exit");
 		currentBB = startBB;
-//		addBranch(startBB, exitBB);//FIXME not sure why this was in here. caused unconditional link from start of program to exit.
-				
 		frame = new ArrayList<Scalar>();
-
 	}
 
 	public void setCurrentBB(BasicBlock current) {

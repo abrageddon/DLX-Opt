@@ -16,7 +16,8 @@ public class VarSymbol extends Symbol {
 	}
 
 	public boolean isSSA() {
-		if (type instanceof ArrayType) {
+		// arrays and globals are not SSA
+		if (type instanceof ArrayType || scope == 0) {
 			return false;
 		}
 		return true;

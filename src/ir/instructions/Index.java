@@ -10,12 +10,10 @@ public class Index extends Instruction {
 		this.base = base;
 		this.offset = offset;
 	}
-	
 
 	public String toString(){
-		if (base == null || offset == null){
-			return "INDEX";
-		}
-		return base.toString() + " @ " + offset.toString();
+		return super.toString() + " : ADDA " +
+				"(" + ((LoadValue)base).symbol.ident + ")" + 
+				"(" + offset.getInstrNumber() + ")";
 	}
 }
