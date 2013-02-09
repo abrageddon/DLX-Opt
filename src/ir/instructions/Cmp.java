@@ -7,7 +7,7 @@ public class Cmp extends ArithmeticBinary {
 	}
 
 	protected String getOperator() {
-		return " CMP ";
+		return "CMP";
 	}
 	
 //	public String toString(){

@@ -32,7 +32,7 @@ public abstract class ControlFlowInstr extends Instruction {
 	protected abstract String getOperator();
 	
 	public String toString() {
-		return super.toString() + " : " + getOperator() +
+		return getInstrNumber() + " : " + getOperator() +
 //				" to " + targetBB.label +
 				" on (" + cmp.getInstrNumber() + ")";
 	}

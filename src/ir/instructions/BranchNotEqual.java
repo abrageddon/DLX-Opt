@@ -9,8 +9,4 @@ public class BranchNotEqual extends ControlFlowInstr {
 	protected String getOperator() {
 		return "BNE";
 	}
-//
-//	public String toString(){
-//		return "BNE" + super.toString();
-//	}
 }

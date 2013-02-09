@@ -4,6 +4,7 @@ public abstract class Symbol {
 
 	public String ident;
 	public SymbolKind kind;
+    // TODO Hold function parameters
 
 	// the scope in which the symbol is declared (0 is global)
 	public int scope;

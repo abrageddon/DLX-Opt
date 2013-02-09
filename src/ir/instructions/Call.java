@@ -10,7 +10,7 @@ public class Call extends Instruction {
 	}
 	
 	public String toString() {
-		return super.toString() + " : CALL " + function.ident;
+		return getInstrNumber() + " : CALL " + function.ident /*+ "("+function.parameters+")"*/;
 	}
 	
 }

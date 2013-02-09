@@ -7,7 +7,7 @@ public class Sub extends ArithmeticBinary {
 	}
 
 	protected String getOperator() {
-		return " SUB ";
+		return "SUB";
 	}
 
 //	public String toString(){

@@ -7,7 +7,7 @@ public class Mul extends ArithmeticBinary {
 	}
 
 	protected String getOperator() {
-		return " MUL ";
+		return "MUL";
 	}
 
 

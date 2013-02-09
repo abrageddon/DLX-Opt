@@ -33,6 +33,6 @@ public class Instruction {
 	}
 	
 	public String toString() {
-		return String.valueOf(instrNumber);
+		return getInstrNumber();
 	}
 }

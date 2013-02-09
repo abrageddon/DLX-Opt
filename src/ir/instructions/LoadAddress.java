@@ -10,6 +10,6 @@ public class LoadAddress extends Instruction {
 	}
 
 	public String toString(){
-		return "LOAD_ADDRESS";
+		return getInstrNumber() + " : LOAD_ADDRESS";
 	}
 }

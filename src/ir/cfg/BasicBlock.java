@@ -1,8 +1,6 @@
 package ir.cfg;
 
 import ir.instructions.Instruction;
-import ir.instructions.Local;
-import ir.instructions.Param;
 import ir.instructions.Scalar;
 
 import java.util.ArrayList;

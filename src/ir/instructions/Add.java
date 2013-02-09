@@ -7,7 +7,7 @@ public class Add extends ArithmeticBinary {
 	}
 
 	protected String getOperator() {
-		return " ADD ";
+		return "ADD";
 	}
 
 	

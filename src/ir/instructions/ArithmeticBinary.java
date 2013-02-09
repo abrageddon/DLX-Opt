@@ -13,8 +13,8 @@ public abstract class ArithmeticBinary extends Instruction {
 	protected abstract String getOperator();
 	
 	public String toString() {
-		return super.toString() + " :" + getOperator() +
-				"(" + left.getInstrNumber() + ")" +
+		return getInstrNumber() + " : " + getOperator() +
+				" (" + left.getInstrNumber() + ")" +
 				"(" + right.getInstrNumber() + ")";
 	}
 }

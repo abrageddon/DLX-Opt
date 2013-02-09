@@ -10,7 +10,7 @@ import java.util.Stack;
 
 public class CFG {
 
-	String label;
+	public String label;
 	
 	public BasicBlock startBB;
 	public BasicBlock exitBB;

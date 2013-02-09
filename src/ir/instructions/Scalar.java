@@ -11,7 +11,12 @@ public class Scalar extends Instruction {
 	}
 	
 	public String toString() {
-		assert symbol != null;
-		return super.toString() + " : " + symbol.toString();
+		return getInstrNumber() + " : " + getSymbol();
 	}
+	
+	public String getSymbol(){
+        assert symbol != null;
+        return symbol.toString();
+	}
+	
 }

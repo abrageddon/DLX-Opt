@@ -15,6 +15,6 @@ public class Array extends Instruction {
 //	}
 
 	public String toString(){
-		return "Array";
+		return "ARRAY";
 	}
 }

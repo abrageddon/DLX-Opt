@@ -12,7 +12,7 @@ public class Branch extends ControlFlowInstr {
 		return "BRA";
 	}
 
-	public String toString(){
-		return ((Instruction)this).toString() + ":" + " BRA to " + targetBB.label;
-	}
+//	public String toString(){
+//		return getInstrNumber() + ":" + getOperator() +" to " + targetBB.label;
+//	}
 }

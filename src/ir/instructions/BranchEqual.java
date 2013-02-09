@@ -10,7 +10,4 @@ public class BranchEqual extends ControlFlowInstr {
 		return "BEQ";
 	}
 
-//	public String toString(){
-//		return "BEQ" + super.toString();
-//	}
 }

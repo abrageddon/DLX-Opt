@@ -10,7 +10,4 @@ public class BranchLesserEqual extends ControlFlowInstr {
 		return "BLE";
 	}
 	
-//	public String toString(){
-//		return "BLE" + super.toString();
-//	}
 }

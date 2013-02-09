@@ -10,7 +10,4 @@ public class BranchLesser extends ControlFlowInstr {
 		return "BLT";
 	}
 
-//	public String toString(){
-//		return "BLT" + super.toString();
-//	}
 }

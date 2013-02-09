@@ -7,7 +7,7 @@ public class StoreValue extends Instruction {
 	}
 
 	public String toString(){
-		return "STORE_VALUE";
+		return getInstrNumber() + " : STORE_VALUE";
 	}
 
 }

@@ -11,8 +11,7 @@ public class Move extends Instruction {
 	}
 	
 	public String toString() {
-		return super.toString() + " : MOVE " +
-					"(" + src.getInstrNumber() + ")" +
+		return getInstrNumber() + " : MOVE (" + src.getInstrNumber() + ")" +
 					"(" + dest.getInstrNumber() + ")";
 	}
 	

@@ -6,39 +6,9 @@ import java.util.List;
 
 import ir.cfg.BasicBlock;
 import ir.cfg.CFG;
-import ir.instructions.Add;
-import ir.instructions.BranchEqual;
-import ir.instructions.BranchGreater;
-import ir.instructions.BranchGreaterEqual;
-import ir.instructions.BranchLesser;
-import ir.instructions.BranchLesserEqual;
-import ir.instructions.BranchNotEqual;
-import ir.instructions.Call;
-import ir.instructions.Cmp;
-import ir.instructions.ControlFlowInstr;
-import ir.instructions.Div;
-import ir.instructions.Index;
-import ir.instructions.Immediate;
-import ir.instructions.LoadAddress;
-import ir.instructions.LoadValue;
-import ir.instructions.Local;
-import ir.instructions.Move;
-import ir.instructions.Mul;
-import ir.instructions.Instruction;
-import ir.instructions.Param;
-import ir.instructions.Return;
-import ir.instructions.Scalar;
-import ir.instructions.StoreValue;
-import ir.instructions.Sub;
+import ir.instructions.*;
 import front.Scanner.ScannerException;
-import front.symbolTable.FunctionSymbol;
-import front.symbolTable.ParamSymbol;
-import front.symbolTable.Symbol;
-import front.symbolTable.SymbolTable;
-import front.symbolTable.VarSymbol;
-import front.symbolTable.ArrayType;
-import front.symbolTable.Type;
-import front.symbolTable.VarType;
+import front.symbolTable.*;
 
 public class Parser {
 

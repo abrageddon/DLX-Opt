@@ -88,47 +88,53 @@ public class VCGPrinter {
                         nodeMap.put(currentBlock, nodeNumber);
 
                         // basic name label
-                        // TODO add vertical_order to nodes if possible
-                        out.print("    node: { title:\"" + nodeNumber 
-                                + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth 
-                                + "\" vertical_order: "+currentBlock.depth
-                                + " label: \"" + currentBlock.label);//open quotes; make sure to close
-
+                        if (currentBlock.label.equals("exit") || currentBlock.label.equals("start")){
+                            out.print("    node: { title:\"" + nodeNumber 
+                                    + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth 
+                                    + "\" vertical_order: "+currentBlock.depth
+                                    + " label: \"" + currentBlock.label + ": "+ cfg.label);//open quotes; make sure to close
+                        }else {
+                            out.print("    node: { title:\"" + nodeNumber 
+                                    + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth 
+                                    + "\" vertical_order: "+currentBlock.depth
+                                    + " label: \"" + currentBlock.label);//open quotes; make sure to close
+                            
+                        }
+                        
                         // special formats
                         if (currentBlock.label.equals("exit")){
                             for (Instruction instruction : currentBlock.getInstructions()) {
                                 out.print("\n" + instruction.toString());
                             }
-                            out.print("\" shape: ellipse color: pink bordercolor: darkred ");
+                            out.print("\" shape: ellipse color: pink bordercolor: darkred }");
                         } else if(currentBlock.label.equals("start")) {
                             for (Instruction instruction : currentBlock.getInstructions()) {
                                 out.print("\n" + instruction.toString());
                             }
-                            out.print("\" shape: ellipse color: lightgreen bordercolor: darkgreen ");
+                            out.print("\" shape: ellipse color: lightgreen bordercolor: darkgreen }");
                         } else if (currentBlock.label.equals("while-cond") || currentBlock.label.equals("if-cond")) {
                             for (Instruction instruction : currentBlock.getInstructions()) {
                                 out.print("\n" + instruction.toString());
                             }
-                            out.print("\" shape: rhomb color: lightcyan bordercolor: darkblue");
+                            out.print("\" shape: rhomb color: lightcyan bordercolor: darkblue }");
                         } else if (currentBlock.label.equals("while-body") || currentBlock.label.equals("while-next") || currentBlock.label.equals("then") || currentBlock.label.equals("else")
                                 || currentBlock.label.equals("fi-join")) {
                             for (Instruction instruction : currentBlock.getInstructions()) {
                                 out.print("\n" + instruction.toString());
                             }
-                            out.print("\" ");
+                            out.print("\" }");
                         }
-                        // close
-                        out.println("}");
 
                         // next node
                         ++nodeNumber;
                     }
                     out.println();
                 }
-
+//                System.out.println(nodeMap);
                 // Edges
                 for (BasicBlock node : nodeMap.keySet()) {
                     // out edges
+//                    System.out.println(nodeMap.get(node)+ " : " +node +"\nSucc: "+node.succ +"\n");
                     for (BasicBlock dest : node.succ) {
                         if (node.label.equals("if-cond") && dest.label.equals("then")) {
                             out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");

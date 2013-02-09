@@ -10,7 +10,4 @@ public class BranchGreater extends ControlFlowInstr {
 		return "BGT";
 	}
 	
-//	public String toString(){
-//		return "BGT" + super.toString();
-//	}
 }

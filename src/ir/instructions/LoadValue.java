@@ -7,6 +7,6 @@ public class LoadValue extends Instruction {
 	}
 
 	public String toString(){
-		return "LOAD_VALUE";
+		return getInstrNumber() + " : LOAD_VALUE";
 	}
 }

@@ -7,7 +7,7 @@ public class Div extends ArithmeticBinary {
 	}
 
 	protected String getOperator() {
-		return " DIV ";
+		return "DIV";
 	}
 
 	
