@@ -13,6 +13,6 @@ public class LoadAddress extends Instruction {
 	}
 
 	public String toString(){
-		return getInstrNumber() + " : LOAD_ADDRESS";
+		return getInstrNumber() + " : LOAD_ADDRESS " + symbol.toString();
 	}
 }

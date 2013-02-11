@@ -123,6 +123,13 @@ public class VCGPrinter {
                                 out.print("\n" + instruction.toString());
                             }
                             out.print("\" }");
+                        }else if (!currentBlock.isInstructionsEmpty()){
+                            for (Instruction instruction : currentBlock.getInstructions()) {
+                                out.print("\n" + instruction.toString());
+                            }
+                            out.print("\" }");
+                        }else {
+                            out.print("\" }");
                         }
 
                         // next node

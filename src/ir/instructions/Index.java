@@ -12,7 +12,7 @@ public class Index extends Instruction {
 	}
 
 	public String toString(){
-		return super.toString() + " : ADDA " +
+		return getInstrNumber() + " : ADDA " +
 				"(" + ((LoadValue)base).symbol.ident + ")" + 
 				"(" + offset.getInstrNumber() + ")";
 	}

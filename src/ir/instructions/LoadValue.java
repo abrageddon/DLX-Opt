@@ -18,7 +18,7 @@ public class LoadValue extends Instruction {
 	}
 	
 	public String toString() {
-		return super.toString() + " : LOAD " +
+		return getInstrNumber() + " : LOAD " +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")";
 	}
 }

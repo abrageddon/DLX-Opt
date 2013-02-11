@@ -23,7 +23,7 @@ public class StoreValue extends Instruction {
 	}
 	
 	public String toString(){
-		return super.toString() + " : STORE " +
+		return getInstrNumber() + " : STORE " +
 				"(" + value.getInstrNumber() + ")" +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")";
 	}

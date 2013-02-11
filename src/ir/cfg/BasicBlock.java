@@ -41,10 +41,14 @@ public class BasicBlock {
 	public List<Instruction> getInstructions() {
 		return instructions;
 	}
- 	
-	public Instruction getFirstInstruction() {
-		return instructions.get(0);
-	}
+    
+    public Instruction getFirstInstruction() {
+        return instructions.get(0);
+    }
+    
+    public Boolean isInstructionsEmpty() {
+        return instructions.isEmpty();
+    }
 	
 	public String toString() {
 		return "|" + label + "|" + "[" + instructions + "]";
