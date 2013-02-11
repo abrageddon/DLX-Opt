@@ -25,9 +25,12 @@ public class CFG {
 		label = lbl;
 		startBB = new BasicBlock("start");
 		exitBB = new BasicBlock("exit");
-		currentBB = new BasicBlock("basic-block");
-		addBranch(startBB, currentBB);
-		addLinearLink(startBB, currentBB);
+		currentBB = startBB;
+		
+//		currentBB = new BasicBlock("basic-block");
+//		addBranch(startBB, currentBB);
+//		addLinearLink(startBB, currentBB);
+		
 		frame = new ArrayList<Scalar>();
 	}
 

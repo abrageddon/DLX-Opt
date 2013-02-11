@@ -34,6 +34,7 @@ public class VCGPrinter {
                 System.err.println("init:Source file " + testFile + "not found");
             }
 
+            // open graph and initial settings; closed in "finally" block
             out.println("graph: { title: \"Control Flow Graph\"\n"
                     + "    layoutalgorithm: dfs\n"
                     + "    display_edge_labels: yes\n"
@@ -87,7 +88,7 @@ public class VCGPrinter {
                         // insert into node map
                         nodeMap.put(currentBlock, nodeNumber);
 
-                        // basic name label
+                        // basic name; label open
                         out.print("    node: { title:\"" + nodeNumber 
                                 + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth + "\nFunction: " + cfg.label
                                 + "\" vertical_order: "+currentBlock.depth + " label: \"" + currentBlock.label);
@@ -115,6 +116,7 @@ public class VCGPrinter {
                         } else if (currentBlock.label.equals("while-cond") || currentBlock.label.equals("if-cond")) {
                             out.print("shape: rhomb color: lightcyan bordercolor: darkblue ");
                         }
+                        
                         // close
                         out.print("}\n");
 

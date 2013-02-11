@@ -189,6 +189,12 @@ public class Parser {
 			issue(new Local(varSymbol));
 		}
 		expect(Tokens.SEMI_COLON);
+		
+		// vars stored in start block
+		BasicBlock genericBB = new BasicBlock("basic-block");
+        CFG.addBranch(cfg.currentBB, genericBB); // current => exit
+        CFG.addLinearLink(cfg.currentBB, genericBB); // current -> exit
+        cfg.setCurrentBB(genericBB);
 	}
 
 	// typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }
