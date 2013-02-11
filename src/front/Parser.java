@@ -100,6 +100,13 @@ public class Parser {
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
+        
+        // vars stored in start block
+        BasicBlock genericBB = new BasicBlock("basic-block");
+        CFG.addBranch(cfg.currentBB, genericBB);
+        CFG.addLinearLink(cfg.currentBB, genericBB);
+        cfg.setCurrentBB(genericBB);
+        
 		mainInstructionCnt = instructionCnt;
 		while(currentIsFirstOf(NonTerminals.FUNC_DECL)) {
 			funcDecl();
@@ -124,6 +131,13 @@ public class Parser {
 		while(currentIsFirstOf(NonTerminals.VAR_DECL)) {
 			varDecl();
 		}
+        
+        // vars stored in start block
+        BasicBlock genericBB = new BasicBlock("basic-block");
+        CFG.addBranch(cfg.currentBB, genericBB);
+        CFG.addLinearLink(cfg.currentBB, genericBB);
+        cfg.setCurrentBB(genericBB);
+        
 		expect(Tokens.L_BRACE);
 		if(currentIsFirstOf(NonTerminals.STAT_SEQUENCE)) {
 			statSequence();
@@ -160,7 +174,7 @@ public class Parser {
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
 				formalParam();
-			}
+			}	        
 			expect(Tokens.SEMI_COLON);
 			funcBody();
 			
@@ -189,12 +203,6 @@ public class Parser {
 			issue(new Local(varSymbol));
 		}
 		expect(Tokens.SEMI_COLON);
-		
-		// vars stored in start block
-		BasicBlock genericBB = new BasicBlock("basic-block");
-        CFG.addBranch(cfg.currentBB, genericBB); // current => exit
-        CFG.addLinearLink(cfg.currentBB, genericBB); // current -> exit
-        cfg.setCurrentBB(genericBB);
 	}
 
 	// typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }
