@@ -9,7 +9,7 @@ public class Param extends Scalar {
 	}
 
 	public String toString(){
-//        return getInstrNumber() + " : " + getSymbol()+".param";
-        return getSymbol()+".param";
+        return getInstrNumber() + " : PARAM " + getSymbol();
+//        return getSymbol()+".param";
 	}
 }

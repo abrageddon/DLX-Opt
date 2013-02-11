@@ -9,12 +9,4 @@ public class Add extends ArithmeticBinary {
 	protected String getOperator() {
 		return "ADD";
 	}
-
-	
-//	public String toString(){
-//		if (left == null || right == null){
-//			return "ADD";
-//		}
-//		return left.toString() + " + " + right.toString();
-//	}
 }

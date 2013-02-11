@@ -9,13 +9,4 @@ public class Mul extends ArithmeticBinary {
 	protected String getOperator() {
 		return "MUL";
 	}
-
-
-//	public String toString(){
-//		if (left == null || right == null){
-//			return "MUL";
-//		}
-//		return left.toString() +" * "+right.toString();
-//	}
-	
 }

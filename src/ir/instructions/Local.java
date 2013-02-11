@@ -9,7 +9,7 @@ public class Local extends Scalar {
 	}
 
     public String toString(){
-//        return getInstrNumber() + " : " + getSymbol()+".local";
-        return getSymbol()+".local";
+        return getInstrNumber() + " : LOCAL " + getSymbol();
+//        return getSymbol()+".local";
     }
 }
