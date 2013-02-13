@@ -8,4 +8,9 @@ public class Global extends Scalar {
 		super(symbol);
 	}
 
+    public String toString(){
+        return getInstrNumber() + " : GLOBAL " + getSymbol();
+//        return getSymbol()+".local";
+    }
+
 }

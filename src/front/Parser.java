@@ -195,12 +195,20 @@ public class Parser {
 		String ident = ident();
 		VarSymbol varSymbol = new VarSymbol(ident, type);
 		insertSymbol(varSymbol);
-		issue(new Local(varSymbol));
+        if (cfg.label.equals("main")){
+            issue(new Global(varSymbol));
+        }else{
+            issue(new Local(varSymbol));
+        }
 		while (accept(Tokens.COMMA)) {
 			ident = ident();
 			varSymbol = new VarSymbol(ident, type);
 			insertSymbol(varSymbol);
-			issue(new Local(varSymbol));
+			if (cfg.label.equals("main")){
+                issue(new Global(varSymbol));
+			}else{
+			    issue(new Local(varSymbol));
+			}
 		}
 		expect(Tokens.SEMI_COLON);
 	}

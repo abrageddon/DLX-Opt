@@ -105,7 +105,7 @@ public class VCGPrinter {
                             }   
                         }
                         
-                        // close label
+                        // label closed
                         out.print("\" ");
                         
                         // special formats
