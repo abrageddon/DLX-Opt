@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import org.junit.Test;
 
+import compiler.DLXCompiler;
+
 
 import tests.TestUtils;
 import front.Parser.ParserException;
@@ -70,15 +72,21 @@ public class VCGPrinter {
                     + "       edge.thickness: 4\n");
 
             // parse
-            Parser parser = new Parser(testFilesFolder + "/" + testFile);
+            DLXCompiler compiler = new DLXCompiler(testFilesFolder + "/" + testFile);;
+//            Parser parser = new Parser(testFilesFolder + "/" + testFile);
             int nodeNumber = 0;
             HashMap<BasicBlock, Integer> nodeMap = new HashMap<BasicBlock, Integer>();
             try {
-                parser.parse();
-                List<CFG> CFGs = parser.CFGs;
+//                parser.parse();
+            	compiler.compile();
+                List<CFG> CFGs = compiler.parser.CFGs;
                 
                 for (CFG cfg : CFGs) {//
                     cfg.calculateDepths();
+                    
+                    // TODO print CFG's frame or globals if CFG is main!
+                    // locals, parameters and globals are not present 
+                    // in the instruction stream anymore
                     
                     // Nodes
                     Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
@@ -150,11 +158,13 @@ public class VCGPrinter {
             } catch (ParserException
                     | ScannerException e) {
                 e.printStackTrace();
-            } finally {
+            } 
+            finally {
                 // close output file and scanner
                 out.println("}");
                 out.close();
-                parser.terminate();
+//                parser.terminate();
+                compiler.terminate();
             }
         }
     }

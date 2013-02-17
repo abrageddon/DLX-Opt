@@ -17,6 +17,7 @@ public class Parser {
 	private String sourceFile;
 	
 	// CFG
+	public List<Global> globals = new ArrayList<Global>();
 	public List<CFG> CFGs = new ArrayList<CFG>();
 	public CFG cfg;
 	public CFG mainCfg;
@@ -197,7 +198,7 @@ public class Parser {
 		insertSymbol(varSymbol);
         if (cfg.label.equals("main")){
             issue(new Global(varSymbol));
-        }else{
+        } else {
             issue(new Local(varSymbol));
         }
 		while (accept(Tokens.COMMA)) {
@@ -471,7 +472,7 @@ public class Parser {
 		if (currentIsFirstOf(NonTerminals.DESIGNATOR)) {
 			ret = designator();
 
-			if (ret instanceof Scalar) {
+			if (ret instanceof Scalar) { //TODO check this!!! frame has instr not scalars anymore
 				if (ret instanceof Global) {
 					Instruction value = issue(new LoadValue(((Scalar) ret).symbol));
 					return value;
@@ -488,7 +489,7 @@ public class Parser {
 			expect(Tokens.R_PAREN);
 		} else {
 			String number = number();
-			ret = new Immediate(number); // TODO issue smth?
+			ret = issue(new Immediate(number));
 		}
 		
 		return ret;
@@ -653,15 +654,16 @@ public class Parser {
 	
 	public Instruction issue(Instruction instr) {
 		
-		// issue instruction into BB
-		instr.setInstrNumber(instructionCnt++);
-		cfg.currentBB.addInstruction(instr);
-
 		// store parameters and local declared variables in the CFG current frame
 		if (instr instanceof Local || instr instanceof Param) {
 			// link symbol to slot in current frame
 			((Scalar)instr).symbol.slot = cfg.frame.size();
 			cfg.frame.add((Scalar)instr);
+		} else if (instr instanceof Global) { // store globals in the global array
+			globals.add((Global) instr);
+		} else { // issue instruction into BB
+			instr.setInstrNumber(instructionCnt++);
+			cfg.currentBB.appendInstruction(instr);			
 		}
 		
 		// return back the instruction

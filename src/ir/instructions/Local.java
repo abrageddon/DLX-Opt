@@ -8,6 +8,10 @@ public class Local extends Scalar {
 		super(symbol);
 	}
 
+	public String getInstrLabel() {
+		return symbol.ident;
+	}
+
     public String toString(){
         return getInstrNumber() + " : LOCAL " + getSymbol();
 //        return getSymbol()+".local";

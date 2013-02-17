@@ -14,7 +14,12 @@ public abstract class ArithmeticBinary extends Instruction {
 	
 	public String toString() {
 		return getInstrNumber() + " : " + getOperator() +
-				" (" + left.getInstrNumber() + ")" +
-				"(" + right.getInstrNumber() + ")";
+				" (" + Instruction.resolve(left).getInstrLabel() + ")" +
+				"(" + Instruction.resolve(right).getInstrLabel() + ")";
+		
+//		return getInstrNumber() + " : " + getOperator() +
+//				" (" + left.getInstrNumber() + ")" +
+//				"(" + right.getInstrNumber() + ")";
+
 	}
 }

@@ -20,8 +20,8 @@ public class BasicBlock {
 	private List<Instruction> instructions;
 	
 	// entry SSA state and exit SSA state
-	public List<Scalar> entryState;
-	public List<Scalar> exitState;
+	public List<Instruction> entryState;
+	public List<Instruction> exitState;
 	
 	public BasicBlock(String lbl) {
 		label = lbl;
@@ -30,12 +30,24 @@ public class BasicBlock {
 		
 		instructions = new ArrayList<Instruction>();
 		
-		entryState = new ArrayList<Scalar>();
-		exitState = new ArrayList<Scalar>();
+		entryState = new ArrayList<Instruction>();
+		exitState = new ArrayList<Instruction>();
 	}
 	
-	public void addInstruction(Instruction instr) {
+	public void prependInstruction(Instruction instr) {
+		instructions.add(0, instr);
+	}
+	
+	public void appendInstruction(Instruction instr) {
 		instructions.add(instr);
+	}
+	
+	public void removeInstruction(Instruction instr) {
+		instructions.remove(instr);
+	}
+	
+	public void removeInstructions(List<Instruction> instrList) {
+		instructions.removeAll(instrList);
 	}
 	
 	public List<Instruction> getInstructions() {

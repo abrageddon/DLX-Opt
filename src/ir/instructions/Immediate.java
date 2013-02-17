@@ -12,7 +12,11 @@ public class Immediate extends Instruction {
 		this(Integer.valueOf(value));
 	}
 
+//	public String getInstrNumber() {
+//		return this.toString();
+//	}
+	
 	public String toString() {
-		return "#" + value.toString();
+		return getInstrNumber() + " : IMM #" + value.toString();
 	}
 }

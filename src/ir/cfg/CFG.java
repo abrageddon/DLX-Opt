@@ -1,5 +1,6 @@
 package ir.cfg;
 
+import ir.instructions.Instruction;
 import ir.instructions.Scalar;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class CFG {
 	public BasicBlock currentJoinBB;
 
 	// Store frame in the CFG since each CFG corresponds to a single function
-	public List<Scalar> frame;
+	public List<Instruction> frame;
 	
 	public CFG(String lbl) {
 		label = lbl;
@@ -31,7 +32,7 @@ public class CFG {
 //		addBranch(startBB, currentBB);
 //		addLinearLink(startBB, currentBB);
 		
-		frame = new ArrayList<Scalar>();
+		frame = new ArrayList<Instruction>();
 	}
 
 	public void setCurrentBB(BasicBlock current) {

@@ -8,6 +8,10 @@ public class Param extends Scalar {
 		super(symbol);
 	}
 
+	public String getInstrLabel() {
+		return symbol.ident;
+	}
+	
 	public String toString(){
         return getInstrNumber() + " : PARAM " + getSymbol();
 //        return getSymbol()+".param";

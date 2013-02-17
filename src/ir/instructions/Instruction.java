@@ -2,8 +2,7 @@ package ir.instructions;
 
 public class Instruction {
 
-	
-	private Instruction forward;
+	private Instruction forward = null;
 	
 	private int instrNumber;
 	
@@ -12,16 +11,18 @@ public class Instruction {
 	}
 	
 	public String getInstrNumber() {
-		if (this instanceof Immediate) {
-			return ((Immediate)this).toString();
-		}
 		return String.valueOf(instrNumber);
 	}
-	
+
+	public String getInstrLabel() {
+		return getInstrNumber();
+	}
 	
 	public static Instruction resolve(Instruction i) {
-		if (i.forward != null) {
+//		System.out.println("RES: " + i);
+		if (i.forward != null && !i.forward.equals(i)) {
 			i.forward = resolve(i.forward);
+//			System.out.println("\t\t" + i.forward);
 			return i.forward;
 		}
 		return i;

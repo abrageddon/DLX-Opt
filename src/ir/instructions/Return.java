@@ -17,6 +17,6 @@ public class Return extends Instruction {
 	}
 	
 	public String toString() {
-		return getInstrNumber()  + " : RET (" + returnValue.getInstrNumber() + ")";
+		return getInstrNumber()  + " : RET (" + Instruction.resolve(returnValue).getInstrLabel() + ")";
 	}
 }
