@@ -2,7 +2,7 @@ package ir.instructions;
 
 public class Return extends Instruction {
 
-	private Instruction returnValue;
+	public Instruction returnValue;
 
 	public Return(Instruction returnValue) {
 		this.returnValue = returnValue;

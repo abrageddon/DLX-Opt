@@ -14,7 +14,7 @@ public class Phi extends Instruction {
     	String ret = "";
     	ret += getInstrNumber() + " : PHI: (";
     	for (Instruction val : values) {
-    		ret += val.getInstrLabel() + " ";
+    		ret += Instruction.resolve(val).getInstrLabel() + " ";
     	}
     	ret += ")";
     	
