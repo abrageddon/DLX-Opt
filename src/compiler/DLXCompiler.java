@@ -1,13 +1,6 @@
 package compiler;
-import ir.cfg.BasicBlock;
-import ir.cfg.CFG;
-import ir.instructions.ArithmeticBinary;
-import ir.instructions.Cmp;
-import ir.instructions.Immediate;
-import ir.instructions.Instruction;
-import ir.instructions.Move;
-import ir.instructions.Phi;
-import ir.instructions.Scalar;
+import ir.cfg.*;
+import ir.instructions.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,10 +41,12 @@ public class DLXCompiler {
 				Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
 				while (blockIterator.hasNext()) {
 					BasicBlock bb = blockIterator.next();
-//					bb.entryState.addAll(cfg.frame); // wrong, should have empty slots
-//					bb.exitState.addAll(cfg.frame); // wrong, should have empty slots
+					// create empty entry state (instruction place holders)
 					bb.entryState = createStateVector(cfg.frame);
-					bb.exitState = createStateVector(cfg.frame);
+					// copy the entry state slots inside exit state slots
+					// this is required to maintain the link between entry and exit state
+					// for the slots that are not mutated in current basic block
+					bb.exitState.addAll(bb.entryState); 
 					constructSSA(bb);
 				}
 
@@ -60,6 +55,7 @@ public class DLXCompiler {
 				while (blockIterator.hasNext()) {
 					BasicBlock bb = blockIterator.next();
 					int slot = 0;
+
 					for (Instruction val : bb.entryState) {
 						List<Instruction> values = new ArrayList<Instruction>();
 						for (BasicBlock pred : bb.pred) {
@@ -67,15 +63,16 @@ public class DLXCompiler {
 						}
 						if (values.size() == 1) { // only one predecessor
 							Instruction.forward(val, values.get(0));
-						} else if (values.size() > 1) {
+						} else if (values.size() > 1) { // multiple predecessors
 							Phi phi = new Phi(values);
+							phi.setInstrNumber(parser.instructionCnt++);
 							Instruction.forward(val, phi);
 							bb.prependInstruction(phi);
-						}
+						}						
 						slot++;
 					}
-
 				}
+				
 				// simplify PHIs
 				blockIterator = cfg.topDownIterator();
 				while (blockIterator.hasNext()) {
@@ -113,14 +110,8 @@ public class DLXCompiler {
 	}
 	
 	private void constructSSA(BasicBlock bb) {
-		// TODO not sure what this abstract interpretation step should do,
-		// since is not very clear in the paper:
-		// "
-		// 	Local variable assignments update the state vector, 
-		// 	reads from local variables select the last written 
-		// 	value for a given variable in the state vector.
-		// "
-		
+		// TODO the abstract interpretation should be extended to all
+		// the other IR operations that either read or write scalars
 		
 		// perform abstract interpretation
 		if (!bb.isInstructionsEmpty()) {
@@ -128,34 +119,43 @@ public class DLXCompiler {
 			for (Instruction instr : bb.getInstructions()) {
 				if (instr instanceof Move) {
 					moves.add(instr);
-					// mutate state vector, replace dest with src
-					// eliminate move instruction
-					Instruction src = ((Move) instr).src;
-					Scalar frameDest = (Scalar)((Move) instr).dest; // a frame slot
-					Instruction stateDest = bb.entryState.get(frameDest.symbol.slot);
-//					assert frameDest == stateDest;
-					Instruction.forward(stateDest, src);
-					bb.exitState.set(frameDest.symbol.slot, src);
+					// mutate state vector, replace dest with src in the state vector
+					
+					// src can be a scalar, belonging to the frame, or the result of another instruction
+					// we use resolve() to get the right value for it
+					Instruction src = resolve(((Move) instr).src, bb);
+					
+					// dest is always a scalar
+					Scalar dest = (Scalar)((Move) instr).dest; // a frame slot
+					bb.exitState.set(dest.symbol.slot, src);
 				} else if (instr instanceof ArithmeticBinary) {
 					// read from local variables
-					if (((ArithmeticBinary) instr).left instanceof Scalar) {
-						int slot = ((Scalar)(((ArithmeticBinary) instr).left)).symbol.slot;
-						((ArithmeticBinary) instr).left = bb.entryState.get(slot);
-					}
-					if (((ArithmeticBinary) instr).right instanceof Scalar) {
-						int slot = ((Scalar)(((ArithmeticBinary) instr).right)).symbol.slot;
-						((ArithmeticBinary) instr).right = bb.entryState.get(slot);
-					}
+					((ArithmeticBinary) instr).right = resolve(((ArithmeticBinary) instr).right, bb);
+					((ArithmeticBinary) instr).left = resolve(((ArithmeticBinary) instr).left, bb);
+				} else if (instr instanceof Return) {
+					((Return) instr).returnValue = resolve(((Return) instr).returnValue, bb);
 				}
 			}
+			// eliminate move instructions
 			bb.removeInstructions(moves);
 		}
-	}	
+	}
+	
+	// resolve the value of a read
+	private Instruction resolve(Instruction inst, BasicBlock bb) {
+		if (inst instanceof Scalar) {
+			// if the instruction is a scalar then this is a read and
+			// we need to actually get it's value from the state vector
+			return bb.exitState.get(((Scalar)inst).symbol.slot);
+		}
+		// a value generating instruction (e.g. IMM)
+		return inst;
+	}
 	
 	private boolean allEqual(List<Instruction> values) {
-		Instruction firstVal = values.get(0);
+		Instruction firstVal = Instruction.resolve(values.get(0));
 		for(int i = 1; i < values.size(); i++) {
-			if(!firstVal.equals(values.get(i))) {
+			if(!firstVal.equals(Instruction.resolve(values.get(i)))) {
 				return false;
 			}
 		}

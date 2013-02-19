@@ -20,7 +20,7 @@ public class Phi extends Instruction {
     	    }else{
     	        comma = true;
     	    }
-    		ret += val.getInstrLabel();
+    		ret += Instruction.resolve(val).getInstrLabel();
     	}
     	ret += ")";
     	

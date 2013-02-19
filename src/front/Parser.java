@@ -22,8 +22,7 @@ public class Parser {
 	public CFG cfg;
 	public CFG mainCfg;
 	
-	private int mainInstructionCnt;
-	private int instructionCnt;
+	public int instructionCnt;
 	
 	public Parser(String srcFile) {
 		symTable = new SymbolTable();
@@ -108,13 +107,11 @@ public class Parser {
         CFG.addLinearLink(cfg.currentBB, genericBB);
         cfg.setCurrentBB(genericBB);
         
-		mainInstructionCnt = instructionCnt;
 		while(currentIsFirstOf(NonTerminals.FUNC_DECL)) {
 			funcDecl();
 		}
 		expect(Tokens.L_BRACE);
 		cfg = mainCfg;
-		instructionCnt = mainInstructionCnt;
 		symTable.increaseScope();
 		statSequence();
 		symTable.decreaseScope();
@@ -167,7 +164,6 @@ public class Parser {
 	// funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” 
 	private void funcDecl() throws ParserException, ScannerException {
 		if(accept(Tokens.FUNCTION) || accept(Tokens.PROCEDURE)) {
-			instructionCnt = 0;
 			String ident = ident();
 			cfg = new CFG(ident);
 			CFGs.add(cfg);

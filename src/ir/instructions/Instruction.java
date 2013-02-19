@@ -19,10 +19,8 @@ public class Instruction {
 	}
 	
 	public static Instruction resolve(Instruction i) {
-//		System.out.println("RES: " + i);
-		if (i.forward != null && !i.forward.equals(i)) {
+		if (i.forward != null) {
 			i.forward = resolve(i.forward);
-//			System.out.println("\t\t" + i.forward);
 			return i.forward;
 		}
 		return i;
