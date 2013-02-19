@@ -4,12 +4,15 @@ import ir.instructions.Instruction;
 import ir.instructions.Scalar;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class BasicBlock {
 
     public String label;
     public Integer depth;//for VCG
+    public HashSet<BasicBlock> semiDom;
+    public BasicBlock iDom;
 	
 	public List<BasicBlock> succ;
 	public List<BasicBlock> pred;

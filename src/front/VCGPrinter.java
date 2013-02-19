@@ -27,9 +27,9 @@ public class VCGPrinter {
     private DLXCompiler compiler;
     private List<CFG> CFGs;
     private HashMap<BasicBlock, Integer> nodeMap;
-    private HashMap<Integer, HashSet<Integer>> dominatorMap;
+    private HashMap<BasicBlock, HashSet<BasicBlock>> dominatorMap;
     private Integer nodeNumber;
-    private String fileName;
+//    private String fileName;
     
 	@Test
     public void generateCFGs() throws IOException {
@@ -39,7 +39,7 @@ public class VCGPrinter {
         for (String testFile : testFiles) {
             // init output file and scanner
 
-        	fileName = testFile;
+//        	fileName = testFile;
         	
             PrintStream vcgOut = null;
             try {
@@ -57,7 +57,7 @@ public class VCGPrinter {
 //            Parser parser = new Parser(testFilesFolder + "/" + testFile);
             nodeNumber = 0;
             nodeMap = new HashMap<BasicBlock, Integer>();
-    		dominatorMap = new HashMap<Integer, HashSet<Integer>>();
+    		dominatorMap = new HashMap<BasicBlock, HashSet<BasicBlock>>();
             try {
 //                parser.parse();
             	compiler.compile();
@@ -218,22 +218,21 @@ public class VCGPrinter {
 	@SuppressWarnings("unchecked")
 	private void createDominatorEdges(CFG cfg) {
 		Iterator<BasicBlock> blockIterator = cfg.bottomUpIterator();
-		HashSet<Integer> allNodeSet = new HashSet<>();
+		HashSet<BasicBlock> allNodeSet = new HashSet<BasicBlock>();
 		Stack<BasicBlock> workList = new Stack<BasicBlock>();
 
 		while (blockIterator.hasNext()) {
 		    BasicBlock currentBlock = blockIterator.next();
-		    allNodeSet.add(nodeMap.get(currentBlock));
+		    allNodeSet.add(currentBlock);
 		}
 		
 //      For (each n in NodeSet)
-		blockIterator = cfg.bottomUpIterator();
+		blockIterator = cfg.topDownIterator();
 		while (blockIterator.hasNext()) {
 //      	Dom(n) = NodeSet
 		    BasicBlock currentBlock = blockIterator.next();
-			dominatorMap.put(nodeMap.get(currentBlock), (HashSet<Integer>) allNodeSet.clone());
+			currentBlock.semiDom = (HashSet<BasicBlock>) allNodeSet.clone();
 		}
-//		System.out.println("Filename: "+ fileName +"\nallNodeSet: " + allNodeSet);
 //      WorkList = {StartNode}
 		workList.push(cfg.startBB);
 //      While (WorkList != null) {
@@ -241,37 +240,78 @@ public class VCGPrinter {
 //          Remove any node Y from WorkList
 			BasicBlock workNode = workList.pop();
 //          New = {Y} U intersects Dom(X);X in Pred(Y)
-			HashSet<Integer> newDom = (HashSet<Integer>) allNodeSet.clone();// TODO figure out this part
+			HashSet<BasicBlock> newDom = (HashSet<BasicBlock>) allNodeSet.clone();// TODO figure out this part
 			if (!workNode.pred.isEmpty()){
 				for (BasicBlock pred: workNode.pred){
-					newDom.retainAll(dominatorMap.get(nodeMap.get(pred)) );
+					newDom.retainAll( pred.semiDom );
 				}
 			}else{
-				newDom = new HashSet<Integer>();
+				newDom = new HashSet<BasicBlock>();
 			}
-			newDom.add(nodeMap.get(workNode));
-
+			newDom.add(workNode);
 //          If New != Dom(Y) {
-			if(! ( newDom.containsAll(dominatorMap.get(nodeMap.get(workNode))) 
-					&& dominatorMap.get(nodeMap.get(workNode)).containsAll(newDom)  ) ){
+			if(! ( newDom.containsAll(workNode.semiDom) 
+					&& workNode.semiDom.containsAll(newDom)  ) ){
 //              Dom(Y) = New
-				dominatorMap.put(nodeMap.get(workNode), newDom);
+				workNode.semiDom = (HashSet<BasicBlock>) newDom.clone();
+				
+				
 //              For (each Z in Succ(Y))
 				for(BasicBlock succ: workNode.succ){
 //                  WorkList = WorkList U {Z}
 					workList.push(succ);
 				}
 			}
+			
+			
 		}
+
+        // find immediate dominator
+        for (BasicBlock node : nodeMap.keySet()) {
+            HashSet<BasicBlock> possibleIDoms = (HashSet<BasicBlock>) node.semiDom.clone();
+            for (BasicBlock iDom : possibleIDoms) {
+                if(iDom == null || iDom == node){continue;}
+                if(node.iDom == null ){
+                    node.iDom = iDom;
+                }else if(node.iDom.depth < iDom.depth && iDom != node){
+                    node.iDom = iDom;
+                }
+            }
+		}
+		
+/*
+//		for i := n by -1 until 2 do
+//		    w := vertex(i);
+        blockIterator = cfg.bottomUpIterator();
+        while (blockIterator.hasNext()) {
+//          for each v in bucket(parent(w)) do
+            BasicBlock currentBlock = blockIterator.next();
+            for (BasicBlock bucketParent: currentBlock.semiDom){
+//		        delete v from bucket(parent(w));
+                bucketParent.semiDom.remove(currentBlock);
+//		        u := EVAL(v);
+//		        dom(v) := if semi(u) < semi(v) then u
+//		            else parent(w) fi od od;
+            }
+		    
+		    
+//		    for i := 2 until n do
+//		        w := vertex(i);
+//		        if dom(w) != vertex(semi(w)) then dom(w) := dom(dom(w)) fi od;
+//		    dom(r) := 0;
+        }
+//*/
+		
 	}
 
     private void dominatorEdges(PrintStream out) {
         for (BasicBlock node : nodeMap.keySet()) {
-            // dominator edges
-            for (Integer dominator : dominatorMap.get(nodeMap.get(node))) {
-            	if( nodeMap.get(node) !=  dominator){
-            		out.println("    edge: { sourcename:\"" + dominator + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
-            	}
+//             dominator edges
+//            for (BasicBlock dominator : node.semiDom) {
+//        		out.println("    edge: { sourcename:\"" + nodeMap.get(dominator) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: darkgray  class: 4}");
+//            }
+            if (node.iDom != null){
+                out.println("    edge: { sourcename:\"" + nodeMap.get(node.iDom) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
             }
         }
     }
