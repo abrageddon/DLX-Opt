@@ -10,8 +10,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
+
 import org.junit.Test;
 
 import compiler.DLXCompiler;
@@ -24,8 +27,11 @@ public class VCGPrinter {
     private DLXCompiler compiler;
     private List<CFG> CFGs;
     private HashMap<BasicBlock, Integer> nodeMap;
+    private HashMap<Integer, HashSet<Integer>> dominatorMap;
+    private Integer nodeNumber;
+    private String fileName;
     
-    @Test
+	@Test
     public void generateCFGs() throws IOException {
         String testFilesFolder = "src/testCases";
         String[] testFiles = TestUtils.listFiles(testFilesFolder, ".tst");// Edit here to run one test
@@ -33,6 +39,8 @@ public class VCGPrinter {
         for (String testFile : testFiles) {
             // init output file and scanner
 
+        	fileName = testFile;
+        	
             PrintStream vcgOut = null;
             try {
                 vcgOut = new PrintStream(new FileOutputStream(testFilesFolder + "/" + testFile + ".vcg"));
@@ -47,8 +55,9 @@ public class VCGPrinter {
             // parse
             compiler = new DLXCompiler(testFilesFolder + "/" + testFile);
 //            Parser parser = new Parser(testFilesFolder + "/" + testFile);
-            int nodeNumber = 0;
+            nodeNumber = 0;
             nodeMap = new HashMap<BasicBlock, Integer>();
+    		dominatorMap = new HashMap<Integer, HashSet<Integer>>();
             try {
 //                parser.parse();
             	compiler.compile();
@@ -58,17 +67,21 @@ public class VCGPrinter {
                     cfg.calculateDepths();
                     
                     // Nodes
-                    buildNodes(vcgOut, nodeNumber, cfg);
+                    buildNodes(vcgOut, cfg);
                     
                     vcgOut.println();
+                    
+                    // Build dominator tree
+                    createDominatorEdges(cfg);
                 }
                 
                 // Edges
                 cfgEdges(vcgOut);
-                
-                // TODO Build dominator tree
-                
-                // TODO Print dominator edges
+
+                vcgOut.println();
+
+                // Print dominator edges
+                dominatorEdges(vcgOut);
 
             } catch (ParserException
                     | ScannerException e) {
@@ -82,10 +95,6 @@ public class VCGPrinter {
         }
     }
 
-    private void closeGraph(PrintStream out) {
-        out.println("}");
-        out.close();
-    }
 
     private void openGraph(PrintStream out) {
         out.println("graph: { title: \"Control Flow Graph\"\n"
@@ -97,7 +106,7 @@ public class VCGPrinter {
                 + "    classname 2 : \"Const Lists (red)\"\n"
                 + "    classname 3 : \"Live Variable Lists (green)\"\n"
                 + "    classname 4 : \"Dominator Graph (gray)\"\n"
-                + "		  yspace: 34\n"
+                + "       yspace: 34\n"
                 + "       xspace: 30\n"
                 + "       xlspace: 10\n"
                 // scaling: 0.75
@@ -124,28 +133,12 @@ public class VCGPrinter {
                 + "       edge.thickness: 4\n");
     }
 
-    private void cfgEdges(PrintStream out) {
-        for (BasicBlock node : nodeMap.keySet()) {
-            // out edges
-            for (BasicBlock dest : node.succ) {
-                if (node.label.equals("if-cond") && dest.label.equals("then")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
-                } else if (node.label.equals("if-cond") && dest.label.equals("else")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
-                } else if (node.label.equals("while-cond") && dest.label.equals("while-body")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
-                } else if (node.label.equals("while-cond") && dest.label.equals("while-next")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
-                } else if (node.depth > dest.depth) {
-                    out.println("    backedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"back\" color: orange class: 1}");
-                } else {
-                    out.println("    edge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\" class: 1}");
-                }
-            }
-        }
+    private void closeGraph(PrintStream out) {
+        out.println("}");
+        out.close();
     }
 
-    private void buildNodes(PrintStream out, int nodeNumber, CFG cfg) {
+    private void buildNodes(PrintStream out, CFG cfg) {
         Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
         while (blockIterator.hasNext()) {
             BasicBlock currentBlock = blockIterator.next();
@@ -197,6 +190,89 @@ public class VCGPrinter {
 
             // next node
             ++nodeNumber;
+        }
+    }
+
+    
+    private void cfgEdges(PrintStream out) {
+        for (BasicBlock node : nodeMap.keySet()) {
+            // out edges
+            for (BasicBlock dest : node.succ) {
+                if (node.label.equals("if-cond") && dest.label.equals("then")) {
+                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
+                } else if (node.label.equals("if-cond") && dest.label.equals("else")) {
+                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
+                } else if (node.label.equals("while-cond") && dest.label.equals("while-body")) {
+                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
+                } else if (node.label.equals("while-cond") && dest.label.equals("while-next")) {
+                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
+                } else if (node.depth > dest.depth) {
+                    out.println("    backedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"back\" color: orange class: 1}");
+                } else {
+                    out.println("    edge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\" class: 1}");
+                }
+            }
+        }
+    }
+    
+	@SuppressWarnings("unchecked")
+	private void createDominatorEdges(CFG cfg) {
+		Iterator<BasicBlock> blockIterator = cfg.bottomUpIterator();
+		HashSet<Integer> allNodeSet = new HashSet<>();
+		Stack<BasicBlock> workList = new Stack<BasicBlock>();
+
+		while (blockIterator.hasNext()) {
+		    BasicBlock currentBlock = blockIterator.next();
+		    allNodeSet.add(nodeMap.get(currentBlock));
+		}
+		
+//      For (each n in NodeSet)
+		blockIterator = cfg.bottomUpIterator();
+		while (blockIterator.hasNext()) {
+//      	Dom(n) = NodeSet
+		    BasicBlock currentBlock = blockIterator.next();
+			dominatorMap.put(nodeMap.get(currentBlock), (HashSet<Integer>) allNodeSet.clone());
+		}
+//		System.out.println("Filename: "+ fileName +"\nallNodeSet: " + allNodeSet);
+//      WorkList = {StartNode}
+		workList.push(cfg.startBB);
+//      While (WorkList != null) {
+		while (!workList.isEmpty()){
+//          Remove any node Y from WorkList
+			BasicBlock workNode = workList.pop();
+//          New = {Y} U intersects Dom(X);X in Pred(Y)
+			HashSet<Integer> newDom = (HashSet<Integer>) allNodeSet.clone();// TODO figure out this part
+			if (!workNode.pred.isEmpty()){
+				for (BasicBlock pred: workNode.pred){
+					newDom.retainAll(dominatorMap.get(nodeMap.get(pred)) );
+				}
+			}else{
+				newDom = new HashSet<Integer>();
+			}
+			newDom.add(nodeMap.get(workNode));
+
+//          If New != Dom(Y) {
+			if(! ( newDom.containsAll(dominatorMap.get(nodeMap.get(workNode))) 
+					&& dominatorMap.get(nodeMap.get(workNode)).containsAll(newDom)  ) ){
+//              Dom(Y) = New
+				dominatorMap.put(nodeMap.get(workNode), newDom);
+//              For (each Z in Succ(Y))
+				for(BasicBlock succ: workNode.succ){
+//                  WorkList = WorkList U {Z}
+					workList.push(succ);
+				}
+			}
+		}
+	}
+
+    private void dominatorEdges(PrintStream out) {
+        for (BasicBlock node : nodeMap.keySet()) {
+            // dominator edges
+            for (Integer dominator : dominatorMap.get(nodeMap.get(node))) {
+            	if( nodeMap.get(node) !=  dominator){
+            		out.println("    edge: { sourcename:\"" + dominator + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
+            	}
+            }
         }
     }
 }

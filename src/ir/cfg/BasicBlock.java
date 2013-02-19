@@ -9,7 +9,7 @@ import java.util.List;
 public class BasicBlock {
 
     public String label;
-    public Integer depth;
+    public Integer depth;//for VCG
 	
 	public List<BasicBlock> succ;
 	public List<BasicBlock> pred;
