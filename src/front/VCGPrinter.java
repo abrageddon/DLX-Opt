@@ -253,8 +253,6 @@ public class VCGPrinter {
 					&& workNode.semiDom.containsAll(newDom)  ) ){
 //              Dom(Y) = New
 				workNode.semiDom = (HashSet<BasicBlock>) newDom.clone();
-				
-				
 //              For (each Z in Succ(Y))
 				for(BasicBlock succ: workNode.succ){
 //                  WorkList = WorkList U {Z}
