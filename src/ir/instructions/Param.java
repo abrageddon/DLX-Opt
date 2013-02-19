@@ -13,7 +13,6 @@ public class Param extends Scalar {
 	}
 	
 	public String toString(){
-        return getInstrNumber() + " : PARAM " + getSymbol();
-//        return getSymbol()+".param";
+        return "PARAM : " + getSymbol();
 	}
 }

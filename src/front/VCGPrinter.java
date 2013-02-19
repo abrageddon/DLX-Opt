@@ -2,6 +2,7 @@ package front;
 
 import ir.cfg.BasicBlock;
 import ir.cfg.CFG;
+import ir.instructions.Global;
 import ir.instructions.Instruction;
 
 import java.io.FileNotFoundException;
@@ -14,7 +15,6 @@ import java.util.List;
 import org.junit.Test;
 
 import compiler.DLXCompiler;
-
 
 import tests.TestUtils;
 import front.Parser.ParserException;
@@ -103,7 +103,17 @@ public class VCGPrinter {
                         
                         // function names for start and exit blocks
                         if (currentBlock.label.equals("exit") || currentBlock.label.equals("start")){
-                            out.print(": "+ cfg.label);
+                            out.print(" : "+ cfg.label);
+                        }
+                        if (currentBlock.label.equals("start")) {
+                            if (cfg.label.equals("main")) {
+                                for (Global global : compiler.parser.globals) {
+                                    out.print("\n" + global.toString());
+                                }
+                            }
+                            for (Instruction frameItem : cfg.frame) {
+                                out.print("\n" + frameItem.toString());
+                            }
                         }
                         
                         // print instructions if they exist
@@ -163,7 +173,7 @@ public class VCGPrinter {
                 // close output file and scanner
                 out.println("}");
                 out.close();
-//                parser.terminate();
+//parser.terminate();
                 compiler.terminate();
             }
         }

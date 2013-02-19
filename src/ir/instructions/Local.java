@@ -13,7 +13,6 @@ public class Local extends Scalar {
 	}
 
     public String toString(){
-        return getInstrNumber() + " : LOCAL " + getSymbol();
-//        return getSymbol()+".local";
+        return "LOCAL : " + getSymbol();
     }
 }

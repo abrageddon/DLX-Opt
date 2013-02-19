@@ -12,9 +12,15 @@ public class Phi extends Instruction {
 	
     public String toString(){
     	String ret = "";
-    	ret += getInstrNumber() + " : PHI: (";
+    	ret += getInstrNumber() + " : PHI (";
+    	boolean comma = false;
     	for (Instruction val : values) {
-    		ret += val.getInstrLabel() + " ";
+    	    if(comma){
+    	        ret += ", ";
+    	    }else{
+    	        comma = true;
+    	    }
+    		ret += val.getInstrLabel();
     	}
     	ret += ")";
     	
