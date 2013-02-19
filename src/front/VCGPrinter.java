@@ -27,7 +27,6 @@ public class VCGPrinter {
     private DLXCompiler compiler;
     private List<CFG> CFGs;
     private HashMap<BasicBlock, Integer> nodeMap;
-    private HashMap<BasicBlock, HashSet<BasicBlock>> dominatorMap;
     private Integer nodeNumber;
 //    private String fileName;
     
@@ -57,7 +56,6 @@ public class VCGPrinter {
 //            Parser parser = new Parser(testFilesFolder + "/" + testFile);
             nodeNumber = 0;
             nodeMap = new HashMap<BasicBlock, Integer>();
-    		dominatorMap = new HashMap<BasicBlock, HashSet<BasicBlock>>();
             try {
 //                parser.parse();
             	compiler.compile();
@@ -104,28 +102,28 @@ public class VCGPrinter {
                 + "    classname 1 : \"CFG Edges (blue)\"\n" 
                 + "    classname 2 : \"Const Lists (red)\"\n"
                 + "    classname 3 : \"Live Variable Lists (green)\"\n"
-                + "    classname 4 : \"Dominator Graph (gray)\"\n"
+                + "    classname 4 : \"Dominator Tree (gray)\"\n"
                 + "       yspace: 34\n"
                 + "       xspace: 30\n"
                 + "       xlspace: 10\n"
                 // scaling: 0.75
-                + "       portsharing: no\n" 
-                + "       finetuning: no\n" 
-                + "       equalydist: yes\n" 
-                + "       orientation: toptobottom\n" 
+                + "       portsharing: no\n"
+                + "       finetuning: yes\n"
+                + "       equalydist: yes\n"
+                + "       orientation: toptobottom\n"
                 + "       lateedgelabels: no\n"
-                + "       dirtyedgelabels: no\n" 
-                + "       linearsegments: yes\n" 
-                + "       nearedges: yes\n" 
-                + "       fstraightphase: yes\n" 
+                + "       dirtyedgelabels: yes\n"
+                + "       linearsegments: yes\n"
+                + "       nearedges: yes\n"
+                + "       fstraightphase: yes\n"
                 + "       straightphase: yes\n"
-                + "       priorityphase: yes\n" 
-                + "       crossingphase2: yes\n" 
-                + "       crossingoptimization: yes\n" 
-                + "       crossingweight: medianbary\n" 
+                + "       priorityphase: yes\n"
+                + "       crossingphase2: yes\n"
+                + "       crossingoptimization: yes\n"
+                + "       crossingweight: medianbary\n"
                 + "       arrowmode: fixed\n"
-                + "       node.borderwidth: 3\n" 
-                + "       node.bordercolor: darkyellow\n" 
+                + "       node.borderwidth: 3\n"
+                + "       node.bordercolor: darkyellow\n"
                 + "       node.color: lightyellow\n"
                 + "       node.textcolor: black\n"
                 + "       edge.arrowsize: 15\n"
