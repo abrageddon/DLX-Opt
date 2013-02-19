@@ -42,6 +42,10 @@ public class Parser {
 		scanner.open(sourceFile);
 		scanner.next(); // scan the input symbol
 		computation();
+
+        for (CFG cfg : CFGs) {
+            cfg.calculateDepths();
+        }
 	}
 
 	public void terminate() {

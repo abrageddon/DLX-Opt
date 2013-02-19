@@ -27,9 +27,8 @@ public class DLXCompiler {
 
 //		try {
 			parser.parse();
-			List<CFG> CFGs = parser.CFGs;
 
-			for (CFG cfg : CFGs) {//
+			for (CFG cfg : parser.CFGs) {
 
 				// skip main since is does not have any local variables
 				if(cfg.label.equals("main")) {

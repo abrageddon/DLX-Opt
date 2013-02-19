@@ -63,8 +63,7 @@ public class VCGPrinter {
             	compiler.compile();
                 CFGs = compiler.parser.CFGs;
                 
-                for (CFG cfg : CFGs) {//
-                    cfg.calculateDepths();
+                for (CFG cfg : CFGs) {
                     
                     // Nodes
                     buildNodes(vcgOut, cfg);
@@ -278,38 +277,15 @@ public class VCGPrinter {
                 }
             }
 		}
-		
-/*
-//		for i := n by -1 until 2 do
-//		    w := vertex(i);
-        blockIterator = cfg.bottomUpIterator();
-        while (blockIterator.hasNext()) {
-//          for each v in bucket(parent(w)) do
-            BasicBlock currentBlock = blockIterator.next();
-            for (BasicBlock bucketParent: currentBlock.semiDom){
-//		        delete v from bucket(parent(w));
-                bucketParent.semiDom.remove(currentBlock);
-//		        u := EVAL(v);
-//		        dom(v) := if semi(u) < semi(v) then u
-//		            else parent(w) fi od od;
-            }
-		    
-		    
-//		    for i := 2 until n do
-//		        w := vertex(i);
-//		        if dom(w) != vertex(semi(w)) then dom(w) := dom(dom(w)) fi od;
-//		    dom(r) := 0;
-        }
-//*/
-		
 	}
 
     private void dominatorEdges(PrintStream out) {
         for (BasicBlock node : nodeMap.keySet()) {
-//             dominator edges
+            // Dominator Edges
 //            for (BasicBlock dominator : node.semiDom) {
 //        		out.println("    edge: { sourcename:\"" + nodeMap.get(dominator) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: darkgray  class: 4}");
 //            }
+            // Immediate Dominator Edges
             if (node.iDom != null){
                 out.println("    edge: { sourcename:\"" + nodeMap.get(node.iDom) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
             }
