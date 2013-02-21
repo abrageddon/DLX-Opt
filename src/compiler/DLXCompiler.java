@@ -79,9 +79,15 @@ public class DLXCompiler {
 					List<Instruction> removablePHIs = new ArrayList<Instruction>();
 					for (Instruction inst : bb.getInstructions()) {
 						if (inst instanceof Phi) {
-							if (allEqual(((Phi) inst).values)) {
-								removablePHIs.add(inst);
+							Phi phi = (Phi) inst;
+							Instruction value = testPhi(phi);
+							if (value != null) {
+								// this PHI is redundant and 
+								// value holds the instruction it should be forwarded to
+								Instruction.forward(phi, value);
+								removablePHIs.add(phi);
 							}
+							
 						}
 					}
 					bb.removeInstructions(removablePHIs);					
@@ -151,14 +157,47 @@ public class DLXCompiler {
 		return inst;
 	}
 	
-	private boolean allEqual(List<Instruction> values) {
-		Instruction firstVal = Instruction.resolve(values.get(0));
-		for(int i = 1; i < values.size(); i++) {
-			if(!firstVal.equals(Instruction.resolve(values.get(i)))) {
-				return false;
+	
+	/**
+	 * Determine if PHI instruction is redundant.
+	 * Functions of the form v2 = PHI(v1, v1, ..., v1) 
+	 * 		are forwarded to their common operand (v2 → v1). 
+	 * Functions of the form v2 = PHI(v1, v2, ..., v2) 
+	 * 		are forwarded to their incoming operand (v2 → v1). 
+	 * 
+	 * @param phi
+	 * @return the instruction the PHI should be forwarded to if redundant, null otherwise
+	 */
+	private Instruction testPhi(Phi phi) {
+
+		// PHI's have at least two operands
+		assert phi.values.size() >= 2;
+		
+		Instruction firstVal = null;
+
+		// pick first value not equal to the PHI instruction itself
+		for(int i = 0; i < phi.values.size(); i++) {
+			firstVal = Instruction.resolve(phi.values.get(i));
+			if (!firstVal.equals(phi)) {
+				break;
 			}
 		}
-		return true;
+		
+		// all values should never be equal to PHI
+		if (firstVal.equals(phi)) {
+			System.err.println("All PHI values equals to PHI itself!");
+		}
+		
+		// test 
+		for(int i = 0; i < phi.values.size(); i++) {
+			Instruction value = Instruction.resolve(phi.values.get(i));
+			if(!value.equals(firstVal) && !value.equals(phi)) {
+				return null; // this PHI is not redundant
+			}
+		}
+		return firstVal; // this PHI is redundant, return the instruction it should be forwarded to
 	}
 
+	
+	
 }
