@@ -6,6 +6,14 @@ public class Instruction {
 	
 	private int instrNumber;
 	
+	public Instruction() {
+		super();
+	}
+ 	
+	public Instruction(Integer instrNumber) {
+		this.instrNumber = instrNumber;
+	}
+	
 	public void setInstrNumber(int instrNumber) {
 		this.instrNumber = instrNumber;
 	}

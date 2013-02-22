@@ -109,7 +109,7 @@ public class DLXCompiler {
 	private List<Instruction> createStateVector(List<Instruction> frame) {
 		List<Instruction> state = new ArrayList<Instruction>();
 		for (int i = 0; i < frame.size(); i++) {
-			state.add(new Instruction());
+			state.add(new Instruction(-1));
 		}
 		return state;
 	}
