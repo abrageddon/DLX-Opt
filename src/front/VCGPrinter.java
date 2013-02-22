@@ -10,10 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
 
 import org.junit.Test;
 
@@ -68,8 +66,6 @@ public class VCGPrinter {
                     
                     vcgOut.println();
                     
-                    // Build dominator tree
-                    createDominatorEdges(cfg);
                 }
                 
                 // Edges
@@ -212,68 +208,7 @@ public class VCGPrinter {
         }
     }
     
-	@SuppressWarnings("unchecked")
-	private void createDominatorEdges(CFG cfg) {
-		Iterator<BasicBlock> blockIterator = cfg.bottomUpIterator();
-		HashSet<BasicBlock> allNodeSet = new HashSet<BasicBlock>();
-		Stack<BasicBlock> workList = new Stack<BasicBlock>();
 
-		while (blockIterator.hasNext()) {
-		    BasicBlock currentBlock = blockIterator.next();
-		    allNodeSet.add(currentBlock);
-		}
-		
-//      For (each n in NodeSet)
-		blockIterator = cfg.topDownIterator();
-		while (blockIterator.hasNext()) {
-//      	Dom(n) = NodeSet
-		    BasicBlock currentBlock = blockIterator.next();
-			currentBlock.semiDom = (HashSet<BasicBlock>) allNodeSet.clone();
-		}
-//      WorkList = {StartNode}
-		workList.push(cfg.startBB);
-//      While (WorkList != null) {
-		while (!workList.isEmpty()){
-//          Remove any node Y from WorkList
-			BasicBlock workNode = workList.pop();
-//          New = {Y} U intersects Dom(X);X in Pred(Y)
-			HashSet<BasicBlock> newDom = (HashSet<BasicBlock>) allNodeSet.clone();// TODO figure out this part
-			if (!workNode.pred.isEmpty()){
-				for (BasicBlock pred: workNode.pred){
-					newDom.retainAll( pred.semiDom );
-				}
-			}else{
-				newDom = new HashSet<BasicBlock>();
-			}
-			newDom.add(workNode);
-//          If New != Dom(Y) {
-			if(! ( newDom.containsAll(workNode.semiDom) 
-					&& workNode.semiDom.containsAll(newDom)  ) ){
-//              Dom(Y) = New
-				workNode.semiDom = (HashSet<BasicBlock>) newDom.clone();
-//              For (each Z in Succ(Y))
-				for(BasicBlock succ: workNode.succ){
-//                  WorkList = WorkList U {Z}
-					workList.push(succ);
-				}
-			}
-			
-			
-		}
-
-        // find immediate dominator
-        for (BasicBlock node : nodeMap.keySet()) {
-            HashSet<BasicBlock> possibleIDoms = (HashSet<BasicBlock>) node.semiDom.clone();
-            for (BasicBlock iDom : possibleIDoms) {
-                if(iDom == null || iDom == node){continue;}
-                if(node.iDom == null ){
-                    node.iDom = iDom;
-                }else if(node.iDom.depth < iDom.depth && iDom != node){
-                    node.iDom = iDom;
-                }
-            }
-		}
-	}
 
     private void dominatorEdges(PrintStream out) {
         for (BasicBlock node : nodeMap.keySet()) {

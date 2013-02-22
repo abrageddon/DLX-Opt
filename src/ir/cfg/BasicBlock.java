@@ -1,7 +1,6 @@
 package ir.cfg;
 
-import ir.instructions.Instruction;
-import ir.instructions.Scalar;
+import ir.instructions.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;

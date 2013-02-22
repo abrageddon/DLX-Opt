@@ -45,6 +45,7 @@ public class Parser {
 
         for (CFG cfg : CFGs) {
             cfg.calculateDepths();
+            cfg.createDominatorEdges();
         }
 	}
 

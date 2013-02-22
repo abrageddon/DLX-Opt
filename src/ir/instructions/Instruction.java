@@ -11,7 +11,7 @@ public class Instruction {
 	}
  	
 	public Instruction(Integer instrNumber) {
-		this.instrNumber = instrNumber;
+	    setInstrNumber(instrNumber);
 	}
 	
 	public void setInstrNumber(int instrNumber) {
