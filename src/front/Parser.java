@@ -26,13 +26,20 @@ public class Parser {
 	
 	public Parser(String srcFile) {
 		symTable = new SymbolTable();
+		FunctionSymbol outputNumFnct = new FunctionSymbol("outputnum");
+		outputNumFnct.formalParams.add(new ParamSymbol("num"));
+		
+		FunctionSymbol outputNumFnctCaseSensitive = new FunctionSymbol("OutputNum");
+		outputNumFnctCaseSensitive.formalParams.add(new ParamSymbol("num"));
+		
 		symTable.insert(new FunctionSymbol("inputnum"));
-		symTable.insert(new FunctionSymbol("outputnum"));
+		symTable.insert(outputNumFnct);
 		symTable.insert(new FunctionSymbol("outputnewline"));
 		
 		symTable.insert(new FunctionSymbol("InputNum"));
-		symTable.insert(new FunctionSymbol("OutputNum"));
+		symTable.insert(outputNumFnctCaseSensitive);
 		symTable.insert(new FunctionSymbol("OutputNewLine"));
+		
 		
 		scanner = new Scanner();
 		sourceFile = srcFile;
@@ -162,6 +169,7 @@ public class Parser {
 			while (accept(Tokens.COMMA)) {
 				ident = ident();
 				param = new ParamSymbol(ident);
+				formalParams.add(param);
 				insertSymbol(param);
 				issue(new Param(param));
 			}
@@ -177,7 +185,7 @@ public class Parser {
 			cfg = new CFG(ident);
 			CFGs.add(cfg);
 			FunctionSymbol fnct = new FunctionSymbol(ident);
-			insertSymbol(new FunctionSymbol(ident));
+			insertSymbol(fnct);
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
 				fnct.formalParams = formalParam(); // add formal parameters to function symbol
