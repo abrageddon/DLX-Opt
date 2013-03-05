@@ -94,6 +94,7 @@ public class DLXCompiler {
 				}
 
 			}
+			assignRegisters();
 //		} catch (ParserException
 //				| ScannerException e) {
 //			e.printStackTrace();
@@ -103,7 +104,7 @@ public class DLXCompiler {
 //			//        out.close();
 //			parser.terminate();
 //		}
-
+		
 	}
 
 	private List<Instruction> createStateVector(List<Instruction> frame) {
@@ -198,6 +199,28 @@ public class DLXCompiler {
 		return firstVal; // this PHI is redundant, return the instruction it should be forwarded to
 	}
 
-	
+	void assignRegisters(){
+	    boolean[] R = new boolean[32];
+	    
+	    
+	    
+	    //Greedy -- Allocating the large live ranges first.
+	    //This makes the full register class available for the large ranges, and the small ranges can often fit in the gaps.
+        //Some functions have too many large live ranges, so there is not enough room for all the small live ranges.
+        //It would be really bad to spill small live ranges with high spill weights, so instead already assigned live ranges with lower spill weight can be evicted from the live range union.
+        //Evicted live ranges are unassigned from their physical register and put back in the priority queue.
+        //They get a second chance at being assigned somewhere else, or they can move on to live range splitting.
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	}
 	
 }

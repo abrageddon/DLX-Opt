@@ -1,9 +1,7 @@
 package front;
 
-import ir.cfg.BasicBlock;
-import ir.cfg.CFG;
-import ir.instructions.Global;
-import ir.instructions.Instruction;
+import ir.cfg.*;
+import ir.instructions.*;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -27,8 +25,13 @@ public class VCGPrinter {
     private HashMap<BasicBlock, Integer> nodeMap;
     private Integer nodeNumber;
 //    private String fileName;
-    
-	@Test
+
+
+    public void terminate() {
+        compiler.terminate();
+    }
+
+    @Test
     public void generateCFGs() throws IOException {
         String testFilesFolder = "src/testCases";
         String[] testFiles = TestUtils.listFiles(testFilesFolder, ".tst");// Edit here to run one test
@@ -36,8 +39,8 @@ public class VCGPrinter {
         for (String testFile : testFiles) {
             // init output file and scanner
 
-//        	fileName = testFile;
-        	
+//          fileName = testFile;
+            
             PrintStream vcgOut = null;
             try {
                 vcgOut = new PrintStream(new FileOutputStream(testFilesFolder + "/" + testFile + ".vcg"));
@@ -56,7 +59,7 @@ public class VCGPrinter {
             nodeMap = new HashMap<BasicBlock, Integer>();
             try {
 //                parser.parse();
-            	compiler.compile();
+                compiler.compile();
                 CFGs = compiler.parser.CFGs;
                 
                 for (CFG cfg : CFGs) {
@@ -96,8 +99,8 @@ public class VCGPrinter {
                 + "    manhatten_edges: yes\n"
                 + "\n"
                 + "    classname 1 : \"CFG Edges (blue)\"\n" 
-                + "    classname 2 : \"Const Lists (red)\"\n"
-                + "    classname 3 : \"Live Variable Lists (green)\"\n"
+//                + "    classname 2 : \"Const Lists (red)\"\n"
+//                + "    classname 3 : \"Live Variable Lists (green)\"\n"
                 + "    classname 4 : \"Dominator Tree (gray)\"\n"
                 + "       yspace: 34\n"
                 + "       xspace: 30\n"

@@ -3,6 +3,11 @@ package ir.instructions;
 public class Instruction {
 
 	private Instruction forward = null;
+
+//    private Memory regA;//return val
+//    private Memory regB;//left op
+//    private Memory regC;//right op
+	
 	
 	private int instrNumber;
 	

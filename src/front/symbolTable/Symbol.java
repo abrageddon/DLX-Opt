@@ -1,5 +1,9 @@
 package front.symbolTable;
 
+import ir.instructions.*;
+
+import java.util.ArrayList;
+
 public abstract class Symbol {
 
 	public String ident;

@@ -68,4 +68,12 @@ public class BasicBlock {
 		return "|" + label + "|" + "[" + instructions + "]";
 	}
 	
+	public List<Instruction> liveVariables(){
+	    List<Instruction> liveVar = new ArrayList<Instruction>();
+	    for (Instruction instruction: instructions){
+	        
+	    }
+	    return liveVar;
+	}
+	
 }

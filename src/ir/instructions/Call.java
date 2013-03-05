@@ -1,5 +1,6 @@
 package ir.instructions;
 
+import front.symbolTable.FunctionSymbol;
 import front.symbolTable.Symbol;
 
 public class Call extends Instruction {
@@ -10,7 +11,7 @@ public class Call extends Instruction {
 	}
 	
 	public String toString() {
-		return getInstrNumber() + " : CALL " + function.ident /*+ "("+function.parameters+")"*/;
+		return getInstrNumber() + " : CALL " + function.ident + "("+((FunctionSymbol)function).formalParams+")";
 	}
 	
 }
