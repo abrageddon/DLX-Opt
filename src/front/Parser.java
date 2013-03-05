@@ -149,21 +149,25 @@ public class Parser {
 	}
 	
 	// formalParam = “(“ [ident { “,” ident }] “)”
-	private void formalParam() throws ParserException, ScannerException {
+	private List<ParamSymbol> formalParam() throws ParserException, ScannerException {
+		List<ParamSymbol> formalParams = null;
 		expect(Tokens.L_PAREN);
 		if (peek(Tokens.IDENT)) {
+			formalParams = new ArrayList<ParamSymbol>();
 			String ident = ident();
-			ParamSymbol par = new ParamSymbol(ident);
-			insertSymbol(par);
-			issue(new Param(par));
+			ParamSymbol param = new ParamSymbol(ident);
+			formalParams.add(param); // add param to function symbol formal param list
+			insertSymbol(param); // add param to the symbol table
+			issue(new Param(param)); // add param to the frame 
 			while (accept(Tokens.COMMA)) {
 				ident = ident();
-				par = new ParamSymbol(ident);
-				insertSymbol(par);
-				issue(new Param(par));
+				param = new ParamSymbol(ident);
+				insertSymbol(param);
+				issue(new Param(param));
 			}
 		}
 		expect(Tokens.R_PAREN);
+		return formalParams;
 	}
 	
 	// funcDecl = (“function” | “procedure”) ident [formalParam] “;” funcBody “;” 
@@ -172,11 +176,12 @@ public class Parser {
 			String ident = ident();
 			cfg = new CFG(ident);
 			CFGs.add(cfg);
-			insertSymbol(new FunctionSymbol(ident)); // TODO add params to function
+			FunctionSymbol fnct = new FunctionSymbol(ident);
+			insertSymbol(new FunctionSymbol(ident));
 			symTable.increaseScope();
 			if(currentIsFirstOf(NonTerminals.FORMAL_PARAM)) {
-				formalParam();
-			}	        
+				fnct.formalParams = formalParam(); // add formal parameters to function symbol
+			}
 			expect(Tokens.SEMI_COLON);
 			funcBody();
 			
@@ -374,6 +379,7 @@ public class Parser {
 		Symbol fnct = tryResolve(ident);
 		if (accept(Tokens.L_PAREN)) {
 			// TODO verify that arguments number match formal parameters
+			// the formal parameters can be accessed using ((FunctionSymbol)fnct).formalParams 
 			if (currentIsFirstOf(NonTerminals.EXPRESSION)) {
 				expression();
 				while (accept(Tokens.COMMA)) {
