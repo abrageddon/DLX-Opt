@@ -140,7 +140,14 @@ public class DLXCompiler {
 					((ArithmeticBinary) instr).left = resolve(((ArithmeticBinary) instr).left, bb);
 				} else if (instr instanceof Return) {
 					((Return) instr).returnValue = resolve(((Return) instr).returnValue, bb);
+				} else if (instr instanceof Call) {
+					List<Instruction> ssaArgs = new ArrayList<Instruction>();
+					for(Instruction arg : ((Call)instr).args) {
+						ssaArgs.add(resolve(arg, bb));
+					}
+					((Call)instr).args = ssaArgs;
 				}
+				 
 			}
 			// eliminate move instructions
 			bb.removeInstructions(moves);

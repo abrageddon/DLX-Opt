@@ -1,17 +1,25 @@
 package ir.instructions;
 
+import java.util.List;
+
 import front.symbolTable.FunctionSymbol;
-import front.symbolTable.Symbol;
 
 public class Call extends Instruction {
-	public Symbol function;
+	public FunctionSymbol function;
+	public List<Instruction> args;
 	
-	public Call(Symbol fnct) {
+	public Call(FunctionSymbol fnct, List<Instruction> args) {
 		this.function = fnct;
+		this.args = args;
 	}
 	
 	public String toString() {
-		return getInstrNumber() + " : CALL " + function.ident + "("+((FunctionSymbol)function).formalParams+")";
+//		return getInstrNumber() + " : CALL " + function.ident + "("+((FunctionSymbol)function).formalParams+")";
+		String argsString = "";
+		for(Instruction inst : args) {
+			argsString += inst.getInstrNumber() + " ";
+		}
+		return getInstrNumber() + " : CALL " + function.ident + "("+ argsString +")";
 	}
 	
 }
