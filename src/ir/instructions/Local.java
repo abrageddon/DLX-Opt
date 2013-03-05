@@ -15,4 +15,5 @@ public class Local extends Scalar {
     public String toString(){
         return "LOCAL : " + getSymbol();
     }
+    
 }

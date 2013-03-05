@@ -145,6 +145,7 @@ public class VCGPrinter {
             // basic name; label open
             out.print("    node: { title:\"" + nodeNumber 
                     + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth + "\nFunction: " + cfg.label
+                    + "\" info2: \""+ currentBlock.liveVariables()
                     + "\" vertical_order: "+currentBlock.depth + " label: \"" + currentBlock.label);
             
             // function names for start and exit blocks

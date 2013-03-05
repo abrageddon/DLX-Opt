@@ -1,12 +1,16 @@
 package ir.instructions;
 
+import front.symbolTable.*;
+
+import java.util.HashSet;
+
 public class Instruction {
 
 	private Instruction forward = null;
 
-//    private Memory regA;//return val
-//    private Memory regB;//left op
-//    private Memory regC;//right op
+    public int regA;//return val
+    public int regB;//left op
+    public int regC;//right op
 	
 	
 	private int instrNumber;
@@ -46,5 +50,9 @@ public class Instruction {
 	
 	public String toString() {
 		return getInstrNumber();
+	}
+	
+	public HashSet<Symbol> getVariables(){    
+	    return null;
 	}
 }

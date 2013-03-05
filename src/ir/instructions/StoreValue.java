@@ -1,5 +1,8 @@
 package ir.instructions;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+
 import front.symbolTable.Symbol;
 
 public class StoreValue extends Instruction {
@@ -27,5 +30,14 @@ public class StoreValue extends Instruction {
 				"(" + value.getInstrNumber() + ")" +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")";
 	}
+
+    @Override
+    public HashSet<Symbol> getVariables() {
+        HashSet<Symbol> ret = new HashSet<Symbol>();
+        ret.add(symbol);
+        return ret;
+    }
+	
+	
 
 }

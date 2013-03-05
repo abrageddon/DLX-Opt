@@ -1,5 +1,7 @@
 package ir.instructions;
 
+import java.util.HashSet;
+
 import front.symbolTable.Symbol;
 
 public class LoadValue extends Instruction {
@@ -21,4 +23,11 @@ public class LoadValue extends Instruction {
 		return getInstrNumber() + " : LOAD " +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")";
 	}
+	
+    @Override
+    public HashSet<Symbol> getVariables() {
+        HashSet<Symbol> ret = new HashSet<Symbol>();
+        ret.add(symbol);
+        return ret;
+    }
 }

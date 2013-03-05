@@ -2,7 +2,6 @@ package front.symbolTable;
 
 import ir.instructions.*;
 
-import java.util.ArrayList;
 
 public abstract class Symbol {
 
@@ -10,6 +9,7 @@ public abstract class Symbol {
 	public SymbolKind kind;
     // TODO Hold function parameters
 
+	
 	// the scope in which the symbol is declared (0 is global)
 	public int scope;
 	

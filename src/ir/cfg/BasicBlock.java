@@ -1,6 +1,7 @@
 package ir.cfg;
 
 import ir.instructions.*;
+import front.symbolTable.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -68,12 +69,33 @@ public class BasicBlock {
 		return "|" + label + "|" + "[" + instructions + "]";
 	}
 	
-	public List<Instruction> liveVariables(){
-	    List<Instruction> liveVar = new ArrayList<Instruction>();
+	public HashSet<Symbol> liveVariables(){
+	    HashSet<Symbol> liveVar = new HashSet<Symbol>();
 	    for (Instruction instruction: instructions){
-	        
+	        if (instruction.getVariables() != null){
+	            liveVar.addAll(instruction.getVariables());
+	        }
 	    }
 	    return liveVar;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 }
