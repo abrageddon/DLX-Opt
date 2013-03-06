@@ -384,20 +384,21 @@ public class Parser {
 		// TODO check if function is defined; check number of parameters
 		expect(Tokens.CALL);
 		String ident = ident();
-		Symbol fnct = tryResolve(ident);
+		FunctionSymbol fnct = (FunctionSymbol) tryResolve(ident);
+		List<Instruction> args = new ArrayList<Instruction>();
 		if (accept(Tokens.L_PAREN)) {
 			// TODO verify that arguments number match formal parameters
 			// the formal parameters can be accessed using ((FunctionSymbol)fnct).formalParams 
 			if (currentIsFirstOf(NonTerminals.EXPRESSION)) {
-				expression();
+				args.add(expression());
 				while (accept(Tokens.COMMA)) {
-					expression();
+					args.add(expression());
 				}
 			}
 			expect(Tokens.R_PAREN);
 		}
 		
-		return issue(new Call(fnct));
+		return issue(new Call(fnct, args));
 	}
 	
 	// assignment = “let” designator “<-” expression

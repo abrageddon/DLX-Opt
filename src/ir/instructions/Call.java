@@ -4,30 +4,35 @@ import java.util.ArrayList;
 
 import front.symbolTable.*;
 
-public class Call extends Instruction {
-    public Symbol function;
+import java.util.List;
 
-    public Call(Symbol fnct) {
-        this.function = fnct;
-    }
+import front.symbolTable.FunctionSymbol;
+
+public class Call extends Instruction {
+	public FunctionSymbol function;
+	public List<Instruction> args;
+	
+	public Call(FunctionSymbol fnct, List<Instruction> args) {
+		this.function = fnct;
+		this.args = args;
+	}
 
     public String toString() {
         String str = getInstrNumber() + " : CALL " + function.ident + "(";
-        if (((FunctionSymbol) function).formalParams != null) {
+        if (args != null) {
             boolean first = true;
-            for (ParamSymbol parSym : ((FunctionSymbol) function).formalParams) {
-
+            for (Instruction inst : args ) {
                 if (first) {
                     first = false;
                 } else {
                     str += ", ";
                 }
-                str += parSym.toString();
+                str += inst.getInstrNumber();
             }
         }
         return str + ")";
     }
-    
+	
     //TODO parameter variables
 //    @Override
 //    public HashSet<Symbol> getVariables() {
