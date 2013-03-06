@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import compiler.Variable;
+
 public class BasicBlock {
 
     public String label;
@@ -68,34 +70,4 @@ public class BasicBlock {
 	public String toString() {
 		return "|" + label + "|" + "[" + instructions + "]";
 	}
-	
-	public HashSet<Symbol> liveVariables(){
-	    HashSet<Symbol> liveVar = new HashSet<Symbol>();
-	    for (Instruction instruction: instructions){
-	        if (instruction.getVariables() != null){
-	            liveVar.addAll(instruction.getVariables());
-	        }
-	    }
-	    return liveVar;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

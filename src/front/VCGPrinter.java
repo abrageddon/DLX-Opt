@@ -14,6 +14,7 @@ import java.util.List;
 import org.junit.Test;
 
 import compiler.DLXCompiler;
+import compiler.Tile;
 
 import tests.TestUtils;
 import front.Parser.ParserException;
@@ -25,6 +26,7 @@ public class VCGPrinter {
     private HashMap<BasicBlock, Integer> nodeMap;
     private Integer nodeNumber;
 //    private String fileName;
+    private boolean doCompile;
 
 
     public void terminate() {
@@ -32,7 +34,19 @@ public class VCGPrinter {
     }
 
     @Test
-    public void generateCFGs() throws IOException {
+    public void IRCFGs(){
+        doCompile=false;
+        generateCFGs();
+    }
+    
+    @Test
+    public void OptCFGs(){
+        doCompile=true;
+        generateCFGs();
+    }
+    
+    
+    public void generateCFGs(){
         String testFilesFolder = "src/testCases";
         String[] testFiles = TestUtils.listFiles(testFilesFolder, ".tst");// Edit here to run one test
 
@@ -40,10 +54,16 @@ public class VCGPrinter {
             // init output file and scanner
 
 //          fileName = testFile;
+            String graphType = "";
+            if (doCompile){
+                graphType = "CO";
+            }else{
+                graphType = "IR";
+            }
             
             PrintStream vcgOut = null;
             try {
-                vcgOut = new PrintStream(new FileOutputStream(testFilesFolder + "/" + testFile + ".vcg"));
+                vcgOut = new PrintStream(new FileOutputStream(testFilesFolder + "/" + testFile +"-"+graphType+ ".vcg"));
             } catch (FileNotFoundException e) {
                 System.err.println("init:Source file " + testFile + "not found");
             }
@@ -59,7 +79,11 @@ public class VCGPrinter {
             nodeMap = new HashMap<BasicBlock, Integer>();
             try {
 //                parser.parse();
-                compiler.compile();
+                if (doCompile){
+                    compiler.compile();
+                }else{
+                    compiler.parser.parse();
+                }
                 CFGs = compiler.parser.CFGs;
                 
                 for (CFG cfg : CFGs) {
@@ -141,12 +165,19 @@ public class VCGPrinter {
 
             // insert into node map
             nodeMap.put(currentBlock, nodeNumber);
+            
 
             // basic name; label open
             out.print("    node: { title:\"" + nodeNumber 
-                    + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth + "\nFunction: " + cfg.label
-                    + "\" info2: \""+ currentBlock.liveVariables()
-                    + "\" vertical_order: "+currentBlock.depth + " label: \"" + currentBlock.label);
+                    + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth + "\nFunction: " + cfg.label);
+            if (doCompile){
+                // Get live variables
+                Tile tile = cfg.tileTree.smallestTileOf(currentBlock);
+                if (tile != null){
+                    out.print( "\" info2: \"Tile Tree: "+tile.tileNumber+"\nVariables:"+ tile.variables);
+                }
+            }
+            out.print( "\" vertical_order: "+currentBlock.depth + " label: \"" + currentBlock.label);
             
             // function names for start and exit blocks
             if (currentBlock.label.equals("exit") || currentBlock.label.equals("start")){

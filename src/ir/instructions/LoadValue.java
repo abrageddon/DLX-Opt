@@ -2,6 +2,8 @@ package ir.instructions;
 
 import java.util.HashSet;
 
+import compiler.Variable;
+
 import front.symbolTable.Symbol;
 
 public class LoadValue extends Instruction {
@@ -25,9 +27,14 @@ public class LoadValue extends Instruction {
 	}
 	
     @Override
-    public HashSet<Symbol> getVariables() {
-        HashSet<Symbol> ret = new HashSet<Symbol>();
-        ret.add(symbol);
+    public HashSet<Variable> getVariables() {
+        HashSet<Variable> ret = new HashSet<Variable>();
+        if (symbol != null){
+            ret.add( new Variable(symbol) );
+        }else{
+            //TODO fix to deal with addresses
+            ret.add( new Variable(address) );
+        }
         return ret;
     }
 }

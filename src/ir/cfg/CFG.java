@@ -8,6 +8,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import compiler.Tile;
+import compiler.TileTree;
+
 public class CFG {
 
 	public String label;
@@ -17,6 +20,9 @@ public class CFG {
 	
 	public BasicBlock currentBB;
 	public BasicBlock currentJoinBB;
+	
+	//Reg Alloc
+	public TileTree tileTree;
 
 	// Store frame in the CFG since each CFG corresponds to a single function
 	public List<Instruction> frame;
@@ -27,9 +33,7 @@ public class CFG {
 		exitBB = new BasicBlock("exit");
 		currentBB = startBB;
 		
-//		currentBB = new BasicBlock("basic-block");
-//		addBranch(startBB, currentBB);
-//		addLinearLink(startBB, currentBB);
+		tileTree = new TileTree();
 		
 		frame = new ArrayList<Instruction>();
 	}
@@ -165,6 +169,66 @@ public class CFG {
             }
         }
     }
+   
+    public void buildTileTree(){
+        Iterator<BasicBlock> blockIterator = this.topDownIterator();
+        Tile currentTile = tileTree.rootTile;
+        int tileNumber = 0;
+        
+        if(!blockIterator.hasNext()){return;}
+
+        BasicBlock currentBlock;
+        BasicBlock nextBlock = blockIterator.next();
+        while (blockIterator.hasNext()) {
+            currentBlock = nextBlock;
+            nextBlock = blockIterator.next();
+            
+            currentTile.addBlock(currentBlock);
+            
+            
+            //New tile for next block if leaving start or entering loop
+            if (currentBlock.label.equals("start")){
+                tileNumber++;
+                Tile newTile = new Tile(currentTile, tileNumber);
+                currentTile.children.add(newTile);
+                currentTile=newTile;
+            }
+            if (nextBlock.label.equals("while-cond")){
+                tileNumber++;
+                Tile newTile = new Tile(currentTile, tileNumber);
+                currentTile.children.add(newTile);
+                currentTile=newTile;
+            }
+            
+            //Drop down a level when exiting loop or at exit block
+            if (nextBlock.label.equals("while-next")){
+                currentTile = currentTile.parent;
+            }
+            if (nextBlock.label.equals("exit")){
+                currentTile = tileTree.rootTile;
+            }
+            
+        }
+        //Fixup
+//        define t(n) to be the smallest tile which cent ains block n.
+//        foreach edge e = (n, m) do
+//          if n not-in t(m) and m not-in t(n) then
+//              let a be the smallest tile containing both n and m
+//              create a block na in a and in all tiles containing a
+//              replace e with (n, na) and (na, m).
+//          endif
+//        endfor
+//        while Exists e = (n, m) where m not-in parent(t(n)) do
+//          create n’ in parent (t(n)) and all ancestor tiles
+//          replace e with (n, n’) and (n’, m)
+//        endwhile
+//        while Exists e == (m, n) where m not-in parent(t(n)) do
+//          create m’ in parent(t(n)) and all ancestor tiles
+//          replace e with (n, m’) and (m’, m)
+//        endwhile
+        
+    }
+   
 	
 	public Iterator<BasicBlock> topDownIterator() {
 		return new TopDownLiniarIterator();

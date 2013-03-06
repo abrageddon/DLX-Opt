@@ -1,5 +1,6 @@
 package ir.instructions;
 
+
 // adda x y
 public class Index extends Instruction {
 
@@ -16,4 +17,17 @@ public class Index extends Instruction {
 				"(" + ((LoadValue)base).symbol.ident + ")" + 
 				"(" + offset.getInstrNumber() + ")";
 	}
+
+    @Override
+    public boolean equals(Object obj) {
+        //TODO fix this
+        if (obj instanceof Index){
+            Index cmp = (Index)obj;
+            boolean ret=false;
+            ret = ret || ((LoadValue)base).symbol.equals(((LoadValue)cmp.base).symbol);
+            ret = ret || (offset).getInstrNumber().equals(cmp.offset.getInstrNumber());
+            return ret;
+        }
+        return false;
+    }
 }

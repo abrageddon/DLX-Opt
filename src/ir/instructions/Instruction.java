@@ -4,6 +4,8 @@ import front.symbolTable.*;
 
 import java.util.HashSet;
 
+import compiler.Variable;
+
 public class Instruction {
 
 	private Instruction forward = null;
@@ -52,7 +54,7 @@ public class Instruction {
 		return getInstrNumber();
 	}
 	
-	public HashSet<Symbol> getVariables(){    
+	public HashSet<Variable> getVariables(){    
 	    return null;
 	}
 }

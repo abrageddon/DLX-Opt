@@ -208,15 +208,11 @@ public class DLXCompiler {
 	}
 
 	void assignRegisters(){
-	    boolean[] R = new boolean[32];
 	    
 	    
 	    for (CFG cfg : parser.CFGs) {
-	        Iterator<BasicBlock> iterator = cfg.topDownIterator();
-	        while(iterator.hasNext()){
-	            BasicBlock block = iterator.next();
-	            
-	        }
+            cfg.buildTileTree();
+            
 	    }
 	    
 	    //Greedy -- Allocating the large live ranges first.
