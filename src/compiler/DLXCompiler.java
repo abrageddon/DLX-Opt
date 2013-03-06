@@ -14,6 +14,7 @@ import front.Scanner.ScannerException;
 public class DLXCompiler {
 
 	public Parser parser;
+	public TileTree tileTree;
 
 	public DLXCompiler(String srcFile) {
 		this.parser = new Parser(srcFile);
@@ -210,7 +211,13 @@ public class DLXCompiler {
 	    boolean[] R = new boolean[32];
 	    
 	    
-	    
+	    for (CFG cfg : parser.CFGs) {
+	        Iterator<BasicBlock> iterator = cfg.topDownIterator();
+	        while(iterator.hasNext()){
+	            BasicBlock block = iterator.next();
+	            
+	        }
+	    }
 	    
 	    //Greedy -- Allocating the large live ranges first.
 	    //  Makes the full register class available for the large ranges, and the small ranges can often fit in the gaps.
@@ -224,6 +231,16 @@ public class DLXCompiler {
 	    
 	    //  When a live range cannot find interfering live ranges it is allowed to evict, it is not spilled right away.
 	    //  If possible, it is split into smaller pieces that are put back on the priority queue.
+	    
+	    
+	    //  Basically start at the top of a basic block with all values stored on the stack.
+	    //  Then just scan the instructions forward, maintaining a list of registers which contain a value, and whether the value is dirty (needs to be written back).
+        //  If an instruction uses a value which is not in a register (or not in the correct register), issue a load (or move) to put it in a free register before the instruction.
+        //  If an instruction writes a value, ensure it is in a register and mark it dirty after the instruction.
+	    
+	    //  If you ever need a register, spill a used register by deallocating the value from it, and writing it to the stack if it is dirty and live.
+	    //  At the end of the basic block, write back any dirty and live registers.
+	    
 	    
 	    //While spill
 	    //    Liveness Analysis

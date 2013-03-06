@@ -1,8 +1,5 @@
 package front.symbolTable;
 
-import ir.instructions.*;
-
-
 public abstract class Symbol {
 
 	public String ident;

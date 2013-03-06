@@ -1,9 +1,5 @@
 package ir.instructions;
 
-import java.util.ArrayList;
-
-import front.symbolTable.*;
-
 import java.util.List;
 
 import front.symbolTable.FunctionSymbol;
