@@ -24,3 +24,6 @@
 #scanner output files
 *.scanner.out
 *.vcg
+
+
+.DS_Store
