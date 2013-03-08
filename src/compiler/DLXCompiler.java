@@ -233,7 +233,7 @@ public class DLXCompiler {
 	 * Determine if PHI instruction is redundant.
 	 * Functions of the form v2 = PHI(v1, v1, ..., v1) 
 	 * 		are forwarded to their common operand (v2 → v1). 
-	 * Functions of the form v2 = PHI(v1, v2, ..., v2) 
+	 * Functions of the form v2 = PHI(v1, v2, ..., v2)
 	 * 		are forwarded to their incoming operand (v2 → v1). 
 	 * 
 	 * @param phi
@@ -282,14 +282,22 @@ public class DLXCompiler {
 	}
 
     private void generateCode() {
-        for (int i = 0; i < RegFree.length; i++) {
-            RegFree[i] = true;
-        }
-        RegFree[0] = false;//block special registers
-        RegFree[FrameP] = false;
-        RegFree[StackP] = false;
-        RegFree[GlobalV] = false;
-        RegFree[ReturnA] = false;
+//        for (int i = 0; i < RegFree.length; i++) {
+//            RegFree[i] = true;
+//        }
+//        RegFree[0] = false;//block special registers
+//        RegFree[FrameP] = false;
+//        RegFree[StackP] = false;
+//        RegFree[GlobalV] = false;
+//        RegFree[ReturnA] = false;
+
+        //TODO Write program to memory
+    	
+        //TODO Write memory program to file
+
+        //TODO implement registers
+        
+        //TODO read program from file
         
     }
 	
