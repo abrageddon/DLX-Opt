@@ -12,10 +12,10 @@ import front.Scanner.ScannerException;
 
 
 public class DLXCompiler {
-    private static final int FP = 28;
-    private static final int SP = 29;
-    private static final int GV = 30;
-    private static final int RA = 31;
+    private static final int FrameP = 28;
+    private static final int StackP = 29;
+    private static final int GlobalV = 30;
+    private static final int ReturnA = 31;
     // Mnemonic-to-Opcode mapping
     static final String mnemo[] = {
         "ADD", "SUB", "MUL", "DIV", "MOD", "CMP", "ERR", "ERR", "OR", "AND", "BIC", "XOR", "LSH", "ASH", "CHK", "ERR",
@@ -70,6 +70,7 @@ public class DLXCompiler {
     static final int WRL = 53;
     static final int ERR = 63;
     
+    private static boolean[] RegFree = new boolean[32];
     
 	public Parser parser;
 	public TileTree tileTree;
@@ -281,7 +282,14 @@ public class DLXCompiler {
 	}
 
     private void generateCode() {
-        // TODO Auto-generated method stub
+        for (int i = 0; i < RegFree.length; i++) {
+            RegFree[i] = true;
+        }
+        RegFree[0] = false;//block special registers
+        RegFree[FrameP] = false;
+        RegFree[StackP] = false;
+        RegFree[GlobalV] = false;
+        RegFree[ReturnA] = false;
         
     }
 	
