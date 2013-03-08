@@ -1,15 +1,17 @@
 package compiler;
-import ir.cfg.*;
-import ir.instructions.*;
 
 import java.util.Iterator;
 
-import back.codeGen.CodeGenerator;
-import back.regAloc.RegisterAllocator;
+import compiler.back.codeGen.CodeGenerator;
+import compiler.back.regAloc.RegisterAllocator;
+import compiler.front.Parser;
+import compiler.front.SSAGenerator;
+import compiler.front.Parser.ParserException;
+import compiler.front.Scanner.ScannerException;
+import compiler.ir.cfg.*;
+import compiler.ir.instructions.*;
 
-import front.Parser;
-import front.Parser.ParserException;
-import front.Scanner.ScannerException;
+
 
 
 public class DLXCompiler {

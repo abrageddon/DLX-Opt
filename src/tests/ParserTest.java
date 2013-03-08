@@ -4,9 +4,10 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import front.Parser;
-import front.Parser.ParserException;
-import front.Scanner.ScannerException;
+import compiler.front.Parser;
+import compiler.front.Parser.ParserException;
+import compiler.front.Scanner.ScannerException;
+
 
 public class ParserTest {
 
