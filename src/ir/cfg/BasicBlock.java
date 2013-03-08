@@ -7,8 +7,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import compiler.PseudoRegister;
-import compiler.Variable;
+import back.regAloc.PseudoRegister;
+import back.regAloc.Variable;
+
 
 public class BasicBlock {
 

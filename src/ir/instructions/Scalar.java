@@ -2,7 +2,8 @@ package ir.instructions;
 
 import java.util.HashSet;
 
-import compiler.Variable;
+import back.regAloc.Variable;
+
 
 import front.symbolTable.Symbol;
 

@@ -2,6 +2,9 @@ package ir.instructions;
 
 import java.util.List;
 
+import back.regAloc.VirtualRegister;
+
+
 import front.symbolTable.FunctionSymbol;
 
 public class Call extends Instruction {
@@ -11,6 +14,8 @@ public class Call extends Instruction {
 	public Call(FunctionSymbol fnct, List<Instruction> args) {
 		this.function = fnct;
 		this.args = args;
+		
+		outputOp = new VirtualRegister();
 	}
 
     public String toString() {

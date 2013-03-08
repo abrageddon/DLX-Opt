@@ -8,9 +8,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import compiler.PseudoRegister;
-import compiler.Tile;
-import compiler.TileTree;
+import back.regAloc.PseudoRegister;
+import back.regAloc.Tile;
+import back.regAloc.TileTree;
+
 
 public class CFG {
 
@@ -170,128 +171,7 @@ public class CFG {
             }
         }
     }
-    public void buildLiveRanges(){
-        // BUILDINTERVALS
-        // for each block b in reverse order do
-        Iterator<BasicBlock> blockIterator = this.bottomUpIterator();
-        HashSet<PseudoRegister> live;
-        ArrayList<Interval> intervals;
-        while (blockIterator.hasNext()) {
-            BasicBlock b = blockIterator.next();
-            // live = union of successor.liveIn for each successor of b
-            live = new HashSet<PseudoRegister>();
-            for (BasicBlock succ:b.succ){
-                live.addAll(succ.liveIn);
-            }
 
-            // for each phi function phi of successors of b do
-            for (BasicBlock succ:b.succ){
-                for(Instruction i:succ.getInstructions()){
-                    if(Phi.class.isAssignableFrom(i.getClass())){
-                // live.add(phi.inputOf(b))
-                        for (Instruction value: ((Phi)i).values ){
-                            //TODO is correct?
-                            live.add( new PseudoRegister( value.getInstrNumber() ) );
-                        }
-                    }
-                }
-            }
-            
-            // for each output operand opd in live do
-//            for (Instruction i: b.getInstructions()){
-//                // intervals[opd].addRange(b.from, b.to)
-//                intervals.add(index, element)
-//            }
-
-            // for each operation op of b in reverse order do
-                // for each output operand opd of op do
-                    // intervals[opd].setFrom(op.id)
-                    // live.remove(opd)
-                // for each input operand opd of op do
-                    // intervals[opd].addRange(b.from, op.id)
-                    // live.add(opd)
-
-            // for each phi function phi of b do
-            for(Instruction i:b.getInstructions()){
-                if(Phi.class.isAssignableFrom(i.getClass())){
-                // live.remove(phi.output)
-                    live.remove(new PseudoRegister( ((Phi)i).getInstrNumber() ));
-                }
-            }
-            
-            // if b is loop header then
-            if(b.label.equals("while-cond")){
-                // loopEnd = last block of the loop starting at b
-//                BasicBlock loopEnd = 
-                // for each opd in live do
-                    // intervals[opd].addRange(b.from, loopEnd.to)
-            }
-
-            // b.liveIn = live
-            b.liveIn = live;
-        }
-    }
-    public void buildTileTree(){
-        Iterator<BasicBlock> blockIterator = this.topDownIterator();
-        Tile currentTile = tileTree.rootTile;
-        int tileNumber = 0;
-        
-        if(!blockIterator.hasNext()){return;}
-
-        BasicBlock currentBlock;
-        BasicBlock nextBlock = blockIterator.next();
-        while (blockIterator.hasNext()) {
-            currentBlock = nextBlock;
-            nextBlock = blockIterator.next();
-            
-            currentTile.addBlock(currentBlock);
-            
-
-            //Drop down a level when exiting loop or at exit block
-            if (nextBlock.label.equals("while-next")){
-                currentTile = currentTile.parent;
-            }
-            if (nextBlock.label.equals("exit")){
-                currentTile = tileTree.rootTile;
-            }
-            
-            //New tile for next block if leaving start or entering loop
-            if (currentBlock.label.equals("start")){
-                tileNumber++;
-                Tile newTile = new Tile(currentTile, tileNumber);
-                currentTile.children.add(newTile);
-                currentTile=newTile;
-            }
-            if (nextBlock.label.equals("while-cond")){
-                tileNumber++;
-                Tile newTile = new Tile(currentTile, tileNumber);
-                currentTile.children.add(newTile);
-                currentTile=newTile;
-            }
-            
-            
-        }
-        //Fixup
-//        define t(n) to be the smallest tile which cent ains block n.
-//        foreach edge e = (n, m) do
-//          if n not-in t(m) and m not-in t(n) then
-//              let a be the smallest tile containing both n and m
-//              create a block na in a and in all tiles containing a
-//              replace e with (n, na) and (na, m).
-//          endif
-//        endfor
-//        while Exists e = (n, m) where m not-in parent(t(n)) do
-//          create n’ in parent (t(n)) and all ancestor tiles
-//          replace e with (n, n’) and (n’, m)
-//        endwhile
-//        while Exists e == (m, n) where m not-in parent(t(n)) do
-//          create m’ in parent(t(n)) and all ancestor tiles
-//          replace e with (n, m’) and (m’, m)
-//        endwhile
-        
-    }
-   
-	
 	public Iterator<BasicBlock> topDownIterator() {
 		return new TopDownLiniarIterator();
 	}	

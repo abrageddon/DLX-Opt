@@ -2,7 +2,8 @@ package ir.instructions;
 
 import java.util.HashSet;
 
-import compiler.Variable;
+import back.regAloc.Variable;
+
 
 import front.symbolTable.Symbol;
 
@@ -27,15 +28,16 @@ public class StoreValue extends Instruction {
 	}
 	
 	public String toString(){
-	    if (regA != 0){
-	        return getInstrNumber() + " : STORE " +
-	                "(" + value.getInstrNumber() + ")" +
-	                "(r:" + regA + ")";
-	    }
+//	    if (regA != 0){
+//	        return getInstrNumber() + " : STORE " +
+//	                "(" + value.getInstrNumber() + ")" +
+//	                "(r:" + regA + ")";
+//	    }
 	    
 		return getInstrNumber() + " : STORE " +
 				"(" + value.getInstrNumber() + ")" +
-				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")";
+				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")" + 
+				" \n [" + Instruction.resolve(value).outputOp +"]";
 	}
 
     @Override
