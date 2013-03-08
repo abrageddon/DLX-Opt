@@ -198,11 +198,10 @@ public class CFG {
             }
             
             // for each output operand opd in live do
-            for (Instruction i: b.getInstructions()){
-                if (){
-                // intervals[opd].addRange(b.from, b.to)
-                }
-            }
+//            for (Instruction i: b.getInstructions()){
+//                // intervals[opd].addRange(b.from, b.to)
+//                intervals.add(index, element)
+//            }
 
             // for each operation op of b in reverse order do
                 // for each output operand opd of op do
@@ -223,7 +222,7 @@ public class CFG {
             // if b is loop header then
             if(b.label.equals("while-cond")){
                 // loopEnd = last block of the loop starting at b
-                BasicBlock loopEnd = 
+//                BasicBlock loopEnd = 
                 // for each opd in live do
                     // intervals[opd].addRange(b.from, loopEnd.to)
             }
