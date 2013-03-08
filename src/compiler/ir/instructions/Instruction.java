@@ -1,20 +1,23 @@
 package compiler.ir.instructions;
 
+import java.util.List;
+
 //import back.regAloc.Variable;
 import compiler.back.regAloc.VirtualRegister;
 
 public class Instruction {
 
 	private Instruction forward = null;
-
-//    public int regA;//return val
-//    public int regB;//left op
-//    public int regC;//right op
-	    
-//    public VirtualRegister inputOp1;
-//    public VirtualRegister inputOp2;
-
+	
+	/**
+	 * Intentionally uninitialized; might be null since not all instructions need it. 
+	 */
 	public VirtualRegister outputOp;
+	
+	/**
+	 * Intentionally uninitialized; might be null since not all instructions need it. 
+	 */
+	public List<VirtualRegister> inputOps;
 	
 	private int instrNumber;
 	
@@ -36,6 +39,20 @@ public class Instruction {
 
 	public String getInstrLabel() {
 		return String.valueOf(getInstrNumber());
+	}
+
+	/**
+	 * @return outputOp might be null if the instruction does not have output operand
+	 */
+	public VirtualRegister getOutputOperand() {
+		return outputOp;
+	}
+	
+	/**
+	 * @return inputOps might be null if the instruction does not have input operands
+	 */
+	public List<VirtualRegister> getInputOperands() {
+		return inputOps;
 	}
 	
 	public static Instruction resolve(Instruction i) {

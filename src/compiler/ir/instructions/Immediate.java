@@ -4,11 +4,11 @@ import compiler.back.regAloc.VirtualRegister;
 
 public class Immediate extends Instruction {
 
-	Integer value;
+	public Integer value;
 	
 	public Immediate(Integer value) {
 		this.value = value;
-		outputOp = new VirtualRegister();
+		this.outputOp = new VirtualRegister();
 	}
 
 	public Immediate(String value) {

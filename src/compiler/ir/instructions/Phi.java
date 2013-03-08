@@ -5,63 +5,53 @@ import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
 
-
-
 public class Phi extends Instruction {
 
 	public List<Instruction> values;
-//	public List<VirtualRegister> regs;
 	
 	public Phi(List<Instruction> values) {
 		this.values = values;
 		outputOp = new VirtualRegister();
-//		regs = new ArrayList<VirtualRegister>();
-//		for(Instruction inst : values) {
-//			regs.add(Instruction.resolve(inst).outputOp);
-//		}
-//		
 	}
 	
-    public String toString(){
+	public List<VirtualRegister> getInputOperands() {
+		// lazily fill the input operands list
+		if(inputOps == null) {
+			this.inputOps = new ArrayList<VirtualRegister>();
+			for(Instruction val : values) {
+				this.inputOps.add(Instruction.resolve(val).outputOp);
+			}
+		}
+		return inputOps;
+	}
+
+	
+    public String toString() {
     	String ret = "";
     	ret += getInstrNumber() + " : PHI (";
     	boolean comma = false;
     	for (Instruction val : values) {
-    	    if(comma){
+    	    if (comma) {
     	        ret += ", ";
-    	    }else{
+    	    } else {
     	        comma = true;
     	    }
     		ret += Instruction.resolve(val).getInstrLabel();
     	}
     	ret += ")";
 
-//    	ret += " \n [";
-//    	comma = false;
-//    	for (VirtualRegister reg : regs) {
-//    	    if(comma){
-//    	        ret += ", ";
-//    	    }else{
-//    	        comma = true;
-//    	    }
-//    		ret += reg;	
-//    	}
-//    	ret += "] -> " + this.outputOp;
-
     	ret += " \n [";
     	comma = false;
     	for (Instruction val : values) {
-    	    if(comma){
+    	    if (comma) {
     	        ret += ", ";
-    	    }else{
+    	    } else {
     	        comma = true;
     	    }
     		ret += Instruction.resolve(val).outputOp;	
     	}
     	ret += "] -> " + this.outputOp;
 
-    	
         return ret;
-        
     }
 }

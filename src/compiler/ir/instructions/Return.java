@@ -1,5 +1,10 @@
 package compiler.ir.instructions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import compiler.back.regAloc.VirtualRegister;
+
 public class Return extends Instruction {
 
 	public Instruction returnValue;
@@ -16,7 +21,18 @@ public class Return extends Instruction {
 		this.returnValue = returnValue;
 	}
 	
+	public List<VirtualRegister> getInputOperands() {
+		// lazily fill the input operands list
+		if(inputOps == null) {
+			this.inputOps = new ArrayList<VirtualRegister>();
+			this.inputOps.add(Instruction.resolve(returnValue).outputOp);
+		}
+		return inputOps;
+	}
+
+	
 	public String toString() {
-		return getInstrNumber()  + " : RET (" + Instruction.resolve(returnValue).getInstrLabel() + ")";
+		return getInstrNumber()  + " : RET (" + Instruction.resolve(returnValue).getInstrLabel() + ")" + 
+				 " [ " + Instruction.resolve(returnValue).outputOp + " ] ";
 	}
 }

@@ -1,13 +1,15 @@
 package compiler.ir.instructions;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
+import compiler.back.regAloc.VirtualRegister;
 import compiler.front.symbolTable.Symbol;
 
 
 public class StoreValue extends Instruction {
 
-	
 	public Symbol symbol;
     public Instruction value;
 	public Index address;
@@ -25,13 +27,18 @@ public class StoreValue extends Instruction {
 		this.value = value;
 	}
 	
-	public String toString(){
-//	    if (regA != 0){
-//	        return getInstrNumber() + " : STORE " +
-//	                "(" + value.getInstrNumber() + ")" +
-//	                "(r:" + regA + ")";
-//	    }
-	    
+	public List<VirtualRegister> getInputOperands() {
+		// lazily fill the input operands list
+		if(inputOps == null) {
+			this.inputOps = new ArrayList<VirtualRegister>();
+			this.inputOps.add(Instruction.resolve(value).outputOp);
+			this.inputOps.add(Instruction.resolve(address).outputOp);
+		}
+		return inputOps;
+	}
+
+	
+	public String toString(){	    
 		return getInstrNumber() + " : STORE " +
 				"(" + value.getInstrNumber() + ")" +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")" + 
