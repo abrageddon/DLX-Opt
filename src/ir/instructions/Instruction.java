@@ -1,12 +1,7 @@
 package ir.instructions;
 
-import front.symbolTable.*;
-
-import java.util.HashSet;
-
-import back.regAloc.Variable;
+//import back.regAloc.Variable;
 import back.regAloc.VirtualRegister;
-
 
 public class Instruction {
 
@@ -60,7 +55,4 @@ public class Instruction {
 		return getInstrLabel();
 	}
 	
-	public HashSet<Variable> getVariables(){    
-	    return null;
-	}
 }

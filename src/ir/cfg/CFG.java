@@ -8,11 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import back.regAloc.PseudoRegister;
-import back.regAloc.Tile;
-import back.regAloc.TileTree;
-
-
 public class CFG {
 
 	public String label;
@@ -23,9 +18,6 @@ public class CFG {
 	public BasicBlock currentBB;
 	public BasicBlock currentJoinBB;
 	
-	//Reg Alloc
-	public TileTree tileTree;
-
 	// Store frame in the CFG since each CFG corresponds to a single function
 	public List<Instruction> frame;
 	
@@ -34,8 +26,6 @@ public class CFG {
 		startBB = new BasicBlock("start");
 		exitBB = new BasicBlock("exit");
 		currentBB = startBB;
-		
-		tileTree = new TileTree();
 		
 		frame = new ArrayList<Instruction>();
 	}

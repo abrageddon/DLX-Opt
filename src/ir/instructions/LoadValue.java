@@ -1,8 +1,5 @@
 package ir.instructions;
 
-import java.util.HashSet;
-
-import back.regAloc.Variable;
 import back.regAloc.VirtualRegister;
 
 
@@ -29,16 +26,4 @@ public class LoadValue extends Instruction {
 		return getInstrNumber() + " : LOAD " +
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ") -> " + outputOp;
 	}
-	
-    @Override
-    public HashSet<Variable> getVariables() {
-        HashSet<Variable> ret = new HashSet<Variable>();
-        if (symbol != null){
-            ret.add( new Variable(symbol) );
-        }else{
-            //TODO fix to deal with addresses
-            ret.add( new Variable(address) );
-        }
-        return ret;
-    }
 }

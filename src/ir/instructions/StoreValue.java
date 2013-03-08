@@ -2,9 +2,6 @@ package ir.instructions;
 
 import java.util.HashSet;
 
-import back.regAloc.Variable;
-
-
 import front.symbolTable.Symbol;
 
 public class StoreValue extends Instruction {
@@ -39,19 +36,5 @@ public class StoreValue extends Instruction {
 				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")" + 
 				" \n [" + Instruction.resolve(value).outputOp +"]";
 	}
-
-    @Override
-    public HashSet<Variable> getVariables() {
-        HashSet<Variable> ret = new HashSet<Variable>();
-        if (symbol != null){
-            ret.add( new Variable(symbol) );
-        }else if (address != null){
-            //TODO fix to deal with addresses
-            ret.add( new Variable(address) );
-        }
-        return ret;
-    }
-	
-	
 
 }
