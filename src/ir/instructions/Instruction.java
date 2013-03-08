@@ -29,12 +29,12 @@ public class Instruction {
 		this.instrNumber = instrNumber;
 	}
 	
-	public String getInstrNumber() {
-		return String.valueOf(instrNumber);
+	public int getInstrNumber() {
+		return instrNumber;
 	}
 
 	public String getInstrLabel() {
-		return getInstrNumber();
+		return String.valueOf(getInstrNumber());
 	}
 	
 	public static Instruction resolve(Instruction i) {
@@ -51,7 +51,7 @@ public class Instruction {
 	}
 	
 	public String toString() {
-		return getInstrNumber();
+		return getInstrLabel();
 	}
 	
 	public HashSet<Variable> getVariables(){    

@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import compiler.PseudoRegister;
 import compiler.Tile;
 import compiler.TileTree;
 
@@ -169,7 +170,68 @@ public class CFG {
             }
         }
     }
-   
+    public void buildLiveRanges(){
+        // BUILDINTERVALS
+        // for each block b in reverse order do
+        Iterator<BasicBlock> blockIterator = this.bottomUpIterator();
+        HashSet<PseudoRegister> live;
+        ArrayList<Interval> intervals;
+        while (blockIterator.hasNext()) {
+            BasicBlock b = blockIterator.next();
+            // live = union of successor.liveIn for each successor of b
+            live = new HashSet<PseudoRegister>();
+            for (BasicBlock succ:b.succ){
+                live.addAll(succ.liveIn);
+            }
+
+            // for each phi function phi of successors of b do
+            for (BasicBlock succ:b.succ){
+                for(Instruction i:succ.getInstructions()){
+                    if(Phi.class.isAssignableFrom(i.getClass())){
+                // live.add(phi.inputOf(b))
+                        for (Instruction value: ((Phi)i).values ){
+                            //TODO is correct?
+                            live.add( new PseudoRegister( value.getInstrNumber() ) );
+                        }
+                    }
+                }
+            }
+            
+            // for each output operand opd in live do
+            for (Instruction i: b.getInstructions()){
+                if (){
+                // intervals[opd].addRange(b.from, b.to)
+                }
+            }
+
+            // for each operation op of b in reverse order do
+                // for each output operand opd of op do
+                    // intervals[opd].setFrom(op.id)
+                    // live.remove(opd)
+                // for each input operand opd of op do
+                    // intervals[opd].addRange(b.from, op.id)
+                    // live.add(opd)
+
+            // for each phi function phi of b do
+            for(Instruction i:b.getInstructions()){
+                if(Phi.class.isAssignableFrom(i.getClass())){
+                // live.remove(phi.output)
+                    live.remove(new PseudoRegister( ((Phi)i).getInstrNumber() ));
+                }
+            }
+            
+            // if b is loop header then
+            if(b.label.equals("while-cond")){
+                // loopEnd = last block of the loop starting at b
+                BasicBlock loopEnd = 
+                // for each opd in live do
+                    // intervals[opd].addRange(b.from, loopEnd.to)
+            }
+
+            // b.liveIn = live
+            b.liveIn = live;
+        }
+    }
     public void buildTileTree(){
         Iterator<BasicBlock> blockIterator = this.topDownIterator();
         Tile currentTile = tileTree.rootTile;
@@ -185,6 +247,14 @@ public class CFG {
             
             currentTile.addBlock(currentBlock);
             
+
+            //Drop down a level when exiting loop or at exit block
+            if (nextBlock.label.equals("while-next")){
+                currentTile = currentTile.parent;
+            }
+            if (nextBlock.label.equals("exit")){
+                currentTile = tileTree.rootTile;
+            }
             
             //New tile for next block if leaving start or entering loop
             if (currentBlock.label.equals("start")){
@@ -200,13 +270,6 @@ public class CFG {
                 currentTile=newTile;
             }
             
-            //Drop down a level when exiting loop or at exit block
-            if (nextBlock.label.equals("while-next")){
-                currentTile = currentTile.parent;
-            }
-            if (nextBlock.label.equals("exit")){
-                currentTile = tileTree.rootTile;
-            }
             
         }
         //Fixup

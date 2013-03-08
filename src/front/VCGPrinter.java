@@ -14,6 +14,7 @@ import java.util.List;
 import org.junit.Test;
 
 import compiler.DLXCompiler;
+import compiler.PseudoRegister;
 import compiler.Tile;
 
 import tests.TestUtils;
@@ -176,6 +177,8 @@ public class VCGPrinter {
                 if (tile != null){
                     out.print( "\" info2: \"Tile Tree: "+tile.tileNumber+"\nVariables:"+ tile.variables);
                 }
+                //Linear scan
+                out.print( "\" info3: \"RegAlloc:\nLiveIn: "+currentBlock.liveIn);
             }
             out.print( "\" vertical_order: "+currentBlock.depth + " label: \"" + currentBlock.label);
             

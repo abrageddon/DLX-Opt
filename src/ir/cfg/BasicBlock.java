@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import compiler.PseudoRegister;
 import compiler.Variable;
 
 public class BasicBlock {
@@ -24,6 +25,8 @@ public class BasicBlock {
 	
 	private List<Instruction> instructions;
 	
+	public HashSet<PseudoRegister> liveIn;
+	
 	// entry SSA state and exit SSA state
 	public List<Instruction> entryState;
 	public List<Instruction> exitState;
@@ -37,6 +40,8 @@ public class BasicBlock {
 		
 		entryState = new ArrayList<Instruction>();
 		exitState = new ArrayList<Instruction>();
+		
+		liveIn = new HashSet<PseudoRegister>();
 	}
 	
 	public void prependInstruction(Instruction instr) {
@@ -70,4 +75,10 @@ public class BasicBlock {
 	public String toString() {
 		return "|" + label + "|" + "[" + instructions + "]";
 	}
+    public int from(){
+        return instructions.get(0).getInstrNumber();
+    }
+    public int to(){
+        return instructions.get(instructions.size()-1).getInstrNumber();
+    }
 }

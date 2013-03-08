@@ -43,7 +43,7 @@ public class StoreValue extends Instruction {
         HashSet<Variable> ret = new HashSet<Variable>();
         if (symbol != null){
             ret.add( new Variable(symbol) );
-        }else{
+        }else if (address != null){
             //TODO fix to deal with addresses
             ret.add( new Variable(address) );
         }

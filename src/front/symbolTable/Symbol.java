@@ -1,6 +1,5 @@
 package front.symbolTable;
 
-import compiler.Variable;
 
 public abstract class Symbol {
 
