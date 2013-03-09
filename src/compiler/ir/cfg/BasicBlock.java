@@ -4,6 +4,7 @@ package compiler.ir.cfg;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 
 import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.instructions.*;
@@ -64,6 +65,27 @@ public class BasicBlock {
 		return instructions;
 	}
     
+	public ListIterator<Instruction> getInstructionsIterator() {
+		return instructions.listIterator();
+	}
+	
+	public ListIterator<Instruction> getReverseInstructionsIterator() {
+		return instructions.listIterator(instructions.size());
+	}
+	
+	//TODO have separate iterator for phis and non-phis, and maybe a combined iterator for whenever needed
+	
+	public List<Phi> getPHIs() {
+		// TODO could cache all PHIs in a different list (would that be safe?)
+		List<Phi> PHIs = new ArrayList<Phi>();
+		for(Instruction inst : instructions) {
+			if (inst instanceof Phi) {
+				PHIs.add((Phi) inst);
+			}
+		}
+		return PHIs;
+	}
+	
     public Instruction getFirstInstruction() {
         return instructions.get(0);
     }
@@ -72,13 +94,24 @@ public class BasicBlock {
         return instructions.isEmpty();
     }
 	
+    /**
+     * Begin instruction number.
+     * 
+     * @return
+     */
+    public int begin(){
+        return instructions.get(0).getInstrNumber();
+    }
+    
+    /**
+     * End instruction number.
+     * @return
+     */
+    public int end(){
+        return instructions.get(instructions.size() - 1).getInstrNumber();
+    }
+    
 	public String toString() {
 		return "|" + label + "|" + "[" + instructions + "]";
 	}
-    public int from(){
-        return instructions.get(0).getInstrNumber();
-    }
-    public int to(){
-        return instructions.get(instructions.size()-1).getInstrNumber();
-    }
 }
