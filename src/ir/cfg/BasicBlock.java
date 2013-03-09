@@ -1,14 +1,13 @@
 package ir.cfg;
 
 import ir.instructions.*;
-import front.symbolTable.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import compiler.PseudoRegister;
-import compiler.Variable;
+import back.regAloc.VirtualRegister;
+
 
 public class BasicBlock {
 
@@ -25,7 +24,7 @@ public class BasicBlock {
 	
 	private List<Instruction> instructions;
 	
-	public HashSet<PseudoRegister> liveIn;
+	public HashSet<VirtualRegister> liveIn;
 	
 	// entry SSA state and exit SSA state
 	public List<Instruction> entryState;
@@ -41,7 +40,7 @@ public class BasicBlock {
 		entryState = new ArrayList<Instruction>();
 		exitState = new ArrayList<Instruction>();
 		
-		liveIn = new HashSet<PseudoRegister>();
+		liveIn = new HashSet<VirtualRegister>();
 	}
 	
 	public void prependInstruction(Instruction instr) {
