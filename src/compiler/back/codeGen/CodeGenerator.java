@@ -136,6 +136,7 @@ public class CodeGenerator {
 	}
 
 	private void preBlockProcessing(BasicBlock currentBlock) {
+		// IF fixup
 		if (currentBlock.label.equals("else") && !currentBlock.isInstructionsEmpty()){
 			int elseBranch = fixup.pop();
 			UnCondBraFwd(0);
@@ -144,6 +145,17 @@ public class CodeGenerator {
 			Fixup(fixup.pop());
 		}
 		
+		if (currentBlock.label.equals("fi-join")) {
+			BasicBlock elseCheck = null;
+			for (BasicBlock block : currentBlock.pred) {
+				if (block.label.equals("else")) {
+					elseCheck = block;
+				}
+			}
+			if (elseCheck != null && !elseCheck.isInstructionsEmpty()) {
+				FixAll(elseCheck.startLine);
+			}
+		}
 	}
 
 	private void produceCode(Instruction instruction) {
@@ -186,21 +198,7 @@ public class CodeGenerator {
 
 	private void postBlockProcessing(BasicBlock currentBlock) {
 
-
-		// IF fixup
-		if (currentBlock.label.equals("fi-join")) {
-			BasicBlock elseCheck = null;
-			for (BasicBlock block : currentBlock.pred) {
-				if (block.label.equals("else")) {
-					elseCheck = block;
-				}
-			}
-			if (elseCheck != null && !elseCheck.isInstructionsEmpty()) {
-				FixAll(elseCheck.startLine);
-			}
-		}
-		
-		// While loop
+		// While loop fixup
 		BasicBlock whileStart = null;
 		for (BasicBlock block : currentBlock.succ) {
 			if (currentBlock.depth > block.depth) {
