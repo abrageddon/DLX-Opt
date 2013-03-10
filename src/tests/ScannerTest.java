@@ -7,9 +7,10 @@ import java.io.PrintStream;
 
 import org.junit.Test;
 
-import front.Scanner;
-import front.Scanner.ScannerException;
-import front.Tokens;
+import compiler.front.Scanner;
+import compiler.front.Tokens;
+import compiler.front.Scanner.ScannerException;
+
 
 public class ScannerTest {
 

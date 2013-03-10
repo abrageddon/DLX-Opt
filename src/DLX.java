@@ -1,5 +1,3 @@
-package oldDLX;
-
 // The DLX Virtual Machine
 // chs / mf 2001-08-07
 
@@ -11,7 +9,7 @@ import java.io.*;
 public class DLX {
 	// processor state variables
 	static int R[] = new int [32];
-	static int PC, op, a, b, c, format;
+	static int PC, op, a, b, c, format; 
     static int progEnd;
 	
 	// emulated memory
@@ -22,7 +20,7 @@ public class DLX {
 	public static void main(String argv[]) {
 	}
 
-	public void load(int program[]) {
+	public static void load(int program[]) {
 		int i;
 		for (i = 0; i < program.length; i++) {
 			M[i] = program[i];
@@ -32,12 +30,10 @@ public class DLX {
         progEnd = i;
 	}
 	
-	public void execute() throws IOException {
+	public static void execute() throws IOException {
 		int origc = 0; // used for F2 instruction RET
 		for (int i = 0; i < 32; i++) { R[i] = 0; };
 		PC = 0; R[30] = MemSize - 1;
-
-                BufferedReader lineReader = new BufferedReader(new InputStreamReader(System.in));
 
 		try {
 
@@ -45,24 +41,6 @@ public class DLX {
 		while (true) {
 			R[0] = 0;
 			disassem(M[PC]); // initializes op, a, b, c
-
-                        /*//DEBUG
-                        System.out.print("\tMEM:");//DEBUG
-                        for (int i = 0 ; i < 50 ; i++){
-                            System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)/10+")|":""));
-                        }
-                        System.out.println();
-                        System.out.print("\tREG:");//DEBUG
-                        for (int i = 0 ; i < 5 ; i++){
-                            System.out.print(R[i] + "|");
-                        }
-                        System.out.print("...|");
-                            System.out.print("FP:"+(10000-R[28])/4 + "|");
-                            System.out.print("SP:"+(10000-R[29])/4 + "|");
-                            System.out.print("RA:"+(R[31]) + "/" + (R[31])/4);
-                        System.out.println();
-                        System.out.print(PC + ":" + disassemble(M[PC]));//DEBUG
-                         //*/
 
 			int nextPC = PC + 1;
 			if (format==2) {
@@ -230,7 +208,7 @@ public class DLX {
 					break;
 				case RDI:
 					System.out.print("?: ");
-					String line = lineReader.readLine();
+					String line = (new BufferedReader(new InputStreamReader(System.in))).readLine();
 					R[a] = Integer.parseInt(line);
 					break;
 				case WRD:
@@ -601,6 +579,5 @@ public class DLX {
             System.out.print("["+i+"] " + disassemble(M[i]));
         }
     }
-	
 
 }
