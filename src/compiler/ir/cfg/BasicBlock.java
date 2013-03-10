@@ -28,6 +28,8 @@ public class BasicBlock {
 	
 	public HashSet<VirtualRegister> liveIn;
 	
+	public int startLine;
+	
 	// entry SSA state and exit SSA state
 	public List<Instruction> entryState;
 	public List<Instruction> exitState;

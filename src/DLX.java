@@ -41,7 +41,25 @@ public class DLX {
 		while (true) {
 			R[0] = 0;
 			disassem(M[PC]); // initializes op, a, b, c
-
+			
+            /*//DEBUG
+            System.out.print("\tMEM:");//DEBUG
+            for (int i = 0 ; i < 50 ; i++){
+                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)/10+")|":""));
+            }
+            System.out.println();
+            System.out.print("\tREG:");//DEBUG
+            for (int i = 0 ; i < 28 ; i++){
+                System.out.print(R[i] + "|");
+            }
+            System.out.print("\n\t");
+                System.out.print("FP:"+(10000-R[28])/4 + "|");
+                System.out.print("SP:"+(10000-R[29])/4 + "|");
+                System.out.print("RA:"+(R[31]) + "/" + (R[31])/4);
+            System.out.println();
+            System.out.print(PC + ":" + disassemble(M[PC]));//DEBUG
+             //*/
+            
 			int nextPC = PC + 1;
 			if (format==2) {
 				origc = c; // used for RET
@@ -233,7 +251,7 @@ public class DLX {
 
 		}
 		catch (java.lang.ArrayIndexOutOfBoundsException e ) {
-		  System.out.println( "failed at " + PC*4 + ",   "  + disassemble( M[PC] ) );
+		  System.out.println( "failed at " + PC + ",   "  + disassemble( M[PC] ) );
 		}
 
 	}

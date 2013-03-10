@@ -30,7 +30,7 @@ public class StoreValue extends Instruction {
 	
 	public List<VirtualRegister> getInputOperands() {
 		// lazily fill the input operands list
-		if(inputOps == null) {
+		if(inputOps == null && address != null) {
 			this.inputOps = new ArrayList<VirtualRegister>();
 			this.inputOps.add(Instruction.resolve(value).outputOp);
 			this.inputOps.add(Instruction.resolve(address).outputOp);

@@ -5,7 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
+
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
 
@@ -21,7 +25,7 @@ public class CodeGenerator {
         "ADD", "SUB", "MUL", "DIV", "MOD", "CMP", "ERR", "ERR", "OR", "AND", "BIC", "XOR", "LSH", "ASH", "CHK", "ERR",
         "ADDI", "SUBI", "MULI", "DIVI", "MODI", "CMPI", "ERRI", "ERRI", "ORI", "ANDI", "BICI", "XORI", "LSHI", "ASHI", "CHKI", "ERR",
         "LDW", "LDX", "POP", "ERR", "STW", "STX", "PSH", "ERR", "BEQ", "BNE", "BLT", "BGE", "BLE", "BGT", "BSR", "ERR",
-        "JSR", "RET", "RDD", "WRD", "WRH", "WRL", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR",
+        "JSR", "RET", "RDI", "WRD", "WRH", "WRL", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR",
         "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR", "ERR"};
     static final int ADD = 0;
     static final int SUB = 1;
@@ -64,7 +68,7 @@ public class CodeGenerator {
     static final int BSR = 46;
     static final int JSR = 48;
     static final int RET = 49;
-    static final int RDD = 50;
+    static final int RDI = 50;
     static final int WRD = 51;
     static final int WRH = 52;
     static final int WRL = 53;
@@ -78,6 +82,7 @@ public class CodeGenerator {
     private int pc;
     private ArrayList<Integer> nativeCode;
     private String outFile;
+    private Stack<Integer> fixup;//TODO figure out this part
 
     public CodeGenerator(List<CFG> CFGs) {
     	this.CFGs = CFGs;
@@ -114,11 +119,30 @@ public class CodeGenerator {
 		Iterator<BasicBlock> blocks = mainCFG.topDownIterator();
 		while (blocks.hasNext()) {
 			BasicBlock currentBlock = (BasicBlock) blocks.next();
+			currentBlock.startLine = pc;// Easy loopbacks
+			
+			
+			// Process block's instructions
 			Iterator<Instruction> instructions = currentBlock.getInstructionsIterator();
 			while (instructions.hasNext()) {
 				Instruction instruction = (Instruction) instructions.next();
 				produceCode(instruction);
 			}
+			
+			postBlockProcessing(currentBlock);
+		}
+	}
+
+	private void postBlockProcessing(BasicBlock currentBlock) {
+		if (currentBlock.label.equals("while-body")){
+			BasicBlock whileStart = currentBlock;
+			for (BasicBlock block: currentBlock.succ){
+				if (block.label.equals("while-cond")){
+					whileStart = block;
+				}
+			}
+		    PutF1(BEQ, 0, 0, whileStart.startLine - pc);
+			Fixup(fixup.pop());
 		}
 	}
 
@@ -129,15 +153,22 @@ public class CodeGenerator {
 	        
 		}else if (instruction instanceof StoreValue){
 			StoreValue ins = (StoreValue)instruction;
-//	        PutF1(STX, 0, Instruction.resolve(ins.value).outputOp.regNumber, Instruction.resolve(ins.address.offset).outputOp.regNumber);
 			//Global
-	        PutF1(STW, Instruction.resolve(ins.value).outputOp.regNumber, GlobalV, GetVarAddress(ins.symbol.ident));
+	        PutF1(STW, Instruction.resolve(ins.value).outputOp.regNumber, GlobalV, -GetVarAddress(ins.symbol.ident));
 	        //TODO arrays, locals
 	        
 		}else if (instruction instanceof LoadValue){
 			LoadValue ins = (LoadValue)instruction;
 			//Global
-	        PutF1(LDX, ins.outputOp.regNumber, GlobalV, GetVarAddress(ins.symbol.ident));
+	        PutF1(LDW, ins.outputOp.regNumber, GlobalV, -GetVarAddress(ins.symbol.ident));
+	        
+		}else if (instruction instanceof ControlFlowInstr){//TODO while, if, etc...
+			ControlFlowInstr ins = (ControlFlowInstr)instruction;
+			CondNegBraFwd(ins);
+	        
+		}else if (instruction instanceof ArithmeticBinary){
+			ArithmeticBinary ins = (ArithmeticBinary)instruction;
+			PutF2(opCode(ins), ins.outputOp.regNumber, ins.inputOps.get(0).regNumber, ins.inputOps.get(1).regNumber);
 	        
 		}else if (instruction instanceof Call){
 			Call ins = (Call)instruction;
@@ -146,14 +177,15 @@ public class CodeGenerator {
 			}else if (ins.function.ident.equalsIgnoreCase("outputnewline")){
 				PutF2(WRL, 0, 0, 0);
 			}else if (ins.function.ident.equalsIgnoreCase("inputnum")){
-				PutF2(RDD, ins.outputOp.regNumber, 0, 0);
+				PutF2(RDI, ins.outputOp.regNumber, 0, 0);
 			} 
 		}
 
 	}
 
 	private void setupProgram() {
-        nativeCode = new ArrayList<Integer>();        
+        nativeCode = new ArrayList<Integer>();
+        fixup = new Stack<Integer>();
     	pc = 0;
         //Setup Frame Pointer at global value pointer
         PutF1(ADDI, FrameP, GlobalV, 0);
@@ -333,32 +365,46 @@ public class CodeGenerator {
         }
     }
     
-    private static int negatedBranchOp(int cond) {
-        switch (cond) {
-            case BEQ:
-                return BNE;
-            case BNE:
-                return BEQ;
-            case BLT:
-                return BGE;
-            case BLE:
-                return BGT;
-            case BGE:
-                return BLT;
-            case BGT:
-                return BLE;
-        }
+    private static int negatedBranchOp(ControlFlowInstr instruction) {
+    	if (instruction instanceof BranchEqual){
+            return BNE;
+		}else if (instruction instanceof BranchGreater){
+            return BLE;
+		}else if (instruction instanceof BranchGreaterEqual){
+            return BLT;
+		}else if (instruction instanceof BranchLesser){
+            return BGE;
+		}else if (instruction instanceof BranchLesserEqual){
+            return BGT;
+		}else if (instruction instanceof BranchNotEqual){
+            return BEQ;
+		}
         return ERR;
     }
+
+	private static int opCode(Instruction instruction) {
+		if (instruction instanceof Add){
+			return ADD;
+		}else if (instruction instanceof Sub){
+			return SUB;
+		}else if (instruction instanceof Mul){
+			return MUL;
+		}else if (instruction instanceof Div){
+			return DIV;
+		}else if (instruction instanceof Cmp){
+			return CMP;
+		}
+		return ERR;
+	}
     
-    private void CondNegBraFwd(Result x) {
-        x.fixuplocation = pc;
-        PutF1(negatedBranchOp(x.cond), x.regno, 0, 0);
+    private void CondNegBraFwd(ControlFlowInstr ins) {
+        fixup.push(pc);
+        PutF1(negatedBranchOp(ins), ins.inputOps.get(0).regNumber, 0, 0);
     }
 
-    private void UnCondBraFwd(Result x) {
-        PutF1(BEQ, 0, 0, x.fixuplocation);//Build linked list by storing previous value
-        x.fixuplocation = pc - 1;
+    private void UnCondBraFwd(ControlFlowInstr ins) {
+        PutF1(BEQ, 0, 0, fixup.pop());//Build linked list by storing previous value
+        fixup.push(pc - 1);
     }
 
     private void Fixup(int loc) {
