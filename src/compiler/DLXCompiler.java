@@ -24,9 +24,6 @@ public class DLXCompiler {
 	}
 
 	public void compile() throws ParserException, ScannerException {
-			// TODO It shouldn't be necessary to init the factory each time
-			VirtualRegisterFactory.init();
-		
 			parser.parse();
 			new SSAGenerator(parser.CFGs).generateSSA();
 			new RegisterAllocator(parser.CFGs).allocateRegisters();

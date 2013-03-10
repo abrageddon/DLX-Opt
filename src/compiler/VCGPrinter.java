@@ -10,8 +10,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import compiler.front.Parser;
-import compiler.front.Scanner;
 import compiler.front.Parser.ParserException;
 import compiler.front.Scanner.ScannerException;
 import compiler.ir.cfg.*;
@@ -47,7 +45,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-4.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-7.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner

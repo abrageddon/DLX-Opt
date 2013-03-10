@@ -15,6 +15,7 @@ import compiler.ir.instructions.*;
 
 public class CodeGenerator {
 
+	private static final int MAX_REG = 27;
     private static final int FrameP = 28;
     private static final int StackP = 29;
     private static final int GlobalV = 30;
@@ -83,7 +84,6 @@ public class CodeGenerator {
     private ArrayList<Integer> nativeCode;
     private String outFile;
     private Stack<Integer> fixup;//TODO figure out this part
-    private Stack<BasicBlock> fixupBlocks;
 
     public CodeGenerator(List<CFG> CFGs) {
     	this.CFGs = CFGs;
@@ -140,25 +140,28 @@ public class CodeGenerator {
 			int elseBranch = fixup.pop();
 			UnCondBraFwd(0);
 			Fixup(elseBranch);
+		}else if (currentBlock.label.equals("else") && currentBlock.isInstructionsEmpty()) {
+			Fixup(fixup.pop());
 		}
 		
 	}
 
 	private void produceCode(Instruction instruction) {
+			//TODO remove when real allocator exists (reg %MAX_REG)+1
 		if (instruction instanceof Immediate){
 			Immediate ins = (Immediate)instruction;
-	        PutF1(ADDI, ins.outputOp.regNumber, 0, ins.value);
+	        PutF1(ADDI, (ins.outputOp.regNumber%MAX_REG)+1, 0, ins.value);
 	        
 		}else if (instruction instanceof StoreValue){
 			StoreValue ins = (StoreValue)instruction;
 			//Global
-	        PutF1(STW, Instruction.resolve(ins.value).outputOp.regNumber, GlobalV, -GetVarAddress(ins.symbol.ident));
+	        PutF1(STW, (Instruction.resolve(ins.value).outputOp.regNumber %MAX_REG)+1, GlobalV, -GetVarAddress(ins.symbol.ident));
 	        //TODO arrays, locals
 	        
 		}else if (instruction instanceof LoadValue){
 			LoadValue ins = (LoadValue)instruction;
 			//Global
-	        PutF1(LDW, ins.outputOp.regNumber, GlobalV, -GetVarAddress(ins.symbol.ident));
+	        PutF1(LDW, (ins.outputOp.regNumber %MAX_REG)+1, GlobalV, -GetVarAddress(ins.symbol.ident));
 	        
 		}else if (instruction instanceof ControlFlowInstr){//TODO while, if, etc...
 			ControlFlowInstr ins = (ControlFlowInstr)instruction;
@@ -166,22 +169,36 @@ public class CodeGenerator {
 	        
 		}else if (instruction instanceof ArithmeticBinary){
 			ArithmeticBinary ins = (ArithmeticBinary)instruction;
-			PutF2(opCode(ins), ins.outputOp.regNumber, ins.inputOps.get(0).regNumber, ins.inputOps.get(1).regNumber);
+			PutF2(opCode(ins), (ins.outputOp.regNumber %MAX_REG)+1, (ins.inputOps.get(0).regNumber%MAX_REG)+1, (ins.inputOps.get(1).regNumber%MAX_REG)+1);
 	        
 		}else if (instruction instanceof Call){
 			Call ins = (Call)instruction;
 			if (ins.function.ident.equalsIgnoreCase("outputnum")){
-				PutF2(WRD, 0, ins.args.get(0).outputOp.regNumber, 0);
+				PutF2(WRD, 0, (ins.args.get(0).outputOp.regNumber%MAX_REG)+1, 0);
 			}else if (ins.function.ident.equalsIgnoreCase("outputnewline")){
 				PutF2(WRL, 0, 0, 0);
 			}else if (ins.function.ident.equalsIgnoreCase("inputnum")){
-				PutF2(RDI, ins.outputOp.regNumber, 0, 0);
+				PutF2(RDI, (ins.outputOp.regNumber %MAX_REG)+1, 0, 0);
 			} 
 		}
 
 	}
 
 	private void postBlockProcessing(BasicBlock currentBlock) {
+
+
+		// IF fixup
+		if (currentBlock.label.equals("fi-join")) {
+			BasicBlock elseCheck = null;
+			for (BasicBlock block : currentBlock.pred) {
+				if (block.label.equals("else")) {
+					elseCheck = block;
+				}
+			}
+			if (elseCheck != null && !elseCheck.isInstructionsEmpty()) {
+				FixAll(elseCheck.startLine);
+			}
+		}
 		
 		// While loop
 		BasicBlock whileStart = null;
@@ -194,17 +211,11 @@ public class CodeGenerator {
 			PutF1(BEQ, 0, 0, whileStart.startLine - pc);
 			Fixup(fixup.pop());
 		}
-		
-		// IF fixup
-		if (currentBlock.label.equals("fi-join")){
-			FixAll(fixup.pop());
-		}
 	}
 
 	private void setupProgram() {
         nativeCode = new ArrayList<Integer>();
         fixup = new Stack<Integer>();
-        fixupBlocks = new Stack<BasicBlock>();
     	pc = 0;
         //Setup Frame Pointer at global value pointer
         PutF1(ADDI, FrameP, GlobalV, 0);
@@ -419,12 +430,12 @@ public class CodeGenerator {
     
     private void CondNegBraFwd(ControlFlowInstr ins) {
         fixup.push(pc);
-        PutF1(negatedBranchOp(ins), ins.inputOps.get(0).regNumber, 0, 0);
+        PutF1(negatedBranchOp(ins), (ins.inputOps.get(0).regNumber%MAX_REG)+1, 0, 0);
     }
 
     private void UnCondBraFwd(int loc) {
         PutF1(BEQ, 0, 0, loc);//Build linked list by storing previous value
-        fixup.push(pc - 1);
+//        fixup.push(pc - 1);
     }
 
     private void Fixup(int loc) {//TODO builtin pop

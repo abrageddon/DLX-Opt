@@ -4,6 +4,7 @@ package compiler.front;
 import java.util.ArrayList;
 import java.util.List;
 
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.Scanner.ScannerException;
 import compiler.front.symbolTable.*;
 import compiler.front.symbolTable.Symbol.SymbolKind;
@@ -50,6 +51,7 @@ public class Parser {
 	
 	public void parse() throws ParserException, ScannerException {
 		scanner.open(sourceFile);
+		VirtualRegisterFactory.init();
 		scanner.next(); // scan the input symbol
 		computation();
 
