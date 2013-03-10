@@ -48,7 +48,7 @@ public abstract class ControlFlowInstr extends Instruction {
 	public String toString() {
 		return getInstrNumber() + " : " + getOperator() +
 //				" to " + targetBB.label +
-				" on (" + cmp.getInstrNumber() + ")" + "/n" +
+				" on (" + cmp.getInstrNumber() + ")" + "\n" +
 				" [" + Instruction.resolve(cmp).outputOp + "]";
 	}
 }

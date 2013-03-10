@@ -23,22 +23,22 @@ public class Range {
      * This range overlaps other range.
      * 	- this range includes other.begin, or
      * 	- other range includes this.begin
-     * 
+     * (Note: adjacent ranges like [1,1] and [2,2] are considered to be overlapped)
      * @param other
      * @return
      */
     public boolean overlaps(Range other) {
     	
     	// this range includes other.begin
-    	if ((other.begin >= this.begin) && (other.begin <= this.end)) {
+    	if ((other.begin - 1 >= this.begin) && (other.begin - 1 <= this.end)) {
     		return true;
     	}
 
     	// other range includes this.begin
-    	if ((this.begin >= other.begin) && (this.begin <= other.end)) {
+    	if ((this.begin + 1 >= other.begin) && (this.begin + 1 <= other.end)) {
     		return true;
     	}
-    	
+
     	return false;
     }
     

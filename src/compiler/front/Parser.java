@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.Scanner.ScannerException;
 import compiler.front.symbolTable.*;
 import compiler.ir.cfg.BasicBlock;
@@ -29,7 +30,7 @@ public class Parser {
 	public int instructionCnt;
 	
 	public Parser(String srcFile) {
-		VirtualRegister.regCnt = 0;
+				
 		symTable = new SymbolTable();
 		FunctionSymbol outputNumFnct = new FunctionSymbol("outputnum");
 		outputNumFnct.formalParams.add(new ParamSymbol("num"));

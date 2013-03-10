@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.symbolTable.FunctionSymbol;
 
 public class Call extends Instruction {
@@ -14,7 +15,7 @@ public class Call extends Instruction {
 		this.function = fnct;
 		this.args = args;
 
-		this.outputOp = new VirtualRegister();
+		this.outputOp = VirtualRegisterFactory.newRegister();
 	}
 
 	public List<VirtualRegister> getInputOperands() {
