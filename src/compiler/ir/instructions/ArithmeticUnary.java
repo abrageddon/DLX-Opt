@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 
 public abstract class ArithmeticUnary extends Instruction {
 
@@ -11,7 +12,7 @@ public abstract class ArithmeticUnary extends Instruction {
 	
 	public ArithmeticUnary(Instruction operand) {
 		this.operand = operand;
-		this.outputOp = new VirtualRegister();
+		this.outputOp = VirtualRegisterFactory.newRegister();
 	}
 	
 	public List<VirtualRegister> getInputOperands() {

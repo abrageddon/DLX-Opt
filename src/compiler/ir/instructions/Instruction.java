@@ -56,7 +56,7 @@ public class Instruction {
 	}
 	
 	public static Instruction resolve(Instruction i) {
-		if (i.forward != null) {
+		if (i != null && i.forward != null) {
 			i.forward = resolve(i.forward);
 			return i.forward;
 		}

@@ -2,6 +2,7 @@ package compiler.front;
 
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -56,12 +57,13 @@ public class SSAGenerator {
 				int slot = 0;
 
 				for (Instruction val : bb.entryState) {
-					List<Instruction> values = new ArrayList<Instruction>();
+					// for each phi value remember the block it came from
+					Hashtable<BasicBlock, Instruction> values = new Hashtable<BasicBlock, Instruction>(); 
 					for (BasicBlock pred : bb.pred) {
-						values.add(pred.exitState.get(slot));
+						values.put(pred, pred.exitState.get(slot));
 					}
 					if (values.size() == 1) { // only one predecessor
-						Instruction.forward(val, values.get(0));
+						Instruction.forward(val, values.get(bb.pred.get(0)));
 					} else if (values.size() > 1) { // multiple predecessors
 						Phi phi = new Phi(values);
 //						phi.setInstrNumber(parser.instructionCnt++); //TODO 
@@ -172,13 +174,13 @@ public class SSAGenerator {
 	private Instruction testPhi(Phi phi) {
 
 		// PHI's have at least two operands
-		assert phi.values.size() >= 2;
+		assert phi.getValues().size() >= 2;
 		
 		Instruction firstVal = null;
 
 		// pick first value not equal to the PHI instruction itself
-		for(int i = 0; i < phi.values.size(); i++) {
-			firstVal = Instruction.resolve(phi.values.get(i));
+		for(int i = 0; i < phi.getValues().size(); i++) {
+			firstVal = Instruction.resolve(phi.getValues().get(i));
 			if (!firstVal.equals(phi)) {
 				break;
 			}
@@ -190,8 +192,8 @@ public class SSAGenerator {
 		}
 		
 		// test 
-		for(int i = 0; i < phi.values.size(); i++) {
-			Instruction value = Instruction.resolve(phi.values.get(i));
+		for(int i = 0; i < phi.getValues().size(); i++) {
+			Instruction value = Instruction.resolve(phi.getValues().get(i));
 			if(!value.equals(firstVal) && !value.equals(phi)) {
 				return null; // this PHI is not redundant
 			}

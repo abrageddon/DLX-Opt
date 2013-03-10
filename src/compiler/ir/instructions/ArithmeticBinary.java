@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 
 public abstract class ArithmeticBinary extends Instruction {
 
@@ -13,7 +14,7 @@ public abstract class ArithmeticBinary extends Instruction {
 	public ArithmeticBinary(Instruction left, Instruction right) {
 		this.left = left;
 		this.right = right;
-		this.outputOp = new VirtualRegister();
+		this.outputOp = VirtualRegisterFactory.newRegister();
 	}
 	
 	public List<VirtualRegister> getInputOperands() {

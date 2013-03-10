@@ -20,8 +20,9 @@ public class RegisterAllocator {
 		this.CFGs = CFGs;
 	}
 
-	public void allocateRegisters(){
+	public void allocateRegisters() {
 		buildLiveRanges();
+		VirtualRegisterFactory.printAllVirtualRegisters();
 	}
 
 	public void buildLiveRanges() {
@@ -44,20 +45,21 @@ public class RegisterAllocator {
 
 				// for each phi function phi of successors of b do
 				// 		live.add(phi.inputOf(b))
-				int bbSuccCnt = 0;
 				for (BasicBlock succ : bb.succ) {
 					for(Phi phi : succ.getPHIs()) {
 						// live.add(phi.inputOf(b))
-						live.add(phi.getInputOperands().get(bbSuccCnt));
+						live.add(phi.getInputOperand(bb));
 					}
-					bbSuccCnt++;
 				}
 
 				// for each opd in live do
 				// 		intervals[opd].addRange(b.from, b.to)
-				for (VirtualRegister opd : live) {
-					opd.addRange(bb.begin(), bb.end());
-					live.remove(opd);
+				if(!bb.isInstructionsEmpty()) {
+					// start and exit bb's are empty
+					// we should probably have an iterator that skips them
+					for (VirtualRegister opd : live) {
+						opd.addRange(bb.begin(), bb.end());	
+					}
 				}
 
 				// for each operation op of b in reverse order do
@@ -75,15 +77,20 @@ public class RegisterAllocator {
 						continue;
 					}
 
-					// we only have one output operand
-					VirtualRegister otputOpd = inst.getOutputOperand();
-					otputOpd.setRangeBegin(inst.getInstrNumber());
-					live.remove(otputOpd);
-
-					// iterate over the input operands					
-					for (VirtualRegister opd : inst.getInputOperands()) {
-						opd.addRange(bb.begin(), inst.getInstrNumber());
-						live.add(opd);
+					// we only have at most one output operand
+					VirtualRegister outputOpd = inst.getOutputOperand();
+					if (outputOpd != null) {
+						outputOpd.setRangeBegin(inst.getInstrNumber());
+						live.remove(outputOpd);
+					}
+					
+					// iterate over the input operands, if any	
+					List<VirtualRegister> inputOpds = inst.getInputOperands();
+					if (inputOpds != null) {
+						for (VirtualRegister opd : inputOpds) {
+							opd.addRange(bb.begin(), inst.getInstrNumber());
+							live.add(opd);
+						}
 					}
 				}
 

@@ -2,6 +2,7 @@ package compiler;
 
 import compiler.back.codeGen.CodeGenerator;
 import compiler.back.regAloc.RegisterAllocator;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.Parser;
 import compiler.front.SSAGenerator;
 import compiler.front.Parser.ParserException;
@@ -23,9 +24,12 @@ public class DLXCompiler {
 	}
 
 	public void compile() throws ParserException, ScannerException {
+			// TODO It shouldn't be necessary to init the factory each time
+			VirtualRegisterFactory.init();
+		
 			parser.parse();
 			new SSAGenerator(parser.CFGs).generateSSA();
-//			new RegisterAllocator(parser.CFGs).allocateRegisters();
+			new RegisterAllocator(parser.CFGs).allocateRegisters();
 			new CodeGenerator(parser.CFGs).generateCode(outFile);
 	}
 }

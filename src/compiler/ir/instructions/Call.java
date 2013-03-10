@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.symbolTable.FunctionSymbol;
 import compiler.front.symbolTable.Symbol.SymbolKind;
 
@@ -16,7 +17,7 @@ public class Call extends Instruction {
 		this.args = args;
 		this.outputOp = null;
 		if (function.kind == SymbolKind.FUNCTION){
-			this.outputOp = new VirtualRegister();
+			this.outputOp = VirtualRegisterFactory.newRegister();
 		}
 	}
 

@@ -99,7 +99,7 @@ public class BasicBlock {
      * 
      * @return
      */
-    public int begin(){
+    public int begin() {
         return instructions.get(0).getInstrNumber();
     }
     
