@@ -58,7 +58,11 @@ public class RegisterAllocator {
 					// start and exit bb's are empty
 					// we should probably have an iterator that skips them
 					for (VirtualRegister opd : live) {
-						opd.addRange(bb.begin(), bb.end());	
+						if (bb.begin() >= 0 && bb.end() >= 0){
+							if (opd != null){
+								opd.addRange(bb.begin(), bb.end());
+							}
+						}
 					}
 				}
 
@@ -88,8 +92,12 @@ public class RegisterAllocator {
 					List<VirtualRegister> inputOpds = inst.getInputOperands();
 					if (inputOpds != null) {
 						for (VirtualRegister opd : inputOpds) {
-							opd.addRange(bb.begin(), inst.getInstrNumber());
-							live.add(opd);
+							if (opd != null){
+								opd.addRange(bb.begin(), inst.getInstrNumber());
+								if (live != null){
+									live.add(opd);
+								}
+							}
 						}
 					}
 				}

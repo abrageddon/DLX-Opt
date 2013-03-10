@@ -379,6 +379,7 @@ public class Parser {
 		CFG.addLinearLink(cfg.currentBB, elseBB); // then -> else
 		
 		// always have an else BB, even if empty
+		//Why?
 		CFG.addBranch(condBB, elseBB); // cond => else
 		cfg.setCurrentBB(elseBB);
 		

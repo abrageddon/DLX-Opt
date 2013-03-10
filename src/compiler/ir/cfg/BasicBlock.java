@@ -102,7 +102,10 @@ public class BasicBlock {
      * @return
      */
     public int begin() {
-        return instructions.get(0).getInstrNumber();
+    	if (instructions!=null && !instructions.isEmpty()){
+    		return instructions.get(0).getInstrNumber();
+    	}
+    	return -1;
     }
     
     /**
@@ -110,7 +113,10 @@ public class BasicBlock {
      * @return
      */
     public int end(){
-        return instructions.get(instructions.size() - 1).getInstrNumber();
+    	if (instructions!=null && !instructions.isEmpty()){
+    		return instructions.get(instructions.size() - 1).getInstrNumber();
+    	}
+    	return -1;
     }
     
 	public String toString() {

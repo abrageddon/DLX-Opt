@@ -120,7 +120,8 @@ public class CodeGenerator {
 		while (blocks.hasNext()) {
 			BasicBlock currentBlock = (BasicBlock) blocks.next();
 			currentBlock.startLine = pc;// Easy loopbacks
-			
+
+			preBlockProcessing(currentBlock);
 			
 			// Process block's instructions
 			Iterator<Instruction> instructions = currentBlock.getInstructionsIterator();
@@ -133,17 +134,14 @@ public class CodeGenerator {
 		}
 	}
 
-	private void postBlockProcessing(BasicBlock currentBlock) {
-		if (currentBlock.label.equals("while-body")){
-			BasicBlock whileStart = currentBlock;
-			for (BasicBlock block: currentBlock.succ){
-				if (block.label.equals("while-cond")){
-					whileStart = block;
-				}
-			}
-		    PutF1(BEQ, 0, 0, whileStart.startLine - pc);
+	private void preBlockProcessing(BasicBlock currentBlock) {
+		if (currentBlock.label.equals("else") && !currentBlock.isInstructionsEmpty()){
+			UnCondBraFwd();
 			Fixup(fixup.pop());
+		}else if (currentBlock.label.equals("fi-join")){
+			FixAll(fixup.pop());
 		}
+		
 	}
 
 	private void produceCode(Instruction instruction) {
@@ -183,6 +181,21 @@ public class CodeGenerator {
 
 	}
 
+	private void postBlockProcessing(BasicBlock currentBlock) {
+		
+		// Detect back edges and fixup
+		BasicBlock whileStart = null;
+		for (BasicBlock block : currentBlock.succ) {
+			if (currentBlock.depth > block.depth) {
+				whileStart = block;
+			}
+		}
+		if (whileStart != null) {
+			PutF1(BEQ, 0, 0, whileStart.startLine - pc);
+			Fixup(fixup.pop());
+		}
+	}
+
 	private void setupProgram() {
         nativeCode = new ArrayList<Integer>();
         fixup = new Stack<Integer>();
@@ -200,6 +213,7 @@ public class CodeGenerator {
 
 
 	private void setupGlobals() {
+		//Zero out memory, could be reduced
         //Setup Global Variables
         for (int i = 0; i < mainCFG.getVarNum(); i++) {
             //Allocate memory
@@ -402,12 +416,12 @@ public class CodeGenerator {
         PutF1(negatedBranchOp(ins), ins.inputOps.get(0).regNumber, 0, 0);
     }
 
-    private void UnCondBraFwd(ControlFlowInstr ins) {
+    private void UnCondBraFwd() {
         PutF1(BEQ, 0, 0, fixup.pop());//Build linked list by storing previous value
         fixup.push(pc - 1);
     }
 
-    private void Fixup(int loc) {
+    private void Fixup(int loc) {//TODO builtin pop
         int part = (0xffff0000 + (pc - loc));
         int fixed = (nativeCode.get(loc) | 0x0000ffff) & part;
         nativeCode.set(loc, fixed);
