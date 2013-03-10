@@ -83,6 +83,7 @@ public class CodeGenerator {
     private ArrayList<Integer> nativeCode;
     private String outFile;
     private Stack<Integer> fixup;//TODO figure out this part
+    private Stack<BasicBlock> fixupBlocks;
 
     public CodeGenerator(List<CFG> CFGs) {
     	this.CFGs = CFGs;
@@ -136,10 +137,9 @@ public class CodeGenerator {
 
 	private void preBlockProcessing(BasicBlock currentBlock) {
 		if (currentBlock.label.equals("else") && !currentBlock.isInstructionsEmpty()){
-			UnCondBraFwd();
-			Fixup(fixup.pop());
-		}else if (currentBlock.label.equals("fi-join")){
-			FixAll(fixup.pop());
+			int elseBranch = fixup.pop();
+			UnCondBraFwd(0);
+			Fixup(elseBranch);
 		}
 		
 	}
@@ -183,7 +183,7 @@ public class CodeGenerator {
 
 	private void postBlockProcessing(BasicBlock currentBlock) {
 		
-		// Detect back edges and fixup
+		// While loop
 		BasicBlock whileStart = null;
 		for (BasicBlock block : currentBlock.succ) {
 			if (currentBlock.depth > block.depth) {
@@ -194,11 +194,17 @@ public class CodeGenerator {
 			PutF1(BEQ, 0, 0, whileStart.startLine - pc);
 			Fixup(fixup.pop());
 		}
+		
+		// IF fixup
+		if (currentBlock.label.equals("fi-join")){
+			FixAll(fixup.pop());
+		}
 	}
 
 	private void setupProgram() {
         nativeCode = new ArrayList<Integer>();
         fixup = new Stack<Integer>();
+        fixupBlocks = new Stack<BasicBlock>();
     	pc = 0;
         //Setup Frame Pointer at global value pointer
         PutF1(ADDI, FrameP, GlobalV, 0);
@@ -416,8 +422,8 @@ public class CodeGenerator {
         PutF1(negatedBranchOp(ins), ins.inputOps.get(0).regNumber, 0, 0);
     }
 
-    private void UnCondBraFwd() {
-        PutF1(BEQ, 0, 0, fixup.pop());//Build linked list by storing previous value
+    private void UnCondBraFwd(int loc) {
+        PutF1(BEQ, 0, 0, loc);//Build linked list by storing previous value
         fixup.push(pc - 1);
     }
 
