@@ -305,7 +305,7 @@ public class VCGPrinter {
 
                     String edgeType = "edge";
                     if (currentBlock.label.equals("if-cond") || currentBlock.label.equals("while-cond")) {
-                        edgeType = "edge";
+                        edgeType = "bentnearedge";
                     }
 
                     
