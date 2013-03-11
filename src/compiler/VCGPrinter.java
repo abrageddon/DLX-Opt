@@ -292,11 +292,12 @@ public class VCGPrinter {
             String edges = "";
 
             //Range start and ends
-            List<Range> ranges = vReg.getRanges();
+//            List<Range> ranges = vReg.getRanges();
+            Range range = vReg.singleRange;
             //Ignore empty ranges
-            if(ranges == null || ranges.isEmpty() ){
-                continue;
-            }
+//            if(ranges == null || ranges.isEmpty() ){
+//                continue;
+//            }
             
             for (CFG cfg : CFGs) {
                 Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
@@ -309,10 +310,10 @@ public class VCGPrinter {
                     }
 
                     
-                    for (Range range : ranges) {
+//                    for (Range range : ranges) {
                         startLine = Math.min(startLine, range.begin);
                         endLine = Math.max(endLine, range.end);
-                    }
+//                    }
 //                        System.err.println(regNumber+": "+currentBlock.begin()+"["+startLine +" - "+ endLine+"]"+currentBlock.end());
                         
                     if (startLine >= currentBlock.begin() && startLine <= currentBlock.end()) {

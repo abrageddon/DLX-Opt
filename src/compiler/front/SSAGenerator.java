@@ -1,7 +1,7 @@
 package compiler.front;
 
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.ir.cfg.BasicBlock;
 import compiler.ir.cfg.CFG;
 import compiler.ir.instructions.ArithmeticBinary;
@@ -69,7 +70,7 @@ public class SSAGenerator {
 						Instruction.forward(val, values.get(bb.pred.get(0)));
 					} else if (values.size() > 1) { // multiple predecessors
 						Phi phi = new Phi(values);
-						//						phi.setInstrNumber(parser.instructionCnt++); //TODO 
+						//						phi.setInstrNumber(parser.instructionCnt++); //TODO
 						phi.setInstrNumber(phiCount++);
 						Instruction.forward(val, phi);
 						bb.prependInstruction(phi);
@@ -92,6 +93,7 @@ public class SSAGenerator {
 							// value holds the instruction it should be forwarded to
 							Instruction.forward(phi, value);
 							removablePHIs.add(phi);
+							VirtualRegisterFactory.removeRegister(phi.outputOp);
 						}
 					}
 				}
@@ -218,8 +220,9 @@ public class SSAGenerator {
 				for(BasicBlock pred : bb.pred) {
 					List<Instruction> moves = new ArrayList<Instruction>();
 					for(Phi phi : bb.getPHIs()){
-						moves.add(new Move(phi.getInputValue(pred), Instruction.resolve(phi)));
-//						topoSortMoves(moves);
+						Move move = new Move(phi.getInputValue(pred), Instruction.resolve(phi));
+						moves.add(move);
+						//TODO topoSortMoves(moves);
 					}
 					pred.appendInstructions(moves);				
 				}
@@ -227,79 +230,116 @@ public class SSAGenerator {
 			}
 		}
 
+//		renumberInstructions();
 	}
 
-//	private void topoSortMoves(List<Instruction> moves) {
-//
-//	}
-//
-//	class Graph {
-//		HashMap<VirtualRegister, Edges> graph;
-//
-//		public Graph() {
-//			graph = new HashMap<VirtualRegister, SSAGenerator.Edges>();
-//		}
-//
-//		public void addEdge(VirtualRegister src, VirtualRegister dest) {
-//			if (graph.get(src) == null) {
-//				graph.put(src, new Edges());
-//			}
-//			if (graph.get(dest) == null) {
-//				graph.put(dest, new Edges());
-//			}
-//			graph.get(src).addOutgoingEdge(dest);
-//			graph.get(dest).addIncomingEdge(src);
-//		}
-//
-//
-//		public void topoSort() {
-//			ArrayList<VirtualRegister> L = new ArrayList<VirtualRegister>();
-//			HashSet<VirtualRegister> S = new HashSet<VirtualRegister>();
-//			for (VirtualRegister vReg : graph.keySet()) {
-//				Edges edges = graph.get(vReg);
-//				if(edges.inEdges.size() == 0) {
-//					S.add(vReg);
-//				}
-//			}
-//
-//			//while S is non-empty do
-//			while(!S.isEmpty()){
-//				//remove a node n from S
-//				VirtualRegister n = S.iterator().next();
-//				S.remove(n);
-//
-//				//for each node m with an edge e from n to m do
-//				for(Iterator<VirtualRegister> it = graph.get(n).outEdges.iterator(); it.hasNext(); ) {
-//					VirtualRegister m = it.next();
-//					graph.get(m).inEdges.remove(n);
-//					if(graph.get(m).inEdges.isEmpty()) {
-//						S.add(m);
-//					}
-//					
-//				} 
-//
-//			}
-//
-//		}
-//
-//	}
-//
-//	class Edges {
-//		List<VirtualRegister> inEdges; // in edges
-//		List<VirtualRegister> outEdges; // out edges
-//
-//		public Edges() {
-//			inEdges = new ArrayList<VirtualRegister>();
-//			outEdges = new ArrayList<VirtualRegister>();
-//		}
-//
-//		public void addIncomingEdge(VirtualRegister in) {
-//			inEdges.add(in);
-//		}
-//
-//		public void addOutgoingEdge(VirtualRegister out) {
-//			outEdges.add(out);
-//		}
-//	}
+	private void topoSortMoves(List<Instruction> moves) {
+
+	}
+
+	static class Graph {
+		HashMap<VirtualRegister, Edges> graph;
+
+		public Graph() {
+			graph = new HashMap<VirtualRegister, SSAGenerator.Edges>();
+		}
+
+		public void addEdge(VirtualRegister src, VirtualRegister dest) {
+			if (graph.get(src) == null) {
+				graph.put(src, new Edges());
+			}
+			if (graph.get(dest) == null) {
+				graph.put(dest, new Edges());
+			}
+			graph.get(src).addOutgoingEdge(dest);
+			graph.get(dest).addIncomingEdge(src);
+		}
+
+
+		public void topoSort() {
+			ArrayList<VirtualRegister> L = new ArrayList<VirtualRegister>();
+			HashSet<VirtualRegister> S = new HashSet<VirtualRegister>();
+			for (VirtualRegister n : graph.keySet()) {
+				if(graph.get(n).inEdges.size() == 0) {
+					S.add(n);
+				}
+			}
+
+			//while S is non-empty do
+			while(!S.isEmpty()) {
+				//remove a node n from S
+				VirtualRegister n = S.iterator().next();
+				S.remove(n);
+				
+				//insert n into L
+			      L.add(n);
+
+				//for each node m with an edge e from n to m do
+				for(Iterator<VirtualRegister> it = graph.get(n).outEdges.iterator(); it.hasNext(); ) {
+					VirtualRegister m = it.next();
+					graph.get(m).inEdges.remove(n);
+					if(graph.get(m).inEdges.isEmpty()) {
+						S.add(m);
+					}
+
+				}
+			}
+			
+			boolean cycle = false;
+			for (VirtualRegister n : graph.keySet()) {
+				if(!graph.get(n).inEdges.isEmpty()) {
+					System.out.println(graph.get(n).inEdges + " -> " + n);
+					cycle = true;
+//					break;
+				}
+			}
+
+			if(cycle) {
+				System.out.println("Cycle present, topological sort not possible");
+			} else {
+				System.out.println("Topological Sort: " + Arrays.toString(L.toArray()));
+			}
+		}
+
+	}
+
+	static class Edges {
+		List<VirtualRegister> inEdges; // in edges
+		List<VirtualRegister> outEdges; // out edges
+
+		public Edges() {
+			inEdges = new ArrayList<VirtualRegister>();
+			outEdges = new ArrayList<VirtualRegister>();
+		}
+
+		public void addIncomingEdge(VirtualRegister in) {
+			inEdges.add(in);
+		}
+
+		public void addOutgoingEdge(VirtualRegister out) {
+			outEdges.add(out);
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		Graph graph = new Graph();
+		VirtualRegister vr1 = new VirtualRegister(1);
+		VirtualRegister vr2 = new VirtualRegister(2);
+		VirtualRegister vr3 = new VirtualRegister(3);
+		VirtualRegister vr4 = new VirtualRegister(4);
+		VirtualRegister vr5 = new VirtualRegister(5);
+		
+		graph.addEdge(vr1, vr2);
+		graph.addEdge(vr2, vr5);
+		graph.addEdge(vr2, vr4);
+		graph.addEdge(vr4, vr1);
+		graph.addEdge(vr4, vr3);
+		
+		graph.topoSort();
+
+		
+		
+	}
 
 }

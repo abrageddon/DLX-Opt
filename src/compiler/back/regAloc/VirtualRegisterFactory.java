@@ -18,11 +18,16 @@ public class VirtualRegisterFactory {
 		virtualRegisters.add(vReg);
 		return vReg;
 	}
-
+	
+	public static void removeRegister(VirtualRegister vReg){
+		virtualRegisters.remove(vReg);
+	}
+	
 	public static void printAllVirtualRegisters() {
 		System.out.println("Virtual Registers");
 		for (VirtualRegister vr : VirtualRegisterFactory.virtualRegisters) {
-			System.out.println(vr + " " + vr.ranges);
+//			System.out.println(vr + " " + vr.ranges);
+			System.out.println(vr + " " + vr.singleRange);
 		}
 	}
 
@@ -31,10 +36,10 @@ public class VirtualRegisterFactory {
 	 * Test the virtual register factory.
 	 */
 	public static void main(String[] args) {
-		VirtualRegister v = VirtualRegisterFactory.newRegister();
-		v.addRange(1, 1);
-		v.addRange(2, 2);
+//		VirtualRegister v = VirtualRegisterFactory.newRegister();
+//		v.addRange(1, 1);
+//		v.addRange(2, 2);
 		
-		System.out.println(v.ranges);
+//		System.out.println(v.ranges);
 	}
 }
