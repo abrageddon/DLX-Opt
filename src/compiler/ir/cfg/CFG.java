@@ -47,6 +47,7 @@ public class CFG {
 		
 		frame = new ArrayList<Instruction>();
 
+		startLine = -1;
         identifiers = new ArrayList<String>();
         vars = new ArrayList<Integer>();
         param = new ArrayList<Integer>();
@@ -400,6 +401,18 @@ public class CFG {
 
     public int getArray(String ident) {
         return arrays.indexOf(String2Id(ident));
+    }
+    
+    public List<Param> getParams(){
+    	List<Param> ret = new ArrayList<Param>();
+    	
+    	for (Instruction ins:frame){
+    		if(ins instanceof Param){
+    			ret.add((Param)ins);
+    		}
+    	}
+    	
+    	return ret;
     }
 
     /**

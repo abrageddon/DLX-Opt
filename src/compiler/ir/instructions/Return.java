@@ -33,6 +33,6 @@ public class Return extends Instruction {
 	
 	public String toString() {
 		return getInstrNumber()  + " : RET (" + Instruction.resolve(returnValue).getInstrLabel() + ")" + 
-				 "\n [ " + Instruction.resolve(returnValue).outputOp + " ] ";
+				 "\n [" + Instruction.resolve(returnValue).outputOp + "] ";
 	}
 }

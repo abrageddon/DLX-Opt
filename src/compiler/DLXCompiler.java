@@ -2,7 +2,6 @@ package compiler;
 
 import compiler.back.codeGen.CodeGenerator;
 import compiler.back.regAloc.RegisterAllocator;
-import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.Parser;
 import compiler.front.SSAGenerator;
 import compiler.front.Parser.ParserException;

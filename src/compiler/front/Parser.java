@@ -511,6 +511,9 @@ public class Parser {
 				if (ret instanceof Global) {
 					Instruction value = issue(new LoadValue(((Scalar) ret).symbol));
 					return value;
+				}else if (ret instanceof Param) {
+					Instruction value = issue(new LoadValue(((Param) ret).symbol));
+					return value;
 				}
 				return ret;
 			} else if (ret instanceof Index) {
