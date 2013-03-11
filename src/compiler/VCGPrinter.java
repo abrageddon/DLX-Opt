@@ -45,7 +45,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-5.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-14.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner

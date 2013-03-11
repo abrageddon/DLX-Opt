@@ -232,7 +232,6 @@ public class CodeGenerator {
 
 		} else if (instruction instanceof LoadValue) {
 			LoadValue ins = (LoadValue) instruction;
-			System.err.println(ins);
 			load(ins);
 
 		} else if (instruction instanceof ControlFlowInstr) {
