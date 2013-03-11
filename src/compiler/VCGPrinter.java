@@ -127,10 +127,9 @@ public class VCGPrinter {
                 + "    display_edge_labels: yes\n"
                 + "    manhatten_edges: yes\n"
                 + "\n"
-                + "    classname 1 : \"CFG Edges (blue)\"\n" 
-//                + "    classname 2 : \"Const Lists (red)\"\n"
-                + "    classname 3 : \"Virtual Registers (green)\"\n"
-                + "    classname 4 : \"Dominator Tree (gray)\"\n"
+                + "    classname 1 : \"CFG Edges (blue)\"\n"
+                + "    classname 2 : \"Virtual Registers (green)\"\n"
+                + "    classname 3 : \"Dominator Tree (gray)\"\n"
                 + "       yspace: 34\n"
                 + "       xspace: 30\n"
                 + "       xlspace: 10\n"
@@ -226,22 +225,24 @@ public class VCGPrinter {
     }
 
     
-    private void cfgEdges(PrintStream out) {
+    private void cfgEdges(PrintStream vcgOut) {
+//        vcgOut.println("\nedge.class: 1\n");
+        String edgeClass = "class: 1";
         for (BasicBlock node : nodeMap.keySet()) {
             // out edges
             for (BasicBlock dest : node.succ) {
                 if (node.label.equals("if-cond") && dest.label.equals("then")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
+                    vcgOut.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen "+edgeClass+"}");
                 } else if (node.label.equals("if-cond") && dest.label.equals("else")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
+                    vcgOut.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red "+edgeClass+"}");
                 } else if (node.label.equals("while-cond") && dest.label.equals("while-body")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen class: 1}");
+                    vcgOut.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"true\" color: darkgreen "+edgeClass+"}");
                 } else if (node.label.equals("while-cond") && dest.label.equals("while-next")) {
-                    out.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red class: 1}");
+                    vcgOut.println("    bentnearedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"false\" color: red "+edgeClass+"}");
                 } else if (node.depth > dest.depth) {
-                    out.println("    backedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"back\" color: orange class: 1}");
+                    vcgOut.println("    backedge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\"  label: \"back\" color: orange "+edgeClass+"}");
                 } else {
-                    out.println("    edge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\" class: 1}");
+                    vcgOut.println("    edge: { sourcename:\"" + nodeMap.get(node) + "\" targetname:\"" + nodeMap.get(dest) + "\" "+edgeClass+"}");
                 }
             }
         }
@@ -249,15 +250,17 @@ public class VCGPrinter {
     
 
 
-    private void dominatorEdges(PrintStream out) {
+    private void dominatorEdges(PrintStream vcgOut) {
+//        vcgOut.println("\nedge.class: 3\n");
+        String edgeClass = "class: 3";
         for (BasicBlock node : nodeMap.keySet()) {
             // Dominator Edges
 //            for (BasicBlock dominator : node.semiDom) {
-//        		out.println("    edge: { sourcename:\"" + nodeMap.get(dominator) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: darkgray  class: 4}");
+//        		vcgOut.println("    edge: { sourcename:\"" + nodeMap.get(dominator) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: darkgray "+edgeClass+"}");
 //            }
             // Immediate Dominator Edges
             if (node.iDom != null){
-                out.println("    edge: { sourcename:\"" + nodeMap.get(node.iDom) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
+                vcgOut.println("    edge: { sourcename:\"" + nodeMap.get(node.iDom) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray "+edgeClass+"}");
             }
         }
     }
@@ -270,6 +273,7 @@ public class VCGPrinter {
                 "node.bordercolor: green\n");
         
 
+        String edgeClass = "class: 2";
         Integer regNumber=0;
 
         for (VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
@@ -312,7 +316,7 @@ public class VCGPrinter {
 //                        System.err.println(regNumber+": "+currentBlock.begin()+"["+startLine +" - "+ endLine+"]"+currentBlock.end());
                         
                     if (startLine >= currentBlock.begin() && startLine <= currentBlock.end()) {
-                        edges = edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" }\n"+ edges;
+                        edges = edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" "+edgeClass+"}\n"+ edges;
                         startDepth = currentBlock.depth;
                         for (Instruction ins: currentBlock.getInstructions()){
                             
@@ -325,7 +329,7 @@ public class VCGPrinter {
                         }
                     }
                     if (endLine >= currentBlock.begin() && endLine <= currentBlock.end()) {
-                        edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" }";
+                        edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" "+edgeClass+"}";
                         endDepth = currentBlock.depth;
                         for (Instruction ins: currentBlock.getInstructions()){
                             
@@ -348,7 +352,7 @@ public class VCGPrinter {
                 depth=startDepth;
             }
 
-            vcgOut.println("node: { title: \"vr" + regNumber + "\" label: \"vr" + regNumber + "\" vertical_order: "+depth+" " +
+            vcgOut.println("node: { title: \"vr" + regNumber + "\" label: \"vr" + regNumber + "\"  " + //vertical_order: "+depth+"
             		"info1: \"Source: " + sourceCode + 
                     "\nStart: " + startLine + "\" " +
                     "info2: \"Dest: " + destCode +
