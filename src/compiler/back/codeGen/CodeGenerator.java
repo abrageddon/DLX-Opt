@@ -235,10 +235,14 @@ public class CodeGenerator {
 			load(ins);
 
 		} else if (instruction instanceof ControlFlowInstr) {
-			ControlFlowInstr ins = (ControlFlowInstr) instruction;
-			CondNegBraFwd(ins);
+            ControlFlowInstr ins = (ControlFlowInstr) instruction;
+            CondNegBraFwd(ins);
 
-		} else if (instruction instanceof Return) {
+        } else if (instruction instanceof Move) {
+            Move ins = (Move) instruction;
+            PutF1(ADDI, Instruction.resolve(ins.dest).outputOp.regNumber, Instruction.resolve(ins.src).outputOp.regNumber, 0);
+
+        } else if (instruction instanceof Return) {
 			Return ins = (Return) instruction;
 			int paramNum = currentCFG.getParamNum();
 			boolean isFunc = currentCFG.isFunc();

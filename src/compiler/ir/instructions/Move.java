@@ -29,7 +29,7 @@ public class Move extends Instruction {
 		return getInstrNumber() + " : MOVE" +
 				"(" + src.getInstrLabel() + ")" + 
 				"(" + dest.getInstrLabel() + ")" + "\n" +  
-				" [ " + Instruction.resolve(src).outputOp + "," + 
+				" [" + Instruction.resolve(src).outputOp + "," + 
 				 	    Instruction.resolve(dest).outputOp + "]";
 	}
 	

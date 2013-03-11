@@ -281,7 +281,7 @@ public class VCGPrinter {
             regNumber = vReg.regNumber;
             int startDepth = -1;
             int endDepth = -1;
-            int startLine = -1;
+            int startLine = Integer.MAX_VALUE;
             int endLine = -1;
             String sourceCode = "";
             String destCode = "";
@@ -304,30 +304,40 @@ public class VCGPrinter {
                         edgeType = "edge";
                     }
 
+                    
                     for (Range range : ranges) {
-                        startLine = range.begin;
-                        endLine = range.end;
+                        startLine = Math.min(startLine, range.begin);
+                        endLine = Math.max(endLine, range.end);
+                    }
+//                        System.err.println(regNumber+": "+currentBlock.begin()+"["+startLine +" - "+ endLine+"]"+currentBlock.end());
                         
-                        if (range.begin > currentBlock.begin() && range.begin < currentBlock.end()) {
-                            edges += edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" }";
-                            startDepth = currentBlock.depth;
-                            for (Instruction ins: currentBlock.getInstructions()){
+                    if (startLine >= currentBlock.begin() && startLine <= currentBlock.end()) {
+                        edges = edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" }\n"+ edges;
+                        startDepth = currentBlock.depth;
+                        for (Instruction ins: currentBlock.getInstructions()){
+                            
 //                                System.err.println(ins.getInstrNumber());
-                                if(ins.getInstrNumber() == range.begin){
-                                    sourceCode = ins.toString();
-                                }
-                            }
-                        }
-                        if (range.end > currentBlock.begin() && range.end < currentBlock.end()) {
-                            edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" }";
-                            endDepth = currentBlock.depth;
-                            for (Instruction ins: currentBlock.getInstructions()){
-                                if(ins.getInstrNumber() == range.end){
-                                    destCode = ins.toString();
-                                }
+                                
+                            if(ins.getInstrNumber() == startLine){
+                                sourceCode = ins.toString();
+//                                    System.err.println("^^SOURCE^^");
                             }
                         }
                     }
+                    if (endLine >= currentBlock.begin() && endLine <= currentBlock.end()) {
+                        edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" }";
+                        endDepth = currentBlock.depth;
+                        for (Instruction ins: currentBlock.getInstructions()){
+                            
+//                              System.err.println(ins.getInstrNumber());
+                            
+                            if(ins.getInstrNumber() == endLine){
+                                destCode = ins.toString();
+//                                  System.err.println("^^DEST^^");
+                            }
+                        }
+                    }
+                    
                 }
             }
             

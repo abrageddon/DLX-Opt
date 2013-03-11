@@ -2,6 +2,7 @@ package compiler.front;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegisterFactory;
@@ -708,6 +709,20 @@ public class Parser {
 		// return back the instruction
 		return instr;
 	}
+
+    public void renumberInstructions() {
+        int instrCnt = 0;
+        for (CFG cfg : CFGs) {
+            // Iterate over BBs and initialize entry and exit states
+            Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
+            while (blockIterator.hasNext()) {
+                BasicBlock bb = blockIterator.next();
+                for (Instruction inst : bb.getInstructions()) {
+                    inst.setInstrNumber(instrCnt++);
+                }
+            }
+        }
+    }
 }
 
 

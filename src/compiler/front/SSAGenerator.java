@@ -93,15 +93,11 @@ public class SSAGenerator {
 							Instruction.forward(phi, value);
 							removablePHIs.add(phi);
 						}
-
 					}
 				}
 				bb.removeInstructions(removablePHIs);					
 			}
-
 		}
-
-		renumberInstructions();
 	}
 
 
@@ -204,19 +200,7 @@ public class SSAGenerator {
 		return firstVal; // this PHI is redundant, return the instruction it should be forwarded to
 	}
 
-	void renumberInstructions() {
-		int instrCnt = 0;
-		for (CFG cfg : CFGs) {
-			// Iterate over BBs and initialize entry and exit states
-			Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
-			while (blockIterator.hasNext()) {
-				BasicBlock bb = blockIterator.next();
-				for (Instruction inst : bb.getInstructions()) {
-					inst.setInstrNumber(instrCnt++);
-				}
-			}
-		}
-	}
+
 
 
 	public void deconstructSSA() {
