@@ -1,6 +1,5 @@
 package compiler.ir.instructions;
 
-import compiler.back.regAloc.VirtualRegister;
 import compiler.back.regAloc.VirtualRegisterFactory;
 
 public class Immediate extends Instruction {

@@ -312,7 +312,7 @@ public class VCGPrinter {
                             edges += edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" }";
                             startDepth = currentBlock.depth;
                             for (Instruction ins: currentBlock.getInstructions()){
-                                System.err.println(ins.getInstrNumber());
+//                                System.err.println(ins.getInstrNumber());
                                 if(ins.getInstrNumber() == range.begin){
                                     sourceCode = ins.toString();
                                 }
