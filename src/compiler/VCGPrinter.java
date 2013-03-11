@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.front.Parser.ParserException;
 import compiler.front.Scanner.ScannerException;
 import compiler.ir.cfg.*;
@@ -45,7 +47,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-14.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "al.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner
@@ -87,6 +89,7 @@ public class VCGPrinter {
                     buildNodes(vcgOut, cfg);
                     
                     vcgOut.println();
+
                     
                 }
                 
@@ -98,6 +101,11 @@ public class VCGPrinter {
                 // Print dominator edges
                 dominatorEdges(vcgOut);
 
+                if (doCompile){
+                    //Live Ranges
+                    buildVirtualRegisters(vcgOut);
+                }
+                
             } catch (ParserException
                     | ScannerException e) {
                 e.printStackTrace();
@@ -111,6 +119,8 @@ public class VCGPrinter {
     }
 
 
+
+
     private void openGraph(PrintStream out) {
         out.println("graph: { title: \"Control Flow Graph\"\n"
                 + "    layoutalgorithm: dfs\n"
@@ -119,7 +129,7 @@ public class VCGPrinter {
                 + "\n"
                 + "    classname 1 : \"CFG Edges (blue)\"\n" 
 //                + "    classname 2 : \"Const Lists (red)\"\n"
-//                + "    classname 3 : \"Live Variable Lists (green)\"\n"
+                + "    classname 3 : \"Virtual Registers (green)\"\n"
                 + "    classname 4 : \"Dominator Tree (gray)\"\n"
                 + "       yspace: 34\n"
                 + "       xspace: 30\n"
@@ -166,7 +176,7 @@ public class VCGPrinter {
             out.print("    node: { title:\"" + nodeNumber 
                     + "\" info1: \""+ currentBlock.label + "\nNode: "+ nodeNumber + "\nDepth: "+ currentBlock.depth + "\nFunction: " + cfg.label);
 
-            out.print( "\" info2: \"Parameters: "+cfg.printParams()+"\nVariables:"+ cfg.printVars() +"\nArrays:"+ cfg.printArrays());
+            out.print( "\" info2: \"Parameters: "+cfg.printParams()+"\nVariables: "+ cfg.printVars() +"\nArrays: "+ cfg.printArrays());
             if (doCompile){
                 //Linear scan
                 out.print( "\" info3: \"RegAlloc:\nLiveIn: "+currentBlock.liveIn);
@@ -249,6 +259,91 @@ public class VCGPrinter {
             if (node.iDom != null){
                 out.println("    edge: { sourcename:\"" + nodeMap.get(node.iDom) + "\" targetname:\"" + nodeMap.get(node) + "\" label: \"DOM\" color: lightgray  class: 4}");
             }
+        }
+    }
+
+    private void buildVirtualRegisters(PrintStream vcgOut) {
+        vcgOut.println("\nedge.class: 3\n"+
+                "edge.color: lightgreen\n"+
+                "node.color: darkgreen\n"+
+                "node.textcolor: lightgreen\n"+
+                "node.bordercolor: green\n");
+        
+
+        Integer regNumber=0;
+
+        for (VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
+//            System.err.println(vReg.regNumber + ":\t" + vReg.getRanges());
+
+            //TODO make more efficient
+            
+            //Print reg node
+            regNumber = vReg.regNumber;
+            int startDepth = -1;
+            int endDepth = -1;
+            int startLine = -1;
+            int endLine = -1;
+            String sourceCode = "";
+            String destCode = "";
+            String edges = "";
+
+            //Range start and ends
+            List<Range> ranges = vReg.getRanges();
+            //Ignore empty ranges
+            if(ranges == null || ranges.isEmpty() ){
+                continue;
+            }
+            
+            for (CFG cfg : CFGs) {
+                Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
+                while (blockIterator.hasNext()) {
+                    BasicBlock currentBlock = blockIterator.next();
+
+                    String edgeType = "edge";
+                    if (currentBlock.label.equals("if-cond") || currentBlock.label.equals("while-cond")) {
+                        edgeType = "edge";
+                    }
+
+                    for (Range range : ranges) {
+                        startLine = range.begin;
+                        endLine = range.end;
+                        
+                        if (range.begin > currentBlock.begin() && range.begin < currentBlock.end()) {
+                            edges += edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" }";
+                            startDepth = currentBlock.depth;
+                            for (Instruction ins: currentBlock.getInstructions()){
+                                System.err.println(ins.getInstrNumber());
+                                if(ins.getInstrNumber() == range.begin){
+                                    sourceCode = ins.toString();
+                                }
+                            }
+                        }
+                        if (range.end > currentBlock.begin() && range.end < currentBlock.end()) {
+                            edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" }";
+                            endDepth = currentBlock.depth;
+                            for (Instruction ins: currentBlock.getInstructions()){
+                                if(ins.getInstrNumber() == range.end){
+                                    destCode = ins.toString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            int depth = (startDepth + (endDepth-startDepth)/2);
+            if (startDepth == -1){
+                depth=endDepth;
+            }else if (endDepth == -1){
+                depth=startDepth;
+            }
+
+            vcgOut.println("node: { title: \"vr" + regNumber + "\" label: \"vr" + regNumber + "\" vertical_order: "+depth+" " +
+            		"info1: \"Source: " + sourceCode + 
+                    "\nStart: " + startLine + "\" " +
+                    "info2: \"Dest: " + destCode +
+            		"\nEnd: " + endLine + "\" " +
+            		"info3: \"Depth: "+depth+"\"}\n" + edges);
         }
     }
 }

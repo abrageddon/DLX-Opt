@@ -26,6 +26,6 @@ public class DLXCompiler {
 			parser.parse();
 			new SSAGenerator(parser.CFGs).generateSSA();
 			new RegisterAllocator(parser.CFGs).allocateRegisters();
-			new CodeGenerator(parser.CFGs).generateCode(outFile);
+//			new CodeGenerator(parser.CFGs).generateCode(outFile);
 	}
 }

@@ -83,4 +83,8 @@ public class VirtualRegister {
 		return "r" + regNumber;
 	}
 
+    public List<Range> getRanges() {
+        return ranges;
+    }
+
 }
