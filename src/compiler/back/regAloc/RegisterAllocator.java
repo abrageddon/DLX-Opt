@@ -10,8 +10,6 @@ import compiler.ir.cfg.CFG;
 import compiler.ir.instructions.Instruction;
 import compiler.ir.instructions.Phi;
 
-
-
 public class RegisterAllocator {
 
 	public List<CFG> CFGs;
@@ -21,11 +19,51 @@ public class RegisterAllocator {
 	}
 
 	public void allocateRegisters() {
-		buildLiveRanges();
+		buildLiveRangesSimplified();
 		VirtualRegisterFactory.printAllVirtualRegisters();
 	}
 
-	public void buildLiveRanges() {
+
+	/**
+	 * Builds a single life time interval for each virtual register.
+	 * The SSA must be deconstructed first.
+	 */
+	public void buildLiveRangesSimplified() {
+
+		for (CFG cfg : this.CFGs) {
+			Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
+
+			while (blockIterator.hasNext()) {
+				BasicBlock bb = blockIterator.next();
+				ListIterator<Instruction> instIterator = bb.getInstructionsIterator();			
+				while(instIterator.hasNext()) {
+					Instruction inst = instIterator.next();
+
+					// we only have at most one output operand
+					VirtualRegister outputOpd = inst.getOutputOperand();
+					if (outputOpd != null) {
+						outputOpd.setSingleRangeBegin(inst.getInstrNumber());
+					}
+
+					// iterate over the input operands, if any	
+					List<VirtualRegister> inputOpds = inst.getInputOperands();
+					if (inputOpds != null) {
+						for (VirtualRegister opd : inputOpds) {
+							if (opd != null) {
+								opd.setSingleRangeEnd(inst.getInstrNumber());
+							}
+						}
+					}
+				}
+			}
+		}	
+	}
+
+	/**
+	 * Builds non continuous life time intervals on SSA ir.
+	 */
+	/*
+	public void buildLiveRangesOpt() {
 
 		for (CFG cfg : this.CFGs) {
 
@@ -87,7 +125,7 @@ public class RegisterAllocator {
 						outputOpd.setRangeBegin(inst.getInstrNumber());
 						live.remove(outputOpd);
 					}
-					
+
 					// iterate over the input operands, if any	
 					List<VirtualRegister> inputOpds = inst.getInputOperands();
 					if (inputOpds != null) {
@@ -108,7 +146,7 @@ public class RegisterAllocator {
 					live.remove(phi.outputOp);
 				}
 
-				
+
 				// if b is loop header then
 				// 		loopEnd = last block of the loop starting at b
 				//		for each opd in live do
@@ -120,7 +158,7 @@ public class RegisterAllocator {
 					// of the loop header."
 					// TODO make sure that "that all blocks of a loop are contiguous 
 					// in the linear block order" 
-					
+
 					// the loop header should have two predecessors,
 					// 		first one, the block before the loop
 					//		second one the last bb of the loop, hence:
@@ -134,6 +172,6 @@ public class RegisterAllocator {
 				bb.liveIn = live;
 			}
 		}
-
 	}
+	*/
 }

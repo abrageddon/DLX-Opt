@@ -8,18 +8,40 @@ import compiler.ir.cfg.Range;
 public class VirtualRegister {
 
 	public int regNumber;
-	List<Range> ranges;
+//	List<Range> ranges;
+	
+	/**
+	 * The single range is used for the simplified linear scan register allocation. 
+	 */
+	public Range singleRange;
 
 	public VirtualRegister(int regNo) {
 		this.regNumber = regNo;
-		this.ranges = new ArrayList<Range>();
+//		this.ranges = new ArrayList<Range>();
+		this.singleRange = new Range();
 	}
 
+	/*
 	public void addRange(int from, int to) {
 		// "the new range is merged if an overlapping range is present"
-		ranges.add(new Range(from, to));
+//		ranges.add(new Range(from, to));
 		mergeOverlappingRanges();
 	}
+	*/
+
+	public void setSingleRangeBegin(int begin) {
+		if (begin < singleRange.begin || singleRange.begin == -1) {
+			singleRange.begin = begin;
+		}
+	}
+	
+	public void setSingleRangeEnd(int end) {
+		if (end > singleRange.end || singleRange.end == -1) {
+			singleRange.end = end;
+		}
+		// if singleRange.end remains -1 it means that the value is not used
+	}
+	
 
 	/**
 	 * This method is called whenever a value is defined, when is the 
@@ -27,6 +49,7 @@ public class VirtualRegister {
 	 * 
 	 * @param begin
 	 */
+	/*	
 	public void setRangeBegin(int begin) {
 		// is not very clear from the paper, but it seems that
 		// whenever this is called the register should have only
@@ -43,7 +66,8 @@ public class VirtualRegister {
 			 System.err.println("r" + regNumber + " defined but not used!");
 		}
 	}
-
+*/
+	/*
 	private void mergeOverlappingRanges() {
 		// naive O(n^2) implementation, obviously not optimal
 		boolean done;
@@ -77,14 +101,14 @@ public class VirtualRegister {
 		} while(!done);
 
 	}
-
+*/
 	@Override
 	public String toString() {
 		return "r" + regNumber;
 	}
-
+/*
     public List<Range> getRanges() {
         return ranges;
     }
-
+*/
 }

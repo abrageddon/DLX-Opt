@@ -4,7 +4,12 @@ public class Range {
 
 	public int begin;
 	public int end;
-	
+
+    public Range() {
+    	this.begin = -1;
+    	this.end = -1;
+	}
+
     public Range(int begin, int end) {
     	this.begin = begin;
     	this.end = end;
