@@ -4,10 +4,12 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import compiler.DLX;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
@@ -15,6 +17,10 @@ import compiler.ir.instructions.*;
 public class CodeGenerator {
 
 	private static final int MAX_REG = 27;
+	private static final boolean DEBUG = true;
+	private HashMap<Integer, String> DEBUGMESG;
+	
+	
 	private static final int FrameP = 28;
 	private static final int StackP = 29;
 	private static final int GlobalV = 30;
@@ -198,7 +204,7 @@ public class CodeGenerator {
 		
 		// Functions intro
 		if (currentBlock.label.equals("start")) {
-
+			AddDebug((currentCFG.isFunc()?"FUNCTION: ":"PROCEDURE: ")+currentCFG.label+"\n");
 			if (!currentCFG.label.equals("main")){
 				// Store Return Address
 				int paramNum = currentCFG.getParamNum();
@@ -210,6 +216,8 @@ public class CodeGenerator {
 
 	private void produceCode(Instruction instruction) {
 		// TODO remove when real allocator exists (reg %MAX_REG)+1
+		AddDebug(instruction.toString());
+		
 		if (instruction instanceof Immediate) {
 			Immediate ins = (Immediate) instruction;
 			PutF1(ADDI, (ins.outputOp.regNumber %MAX_REG)+1, 0, ins.value);
@@ -224,7 +232,7 @@ public class CodeGenerator {
 
 		} else if (instruction instanceof LoadValue) {
 			LoadValue ins = (LoadValue) instruction;
-			laod(ins);
+			load(ins);
 
 		} else if (instruction instanceof ControlFlowInstr) {
 			ControlFlowInstr ins = (ControlFlowInstr) instruction;
@@ -281,6 +289,14 @@ public class CodeGenerator {
 
 	}
 
+	private void AddDebug(String string) {
+		// TODO Auto-generated method stub
+		if (!DEBUGMESG.containsKey(pc)){
+			DEBUGMESG.put(pc, "");
+		}
+		DEBUGMESG.put(pc, DEBUGMESG.get(pc) + string);
+	}
+
 	private void postBlockProcessing(BasicBlock currentBlock) {
 
 		// While loop fixup
@@ -325,8 +341,6 @@ public class CodeGenerator {
 
 		// Put Param, reverse order
 		if (paramNum > 0) {
-			System.err.println("callee.getParams(): "+callee.getParams());
-			System.err.println("ins.getInputOperands(): "+ins.getInputOperands());
 			for (VirtualRegister vr:ins.getInputOperands()) {
 				// load word to mem
 				//TODO load params to mem
@@ -400,6 +414,7 @@ public class CodeGenerator {
 		fixup = new Stack<Integer>();
 		functionFixup = new Stack<Integer>();
 		functionsToFixup = new Stack<CFG>();
+		DEBUGMESG = new HashMap<Integer, String>();
 		pc = 0;
 		// Setup Frame Pointer at global value pointer
 		PutF1(ADDI, FrameP, GlobalV, 0);
@@ -437,17 +452,17 @@ public class CodeGenerator {
 		}
 	}
 
-	private void laod(LoadValue ins) {
-		if (currentCFG.containsVar(ins.symbol.ident)) {
+	private void load(LoadValue ins) {
+		if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
 			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
 					-GetVarAddress(ins.symbol.ident));
-		} else if (currentCFG.containsArray(ins.symbol.ident)) {
+		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Array
 			ins.getInputOperands();
 			PutF1(LDX, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
 					(ins.inputOps.get(0).regNumber % MAX_REG) + 1);
-		} else if (currentCFG.containsParam(ins.symbol.ident)) {
+		} else if (currentCFG.containsParam(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Param
 			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
 					8 + GetParamAddress(ins.symbol.ident));
@@ -658,7 +673,15 @@ public class CodeGenerator {
 				if (i > 0) {
 					out.write("\n");
 				}
+				if (DEBUG && DEBUGMESG.containsKey(i)){
+					for (String line:DEBUGMESG.get(i).split(System.getProperty("line.separator")) ){
+						out.write("# "+line + "\n");
+					}
+				}
 				out.write(nativeCode.get(i).toString());
+				if (DEBUG){
+					out.write("\n# "+DLX.disassemble(nativeCode.get(i)) );
+				}
 			}
 			out.close();
 		} catch (IOException e) {
