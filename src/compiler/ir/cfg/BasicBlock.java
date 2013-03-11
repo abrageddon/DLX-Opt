@@ -55,6 +55,10 @@ public class BasicBlock {
 		instructions.add(instr);
 	}
 	
+	public void appendInstructions(List<Instruction> instrs) {
+		instructions.addAll(instrs);
+	}
+	
 	public void removeInstruction(Instruction instr) {
 		instructions.remove(instr);
 	}
@@ -62,7 +66,11 @@ public class BasicBlock {
 	public void removeInstructions(List<Instruction> instrList) {
 		instructions.removeAll(instrList);
 	}
-	
+
+	public void removePHIs(List<Phi> instrList) {
+		instructions.removeAll(instrList);
+	}
+
 	public List<Instruction> getInstructions() {
 		return instructions;
 	}

@@ -2,10 +2,13 @@ package compiler.front;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.cfg.BasicBlock;
 import compiler.ir.cfg.CFG;
 import compiler.ir.instructions.ArithmeticBinary;
@@ -20,11 +23,11 @@ public class SSAGenerator {
 
 	public List<CFG> CFGs;
 	public int phiCount = 0;
-	
+
 	public SSAGenerator(List<CFG> CFGs) {
 		this.CFGs = CFGs;
 	}
-	
+
 	/**
 	 * Generates SSA by mutating the input CFGs.
 	 */
@@ -66,7 +69,7 @@ public class SSAGenerator {
 						Instruction.forward(val, values.get(bb.pred.get(0)));
 					} else if (values.size() > 1) { // multiple predecessors
 						Phi phi = new Phi(values);
-//						phi.setInstrNumber(parser.instructionCnt++); //TODO 
+						//						phi.setInstrNumber(parser.instructionCnt++); //TODO 
 						phi.setInstrNumber(phiCount++);
 						Instruction.forward(val, phi);
 						bb.prependInstruction(phi);
@@ -74,7 +77,7 @@ public class SSAGenerator {
 					slot++;
 				}
 			}
-			
+
 			// simplify PHIs
 			blockIterator = cfg.topDownIterator();
 			while (blockIterator.hasNext()) {
@@ -90,17 +93,17 @@ public class SSAGenerator {
 							Instruction.forward(phi, value);
 							removablePHIs.add(phi);
 						}
-						
+
 					}
 				}
 				bb.removeInstructions(removablePHIs);					
 			}
 
 		}
-		
+
 		renumberInstructions();
 	}
-	
+
 
 	private List<Instruction> createStateVector(List<Instruction> frame) {
 		List<Instruction> state = new ArrayList<Instruction>();
@@ -109,11 +112,11 @@ public class SSAGenerator {
 		}
 		return state;
 	}
-	
+
 	private void constructSSA(BasicBlock bb) {
 		// TODO the abstract interpretation should be extended to all
 		// the other IR operations that either read or write scalars
-		
+
 		// perform abstract interpretation
 		if (!bb.isInstructionsEmpty()) {
 			List<Instruction> moves = new ArrayList<Instruction>();
@@ -121,11 +124,11 @@ public class SSAGenerator {
 				if (instr instanceof Move) {
 					moves.add(instr);
 					// mutate state vector, replace dest with src in the state vector
-					
+
 					// src can be a scalar, belonging to the frame, or the result of another instruction
 					// we use resolve() to get the right value for it
 					Instruction src = resolve(((Move) instr).src, bb);
-					
+
 					// dest is always a scalar
 					Scalar dest = (Scalar)((Move) instr).dest; // a frame slot
 					bb.exitState.set(dest.symbol.slot, src);
@@ -142,13 +145,13 @@ public class SSAGenerator {
 					}
 					((Call)instr).args = ssaArgs;
 				}
-				 
+
 			}
 			// eliminate move instructions
 			bb.removeInstructions(moves);
 		}
 	}
-	
+
 	// resolve the value of a read
 	private Instruction resolve(Instruction inst, BasicBlock bb) {
 		if (inst instanceof Scalar) {
@@ -159,8 +162,8 @@ public class SSAGenerator {
 		// a value generating instruction (e.g. IMM)
 		return inst;
 	}
-	
-	
+
+
 	/**
 	 * Determine if PHI instruction is redundant.
 	 * Functions of the form v2 = PHI(v1, v1, ..., v1) 
@@ -175,7 +178,7 @@ public class SSAGenerator {
 
 		// PHI's have at least two operands
 		assert phi.getValues().size() >= 2;
-		
+
 		Instruction firstVal = null;
 
 		// pick first value not equal to the PHI instruction itself
@@ -185,12 +188,12 @@ public class SSAGenerator {
 				break;
 			}
 		}
-		
+
 		// all values should never be equal to PHI
 		if (firstVal.equals(phi)) {
 			System.err.println("All PHI values equals to PHI itself!");
 		}
-		
+
 		// test 
 		for(int i = 0; i < phi.getValues().size(); i++) {
 			Instruction value = Instruction.resolve(phi.getValues().get(i));
@@ -200,7 +203,7 @@ public class SSAGenerator {
 		}
 		return firstVal; // this PHI is redundant, return the instruction it should be forwarded to
 	}
-	
+
 	void renumberInstructions() {
 		int instrCnt = 0;
 		for (CFG cfg : CFGs) {
@@ -214,6 +217,105 @@ public class SSAGenerator {
 			}
 		}
 	}
-		
+
+
+	public void deconstructSSA() {
+
+		for (CFG cfg : this.CFGs) {
+
+			// skip main since is does not have any local variables
+			if(cfg.label.equals("main")) {
+				continue;
+			}
+
+			Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
+			while (blockIterator.hasNext()) {
+				BasicBlock bb = blockIterator.next();
+				for(BasicBlock pred : bb.pred) {
+					List<Instruction> moves = new ArrayList<Instruction>();
+					for(Phi phi : bb.getPHIs()){
+						moves.add(new Move(phi.getInputValue(pred), Instruction.resolve(phi)));
+//						topoSortMoves(moves);
+					}
+					pred.appendInstructions(moves);				
+				}
+				bb.removePHIs(bb.getPHIs());
+			}
+		}
+
+	}
+
+//	private void topoSortMoves(List<Instruction> moves) {
+//
+//	}
+//
+//	class Graph {
+//		HashMap<VirtualRegister, Edges> graph;
+//
+//		public Graph() {
+//			graph = new HashMap<VirtualRegister, SSAGenerator.Edges>();
+//		}
+//
+//		public void addEdge(VirtualRegister src, VirtualRegister dest) {
+//			if (graph.get(src) == null) {
+//				graph.put(src, new Edges());
+//			}
+//			if (graph.get(dest) == null) {
+//				graph.put(dest, new Edges());
+//			}
+//			graph.get(src).addOutgoingEdge(dest);
+//			graph.get(dest).addIncomingEdge(src);
+//		}
+//
+//
+//		public void topoSort() {
+//			ArrayList<VirtualRegister> L = new ArrayList<VirtualRegister>();
+//			HashSet<VirtualRegister> S = new HashSet<VirtualRegister>();
+//			for (VirtualRegister vReg : graph.keySet()) {
+//				Edges edges = graph.get(vReg);
+//				if(edges.inEdges.size() == 0) {
+//					S.add(vReg);
+//				}
+//			}
+//
+//			//while S is non-empty do
+//			while(!S.isEmpty()){
+//				//remove a node n from S
+//				VirtualRegister n = S.iterator().next();
+//				S.remove(n);
+//
+//				//for each node m with an edge e from n to m do
+//				for(Iterator<VirtualRegister> it = graph.get(n).outEdges.iterator(); it.hasNext(); ) {
+//					VirtualRegister m = it.next();
+//					graph.get(m).inEdges.remove(n);
+//					if(graph.get(m).inEdges.isEmpty()) {
+//						S.add(m);
+//					}
+//					
+//				} 
+//
+//			}
+//
+//		}
+//
+//	}
+//
+//	class Edges {
+//		List<VirtualRegister> inEdges; // in edges
+//		List<VirtualRegister> outEdges; // out edges
+//
+//		public Edges() {
+//			inEdges = new ArrayList<VirtualRegister>();
+//			outEdges = new ArrayList<VirtualRegister>();
+//		}
+//
+//		public void addIncomingEdge(VirtualRegister in) {
+//			inEdges.add(in);
+//		}
+//
+//		public void addOutgoingEdge(VirtualRegister out) {
+//			outEdges.add(out);
+//		}
+//	}
 
 }

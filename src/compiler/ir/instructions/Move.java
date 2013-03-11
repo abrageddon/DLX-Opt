@@ -28,9 +28,9 @@ public class Move extends Instruction {
 	public String toString() {
 		return getInstrNumber() + " : MOVE" +
 				"(" + src.getInstrLabel() + ")" + 
-				"(" + dest.getInstrLabel() + ")" + "/n" +  
+				"(" + dest.getInstrLabel() + ")" + "\n" +  
 				" [ " + Instruction.resolve(src).outputOp + "," + 
-				 	    Instruction.resolve(dest).outputOp + "]" + " -> " + outputOp;
+				 	    Instruction.resolve(dest).outputOp + "]";
 	}
 	
 }

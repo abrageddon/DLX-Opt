@@ -1,7 +1,11 @@
 package compiler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import compiler.back.codeGen.CodeGenerator;
 import compiler.back.regAloc.RegisterAllocator;
+import compiler.back.regAloc.VirtualRegister;
 import compiler.front.Parser;
 import compiler.front.SSAGenerator;
 import compiler.front.Parser.ParserException;
@@ -24,8 +28,17 @@ public class DLXCompiler {
 
 	public void compile() throws ParserException, ScannerException {
 			parser.parse();
+
 			new SSAGenerator(parser.CFGs).generateSSA();
-			new RegisterAllocator(parser.CFGs).allocateRegisters();
+
+			SSAGenerator ssaGen = new SSAGenerator(parser.CFGs); 
+			ssaGen.generateSSA();
+			// TODO should display the graph before we generate SSA
+			ssaGen.deconstructSSA();
+////			new RegisterAllocator(parser.CFGs).allocateRegisters();
 //			new CodeGenerator(parser.CFGs).generateCode(outFile);
+
 	}
+	
+		
 }

@@ -33,6 +33,10 @@ public class Phi extends Instruction {
 		return Instruction.resolve(values.get(bb)).outputOp;
 	}
 
+	public Instruction getInputValue(BasicBlock bb) {
+		return Instruction.resolve(values.get(bb));
+	}
+	
 	public List<Instruction> getValues() {
 		return new ArrayList<Instruction>(values.values());
 	}
