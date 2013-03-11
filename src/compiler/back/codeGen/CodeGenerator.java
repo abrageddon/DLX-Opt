@@ -232,6 +232,7 @@ public class CodeGenerator {
 
 		} else if (instruction instanceof LoadValue) {
 			LoadValue ins = (LoadValue) instruction;
+			System.err.println(ins);
 			load(ins);
 
 		} else if (instruction instanceof ControlFlowInstr) {
@@ -289,14 +290,6 @@ public class CodeGenerator {
 
 	}
 
-	private void AddDebug(String string) {
-		// TODO Auto-generated method stub
-		if (!DEBUGMESG.containsKey(pc)){
-			DEBUGMESG.put(pc, "");
-		}
-		DEBUGMESG.put(pc, DEBUGMESG.get(pc) + string);
-	}
-
 	private void postBlockProcessing(BasicBlock currentBlock) {
 
 		// While loop fixup
@@ -341,10 +334,12 @@ public class CodeGenerator {
 
 		// Put Param, reverse order
 		if (paramNum > 0) {
-			for (VirtualRegister vr:ins.getInputOperands()) {
+			List<VirtualRegister> parms = ins.getInputOperands();
+			for( int i = parms.size()-1; i>=0;i--){
+			
 				// load word to mem
 				//TODO load params to mem
-				Push((vr.regNumber%MAX_REG)+1);
+				Push((parms.get(i).regNumber%MAX_REG)+1);
 			}
 		}
 
@@ -455,17 +450,14 @@ public class CodeGenerator {
 	private void load(LoadValue ins) {
 		if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
-			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
-					-GetVarAddress(ins.symbol.ident));
+			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Array
 			ins.getInputOperands();
-			PutF1(LDX, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
-					(ins.inputOps.get(0).regNumber % MAX_REG) + 1);
+			PutF1(LDX, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, (ins.inputOps.get(0).regNumber % MAX_REG) + 1);
 		} else if (currentCFG.containsParam(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Param
-			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP,
-					8 + GetParamAddress(ins.symbol.ident));
+			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, 8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
 			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, GlobalV,
@@ -680,7 +672,7 @@ public class CodeGenerator {
 				}
 				out.write(nativeCode.get(i).toString());
 				if (DEBUG){
-					out.write("\n# "+DLX.disassemble(nativeCode.get(i)) );
+					out.write("\n# "+i+": "+DLX.disassemble(nativeCode.get(i)) );
 				}
 			}
 			out.close();
@@ -691,6 +683,15 @@ public class CodeGenerator {
 
 	}
 
+
+	private void AddDebug(String string) {
+		// TODO Auto-generated method stub
+		if (!DEBUGMESG.containsKey(pc)){
+			DEBUGMESG.put(pc, "");
+		}
+		DEBUGMESG.put(pc, DEBUGMESG.get(pc) + string);
+	}
+	
 	public void Error(String errorMsg) {
 		System.err.println("PC = " + pc + " Compiler error: " + errorMsg);
 	}

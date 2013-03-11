@@ -177,6 +177,7 @@ public class Parser {
 				param = new ParamSymbol(ident);
 				formalParams.add(param);
 				insertSymbol(param);
+				cfg.addParam(ident);
 				issue(new Param(param));
 			}
 		}

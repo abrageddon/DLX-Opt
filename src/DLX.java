@@ -17,8 +17,8 @@ public class DLX {
 	static int M[] = new int [MemSize/4];
 
     
-	public static void main(String argv[]) {
-	}
+//	public static void main(String argv[]) {
+//	}
 
 	public static void load(int program[]) {
 		int i;
@@ -50,7 +50,7 @@ public class DLX {
             System.out.println();
             System.out.print("\tREG:");//DEBUG
             for (int i = 0 ; i < 28 ; i++){
-                System.out.print(R[i] + "|");
+                System.out.print(R[i] + "|" + ((i+1)%5 == 0 ? "("+(i+1)+")|":""));
             }
             System.out.print("\n\t");
                 System.out.print("FP:"+(10000-R[28])/4 + "|");
