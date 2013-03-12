@@ -8,14 +8,29 @@ test2-4.tst
 test2-8.tst
 test2-9.tst
 test2-10.tst
+test2-12.tst
+test3-1.tst
+test3-2.tst
+test3-3.tst
+test3-4.tst
+test3-5.tst
+test3-6.tst
+test3-7.tst
+test3-8.tst
+test3-9.tst
+test3-10.tst
+test3-12.tst
+test3-13.tst
+test3-14.tst
 
-2D Array problem
-test002.tst
-	57 : STORE (0)(56) 
-	[null, vr31]
+Missing RET
+test2-14.tst
 
 Function return result use problem (recursion/spill related?)
 test2-7.tst
+test2-11.tst
+test3-11.tst
+test002.tst
 
 VirtualRegister with -1 endpoint
 test2-1.tst
