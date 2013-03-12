@@ -510,17 +510,22 @@ public class CodeGenerator {
 	}
 
 	private void store(StoreValue ins) {
-		if (ins.symbol == null && ins.address != null) {
+		if (ins.symbol == null) {
 			// Store by address
 			List<VirtualRegister> address = ins.getInputOperands();
 			if (address == null || address.isEmpty()) {
 				return;
 			}
+			
+			//TODO fix bug
+			System.err.println("store: " + ins);
+			
 			PutF1(STX, useReg(address.get(0)), useReg(address.get(1)), 0);
 		} else if (currentCFG.containsVar(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Var
-			PutF1(STW, useReg(ins.outputOp), FrameP,
+		    List<VirtualRegister> inputs = ins.getInputOperands();
+			PutF1(STW, useReg(inputs.get(0)), FrameP,
 					-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsParam(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
