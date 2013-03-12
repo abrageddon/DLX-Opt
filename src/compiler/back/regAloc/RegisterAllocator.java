@@ -49,7 +49,7 @@ public class RegisterAllocator {
 		List<VirtualRegister> expiredIntervals = new ArrayList<VirtualRegister>();
 		for(VirtualRegister vRegJ : active) {
 			if(vRegJ.range.end >= vRegI.range.begin) {
-				return;
+				break;
 			}
 			expiredIntervals.add(vRegJ);
 			RealRegisterPool.freeRegister(vRegJ.rReg);
