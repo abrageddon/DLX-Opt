@@ -11,6 +11,7 @@ import java.util.Stack;
 
 import compiler.DLX;
 import compiler.back.regAloc.RealRegister;
+import compiler.back.regAloc.RealRegisterPool;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
@@ -493,7 +494,7 @@ public class CodeGenerator {
 	}
 	
 	private int useReg(VirtualRegister vReg) {
-		// TODO IF !rReg.free THEN return spill(rReg) ELSE return rReg.regNumber
+		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
 		if(vReg.rReg == null){
 			return spill(vReg);
 		}
@@ -501,8 +502,17 @@ public class CodeGenerator {
 	}
 
 	private int spill(VirtualRegister rReg) {
-		System.err.println("spill: "+rReg);
-		return 0;
+		//TODO if loading then load from mem to temp registers
+		//TODO if storing then save to temp register and move to mem
+		//Read offset loc
+		RealRegister tempReg = RealRegisterPool.getFreeRegister();
+		if (tempReg == null){
+			System.err.println("spill: NO MORE REGISTERS");
+			return 0;
+		}
+
+		System.err.println("spill: "+tempReg.regNumber);
+		return tempReg.regNumber;
 	}
 
 	private void store(StoreValue ins) {
