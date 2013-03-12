@@ -241,6 +241,9 @@ public class CodeGenerator {
         } else if (instruction instanceof Move) {
             Move ins = (Move) instruction;
         	List<VirtualRegister> operands = ins.getInputOperands();
+        	
+        	//TODO find bug
+        	
             PutF1(ADDI, useReg(Instruction.resolve(ins).outputOp), useReg(operands.get(0)), 0);
 
         } else if (instruction instanceof Index) {
