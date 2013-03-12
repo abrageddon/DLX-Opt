@@ -459,7 +459,7 @@ public class CodeGenerator {
 	private void load(LoadValue ins) {
 		if (ins.symbol == null && ins.address != null) {
 			// Load by address
-			System.err.println("Check: " + ins);
+//			System.err.println("Check: " + ins);
 			List<VirtualRegister> address = ins.getInputOperands();
 			if (address == null || address.isEmpty()) {
 				return;

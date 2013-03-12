@@ -332,7 +332,7 @@ public class CFG {
     public int getArrayOffset(int id) {
         int offset = vars.size() ;
 
-        System.err.println("vars "+vars.size()+" offset="+(offset*4));
+//        System.err.println("vars "+vars.size()+" offset="+(offset*4));
         
         
         for (int i=0;i < id; i++){
@@ -341,7 +341,7 @@ public class CFG {
                 arraySize *=arraysDims.get(id).get(dim);
             }
 
-            System.err.println("arraySize="+arraySize);
+//            System.err.println("arraySize="+arraySize);
             
             offset += arraySize;
         }
