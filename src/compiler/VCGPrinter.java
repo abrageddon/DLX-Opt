@@ -47,7 +47,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-0.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "0-2.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner
@@ -287,18 +287,19 @@ public class VCGPrinter {
             int startDepth = -2;
             int endDepth = -2;
             int startLine = Integer.MAX_VALUE;
-            int endLine = -2;
+            int endLine = Integer.MIN_VALUE;
             String sourceCode = "";
             String destCode = "";
             String edges = "";
 
             //Range start and ends
-//            List<Range> ranges = vReg.getRanges();
             Range range = rReg.range;
-            //Ignore empty ranges
-//            if(ranges == null || ranges.isEmpty() ){
-//                continue;
-//            }
+            if (range.begin >= 0){
+                startLine = range.begin;
+            }
+            if (range.end >= 0){
+                endLine = range.end;
+            }
             
             //Search tree for matching line number; inefficient
             for (CFG cfg : CFGs) {
@@ -311,14 +312,7 @@ public class VCGPrinter {
                         edgeType = "bentnearedge";
                     }
 
-                    
-//                    for (Range range : ranges) {
-                        startLine = Math.min(startLine, range.begin);
-                        endLine = Math.max(endLine, range.end);
-//                    }
-//                        System.err.println(regNumber+": "+currentBlock.begin()+"["+startLine +" - "+ endLine+"]"+currentBlock.end());
-                        
-                    if (startLine >= currentBlock.begin() && startLine <= currentBlock.end()) {
+                    if (startLine!=Integer.MAX_VALUE && startLine >= currentBlock.begin() && startLine <= currentBlock.end()) {
                         edges = edgeType + ": { sourcename: \"" + nodeMap.get(currentBlock) + "\" targetname: \"vr" + regNumber + "\" "+edgeClass+"}\n"+ edges;
                         startDepth = currentBlock.depth;
                         for (Instruction ins: currentBlock.getInstructions()){
@@ -331,7 +325,7 @@ public class VCGPrinter {
                             }
                         }
                     }
-                    if (endLine >= currentBlock.begin() && endLine <= currentBlock.end()) {
+                    if (endLine!=Integer.MIN_VALUE && endLine >= currentBlock.begin() && endLine <= currentBlock.end()) {
                         edges += edgeType + ": { targetname: \"" + nodeMap.get(currentBlock) + "\" sourcename: \"vr" + regNumber + "\" "+edgeClass+"}";
                         endDepth = currentBlock.depth;
                         for (Instruction ins: currentBlock.getInstructions()){
@@ -357,10 +351,10 @@ public class VCGPrinter {
             }
 
             vcgOut.println("node: { title: \"vr" + regNumber + "\" label: \"vr" + regNumber + "\"  " + //vertical_order: "+depth+"
-            		"info1: \"Source: " + sourceCode + 
-                    "\nStart: " + startLine + "\" " +
-                    "info2: \"Dest: " + destCode +
-            		"\nEnd: " + endLine + "\" " +
+            		(startLine==Integer.MAX_VALUE?"":"info1: \"Source: " + sourceCode + 
+                    "\nStart: " + startLine + "\" ") +
+                    (endLine==Integer.MIN_VALUE?"":"info2: \"Dest: " + destCode +
+            		"\nEnd: " + endLine + "\" ") +
             		"info3: \"Depth: "+depth+"\"}\n" + edges);
         }
     }

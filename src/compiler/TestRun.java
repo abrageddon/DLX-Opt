@@ -35,7 +35,7 @@ public class TestRun {
         		new DLXCompiler(fileName.substring(0, fileName.length()-4)).compile();
         		prog = readBin(new File(fileName) );
         	}else{
-        		new DLXCompiler(fileName).compile();
+        	    new DLXCompiler(fileName).compile();
         		prog = readBin(new File(fileName + ".bin"));
         	}
             DLX dlx = new DLX();
@@ -43,7 +43,7 @@ public class TestRun {
             dlx.displayProgram();
             dlx.execute();
         } catch (IOException | ParserException | ScannerException e) {
-            System.err.println("Error reading input files!");
+            System.err.println("Error reading input files!: \n" + e);
         }
 	}
     

@@ -46,12 +46,12 @@ public class DLX {
             //DEBUG
             System.out.print("\tMEM:");//DEBUG
             for (int i = 0 ; i < 50 ; i++){
-                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)/10+")|":""));
+                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)+")|":""));
             }
             System.out.println();
             System.out.print("\tREG:");//DEBUG
             for (int i = 0 ; i < 28 ; i++){
-                System.out.print(R[i] + "|");
+                System.out.print(R[i] + "|" + ((i+1)%5 == 0 ? "("+(i+1)+")|":""));
             }
             System.out.print("\n\t");
                 System.out.print("FP:"+(10000-R[28])/4 + "|");

@@ -47,6 +47,7 @@ public class Parser {
 		symTable.insert(new FunctionSymbol("OutputNewLine", SymbolKind.PROCEDURE));
 		
 		scanner = new Scanner();
+        
 		sourceFile = srcFile;
 	}
 	
