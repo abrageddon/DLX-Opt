@@ -1,6 +1,8 @@
 package compiler.back.regAloc;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -8,22 +10,78 @@ import java.util.ListIterator;
 import compiler.ir.cfg.BasicBlock;
 import compiler.ir.cfg.CFG;
 import compiler.ir.instructions.Instruction;
-import compiler.ir.instructions.Phi;
 
 public class RegisterAllocator {
 
 	public List<CFG> CFGs;
-
+	public int stackOffset = 0;
+	List<VirtualRegister> active = new ArrayList<VirtualRegister>();
+	
 	public RegisterAllocator(List<CFG> CFGs) {
 		this.CFGs = CFGs;
 	}
 
 	public void allocateRegisters() {
 		buildLiveRangesSimplified();
+		linearScanRegAlloc();
 		VirtualRegisterFactory.printAllVirtualRegisters();
 	}
 
+	public int noOfReg = 8; 
+	
+	void linearScanRegAlloc() {
+		stackOffset = 0;
+		Collections.sort(VirtualRegisterFactory.virtualRegisters, increasingStartCmp);
+		for(VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
+			expireOldIntervals(vReg);
+			if (active.size() == RealRegisterPool.MAX_REGS) {
+				spillAtInterval(vReg);
+			} else {
+				vReg.rReg = RealRegisterPool.getFreeRegister();
+				active.add(vReg);
+				Collections.sort(active, increasingEndCmp);
+			}
+		}
+	}
+	
+	void expireOldIntervals(VirtualRegister vRegI) {
+		List<VirtualRegister> expiredIntervals = new ArrayList<VirtualRegister>();
+		for(VirtualRegister vRegJ : active) {
+			if(vRegJ.range.end >= vRegI.range.begin) {
+				return;
+			}
+			expiredIntervals.add(vRegJ);
+			RealRegisterPool.freeRegister(vRegJ.rReg);
+		}
+		active.removeAll(expiredIntervals);
+	}
+	
+	void spillAtInterval(VirtualRegister vRegI) {
+		 // spilling heuristic chooses last one in active, active is always sorted by increasing end point
+		VirtualRegister spill = active.get(active.size() - 1);
+		if (spill.range.end > vRegI.range.end) {
+			vRegI.rReg = spill.rReg;
+			spill.spillLocation = stackOffset++;
+			spill.rReg = null; // the register is used for vRegI now
+			active.remove(spill);
+			active.add(vRegI);
+			Collections.sort(active, increasingEndCmp);
+		} else {
+			vRegI.spillLocation = stackOffset++;
+		}
+	}	
 
+	public static Comparator<VirtualRegister> increasingStartCmp =  new Comparator<VirtualRegister>() {
+		public int compare(VirtualRegister o1, VirtualRegister o2) {
+			return o1.range.begin < o2.range.begin ? -1 : o1.range.begin == o2.range.begin ? 0 : 1;  
+		}};
+
+	public static Comparator<VirtualRegister> increasingEndCmp =  new Comparator<VirtualRegister>() {
+		public int compare(VirtualRegister o1, VirtualRegister o2) {
+			return o1.range.end < o2.range.end ? -1 : o1.range.end == o2.range.end ? 0 : 1;  
+		}};
+
+	
 	/**
 	 * Builds a single life time interval for each virtual register.
 	 * The SSA must be deconstructed first.
@@ -59,6 +117,7 @@ public class RegisterAllocator {
 		}	
 	}
 
+	
 	/**
 	 * Builds non continuous life time intervals on SSA ir.
 	 */

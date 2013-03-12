@@ -1,24 +1,25 @@
 package compiler.back.regAloc;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import compiler.ir.cfg.Range;
 
-public class VirtualRegister {
+public class VirtualRegister extends Register {
 
-	public int regNumber;
-//	List<Range> ranges;
+	
+	public RealRegister rReg;
+	public int spillLocation;
+	
+	//	List<Range> ranges;
 	
 	/**
 	 * The single range is used for the simplified linear scan register allocation. 
 	 */
-	public Range singleRange;
+	public Range range;
 
 	public VirtualRegister(int regNo) {
-		this.regNumber = regNo;
+		super(regNo);
 //		this.ranges = new ArrayList<Range>();
-		this.singleRange = new Range();
+		this.range = new Range();
+		this.spillLocation = -1;
 	}
 
 	/*
@@ -30,14 +31,14 @@ public class VirtualRegister {
 	*/
 
 	public void setSingleRangeBegin(int begin) {
-		if (begin < singleRange.begin || singleRange.begin == -1) {
-			singleRange.begin = begin;
+		if (begin < range.begin || range.begin == -1) {
+			range.begin = begin;
 		}
 	}
 	
 	public void setSingleRangeEnd(int end) {
-		if (end > singleRange.end || singleRange.end == -1) {
-			singleRange.end = end;
+		if (end > range.end || range.end == -1) {
+			range.end = end;
 		}
 		// if singleRange.end remains -1 it means that the value is not used
 	}
@@ -104,7 +105,7 @@ public class VirtualRegister {
 */
 	@Override
 	public String toString() {
-		return "r" + regNumber;
+		return "vr" + regNumber;
 	}
 /*
     public List<Range> getRanges() {
