@@ -465,7 +465,7 @@ public class CodeGenerator {
 				return;
 			}
 //            PutF1(LDX, useReg(address.get(0)), GlobalV, useReg(ins.outputOp) );
-            PutF1(LDX, useReg(address.get(0)), useReg(ins.outputOp), 0 );
+            PutF1(LDX, useReg(ins.outputOp), useReg(address.get(0)), 0 );
 		} else if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
 			PutF1(LDW, useReg(ins.outputOp), FrameP, -GetVarAddress(ins.symbol.ident));
