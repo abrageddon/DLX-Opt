@@ -464,7 +464,8 @@ public class CodeGenerator {
 			if (address == null || address.isEmpty()) {
 				return;
 			}
-			PutF1(LDX, useReg(address.get(0)), GlobalV, useReg(ins.outputOp) );
+//            PutF1(LDX, useReg(address.get(0)), GlobalV, useReg(ins.outputOp) );
+            PutF1(LDX, useReg(address.get(0)), useReg(ins.outputOp), 0 );
 		} else if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
 			PutF1(LDW, useReg(ins.outputOp), FrameP, -GetVarAddress(ins.symbol.ident));
@@ -477,12 +478,14 @@ public class CodeGenerator {
 					-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Array base address
-			PutF1(ADDI, useReg(ins.outputOp), FrameP , 0 );
-			PutF1(ADDI, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
+//			PutF1(ADDI, useReg(ins.outputOp), FrameP , 0 );
+//			PutF1(ADD, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
+	          PutF1(ADDI, useReg(ins.outputOp), FrameP, -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array base address
-			PutF1(ADDI, useReg(ins.outputOp), GlobalV , 0 );
-			PutF1(ADDI, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
+//			PutF1(ADDI, useReg(ins.outputOp), GlobalV , 0 );
+//          PutF1(ADD, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
+          PutF1(ADDI, useReg(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
 		}
 	}
 	

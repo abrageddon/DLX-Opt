@@ -47,7 +47,6 @@ public class Parser {
 		symTable.insert(new FunctionSymbol("OutputNewLine", SymbolKind.PROCEDURE));
 		
 		scanner = new Scanner();
-        
 		sourceFile = srcFile;
 	}
 	
@@ -574,7 +573,7 @@ public class Parser {
 			// build offset
 			Instruction idxNumber = expression();
 			expect(Tokens.R_SQ_BRKT);
-			Instruction idxInstr = issue(new Mul(idxNumber, new Immediate(4)));
+			Instruction idxInstr = issue(new Mul(idxNumber, issue(new Immediate(4))));
 			indexes.add(idxInstr);
 //	        addr = issue(new Index(addr, offset)); // index into array
 		}
