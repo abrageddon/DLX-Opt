@@ -22,6 +22,7 @@ public class RegisterAllocator {
 	}
 
 	public void allocateRegisters() {
+	    RealRegisterPool.resetPool();
 		buildLiveRangesSimplified();
 		linearScanRegAlloc();
 		VirtualRegisterFactory.printAllVirtualRegisters();

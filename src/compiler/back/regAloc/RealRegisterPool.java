@@ -7,12 +7,18 @@ public class RealRegisterPool {
 
 	public static final int MAX_REGS = 8;
 	public static List<RealRegister> regs = new ArrayList<RealRegister>();
-	
-	static {
-		for(int regNo = 1; regNo < MAX_REGS+1; regNo++) {
-			regs.add(new RealRegister(regNo));
-		}
-	}
+
+    static {
+        for(int regNo = 1; regNo < MAX_REGS+1; regNo++) {
+            regs.add(new RealRegister(regNo));
+        }
+    }
+    public static void resetPool() {
+        regs = new ArrayList<RealRegister>();
+        for(int regNo = 1; regNo < MAX_REGS+1; regNo++) {
+            regs.add(new RealRegister(regNo));
+        }
+    }
 	
 	public static RealRegister getFreeRegister() {
 		for(RealRegister rReg : regs) {

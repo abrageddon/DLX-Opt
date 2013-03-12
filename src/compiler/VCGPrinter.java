@@ -12,8 +12,6 @@ import org.junit.Test;
 
 import compiler.back.regAloc.VirtualRegister;
 import compiler.back.regAloc.VirtualRegisterFactory;
-import compiler.front.Parser.ParserException;
-import compiler.front.Scanner.ScannerException;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
 
@@ -47,7 +45,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "3-0.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, ".tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner
@@ -106,11 +104,10 @@ public class VCGPrinter {
                     buildVirtualRegisters(vcgOut);
                 }
                 
-            } catch (ParserException
-                    | ScannerException e) {
+            } catch (Exception e) {
+                System.err.println(testFile + ":");
                 e.printStackTrace();
-            } 
-            finally {
+            }finally {
                 // close output file and scanner
                 closeGraph(vcgOut);
                 compiler.terminate();
