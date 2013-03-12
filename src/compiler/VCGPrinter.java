@@ -47,7 +47,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "0-2.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "3-0.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner
@@ -300,6 +300,8 @@ public class VCGPrinter {
             if (range.end >= 0){
                 endLine = range.end;
             }
+            
+//            System.err.println(rReg.regNumber +" " + startLine + " "+ endLine);
             
             //Search tree for matching line number; inefficient
             for (CFG cfg : CFGs) {

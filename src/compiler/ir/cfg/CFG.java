@@ -346,7 +346,7 @@ public class CFG {
             offset += arraySize;
         }
 
-        System.err.println("offset="+(offset*4));
+//        System.err.println("offset="+(offset*4));
         return offset * 4;
     }
 
