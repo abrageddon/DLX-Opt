@@ -22,10 +22,10 @@ public class StoreValue extends Instruction {
 	}
 
 	public StoreValue(Symbol symbol, Instruction value) {
-		// store value to address
+		// store value to symbol address
 		// this.address = symbol.getAddress(); //TODO
-		this.symbol = symbol;
 		this.value = value;
+		this.symbol = symbol;
 	}
 	
 	public List<VirtualRegister> getInputOperands() {
@@ -41,9 +41,9 @@ public class StoreValue extends Instruction {
 	}
 
 	
-	public String toString(){
+	public String toString() {
 		return getInstrNumber() + " : STORE " +
-				"(" + value.getInstrNumber() + ")" +
+				"(" + Instruction.resolve(value).getInstrNumber() + ")" +
 				"(" + (symbol != null ? "@"+symbol.ident  : address.getInstrNumber() ) + ")" + 
 				" \n [" + Instruction.resolve(value).outputOp +  (symbol != null ?"": ", "+Instruction.resolve(address).outputOp ) +"]" ;
 	}
