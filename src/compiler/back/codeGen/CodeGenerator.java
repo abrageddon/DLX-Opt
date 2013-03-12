@@ -536,11 +536,6 @@ public class CodeGenerator {
 			// Global Var
 			//TODO resolve?
             List<VirtualRegister> inputs = ins.getInputOperands();
-
-            System.err.println("store: " + ins);
-            System.err.println("inputs.get(0): " + inputs.get(0));
-            System.err.println("ins.outputOp: " + ins.outputOp);
-            
 			PutF1(STW, useReg(inputs.get(0)),
 					GlobalV, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident)
