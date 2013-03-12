@@ -19,6 +19,7 @@ import compiler.ir.instructions.Move;
 import compiler.ir.instructions.Phi;
 import compiler.ir.instructions.Return;
 import compiler.ir.instructions.Scalar;
+import compiler.ir.instructions.StoreValue;
 
 public class SSAGenerator {
 
@@ -142,6 +143,8 @@ public class SSAGenerator {
 						ssaArgs.add(resolve(arg, bb));
 					}
 					((Call)instr).args = ssaArgs;
+				} else if (instr instanceof StoreValue) {
+					((StoreValue) instr).value = resolve(((StoreValue) instr).value, bb);
 				}
 
 			}
