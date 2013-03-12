@@ -539,6 +539,7 @@ public class CodeGenerator {
 
             System.err.println("store: " + ins);
             System.err.println("inputs.get(0): " + inputs.get(0));
+            System.err.println("ins.outputOp: " + ins.outputOp);
             
 			PutF1(STW, useReg(inputs.get(0)),
 					GlobalV, -GetVarAddress(ins.symbol.ident));
