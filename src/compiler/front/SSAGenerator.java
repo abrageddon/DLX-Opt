@@ -13,7 +13,9 @@ import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.ir.cfg.BasicBlock;
 import compiler.ir.cfg.CFG;
 import compiler.ir.instructions.ArithmeticBinary;
+import compiler.ir.instructions.ArithmeticUnary;
 import compiler.ir.instructions.Call;
+import compiler.ir.instructions.Index;
 import compiler.ir.instructions.Instruction;
 import compiler.ir.instructions.Move;
 import compiler.ir.instructions.Phi;
@@ -135,6 +137,8 @@ public class SSAGenerator {
 					// read from local variables
 					((ArithmeticBinary) instr).right = resolve(((ArithmeticBinary) instr).right, bb);
 					((ArithmeticBinary) instr).left = resolve(((ArithmeticBinary) instr).left, bb);
+				} else if (instr instanceof ArithmeticUnary) {
+					((ArithmeticUnary) instr).operand = resolve(((ArithmeticUnary) instr).operand, bb);
 				} else if (instr instanceof Return) {
 					((Return) instr).returnValue = resolve(((Return) instr).returnValue, bb);
 				} else if (instr instanceof Call) {
@@ -145,7 +149,10 @@ public class SSAGenerator {
 					((Call)instr).args = ssaArgs;
 				} else if (instr instanceof StoreValue) {
 					((StoreValue) instr).value = resolve(((StoreValue) instr).value, bb);
+				} else if (instr instanceof Index) {
+					((Index) instr).offset = resolve(((Index) instr).offset, bb);
 				}
+
 
 			}
 			// eliminate move instructions

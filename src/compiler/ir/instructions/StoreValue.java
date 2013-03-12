@@ -1,13 +1,10 @@
 package compiler.ir.instructions;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import compiler.back.regAloc.VirtualRegister;
 import compiler.front.symbolTable.Symbol;
-import compiler.front.symbolTable.Symbol.SymbolKind;
-
 
 public class StoreValue extends Instruction {
 
@@ -39,7 +36,6 @@ public class StoreValue extends Instruction {
 		}
 		return inputOps;
 	}
-
 	
 	public String toString() {
 		return getInstrNumber() + " : STORE " +
