@@ -22,6 +22,10 @@ public class VirtualRegister extends Register {
 		this.spillLocation = -1;
 	}
 
+	public VirtualRegister(int reNo, RealRegister rReg) {
+		this(reNo);
+		this.rReg = rReg;
+	}
 	/*
 	public void addRange(int from, int to) {
 		// "the new range is merged if an overlapping range is present"

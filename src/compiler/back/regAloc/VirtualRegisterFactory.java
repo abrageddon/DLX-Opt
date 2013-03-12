@@ -24,6 +24,12 @@ public class VirtualRegisterFactory {
 		return vReg;
 	}
 
+	public static VirtualRegister newRegister(RealRegister rReg){
+		VirtualRegister vReg = new VirtualRegister(regCnt++, rReg);
+		virtualRegisters.add(vReg);
+		return vReg;
+	}
+	
 	public static void removeRegister(VirtualRegister vReg){
 		virtualRegisters.remove(vReg);
 	}
