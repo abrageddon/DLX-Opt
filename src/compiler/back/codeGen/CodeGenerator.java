@@ -246,7 +246,7 @@ public class CodeGenerator {
         } else if (instruction instanceof Index) {
         	Index ins = (Index) instruction;
         	List<VirtualRegister> operands = ins.getInputOperands();
-            PutF1(ADD, useReg(ins.outputOp), useReg(operands.get(0)), useReg(operands.get(1)));
+            PutF1(SUB, useReg(ins.outputOp), useReg(operands.get(0)), useReg(operands.get(1)));
 
         } else if (instruction instanceof Return) {
 			Return ins = (Return) instruction;
@@ -476,20 +476,13 @@ public class CodeGenerator {
 			PutF1(LDW, useReg(ins.outputOp), GlobalV,
 					-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
-			// Array
-			List<VirtualRegister> address = ins.getInputOperands();
-			if (address == null || address.isEmpty() ){
-				return;
-			}
-			PutF1(LDX, useReg(ins.outputOp), FrameP, useReg(address.get(0)));
+			// Array base address
+			PutF1(ADDI, useReg(ins.outputOp), FrameP , 0 );
+			PutF1(ADDI, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
-			// Global Array
-			List<VirtualRegister> address = ins.getInputOperands();
-			if (address == null || address.isEmpty() ){
-				return;
-			}
-			PutF1(LDX, useReg(ins.outputOp), GlobalV,
-					useReg(address.get(0)));
+			// Global Array base address
+			PutF1(ADDI, useReg(ins.outputOp), GlobalV , 0 );
+			PutF1(ADDI, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
 		}
 	}
 	
@@ -512,7 +505,7 @@ public class CodeGenerator {
 
 	private void store(StoreValue ins) {
 		if (ins.symbol == null && ins.address != null) {
-			// Load by address
+			// Store by address
 			List<VirtualRegister> address = ins.getInputOperands();
 			if (address == null || address.isEmpty()) {
 				return;
@@ -536,18 +529,13 @@ public class CodeGenerator {
 		} else if (currentCFG.containsArray(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Array
-			List<VirtualRegister> address = ins.getInputOperands();
-			if (address == null || address.isEmpty()) {
-				return;
-			}
-			PutF1(STX, useReg(ins.outputOp), FrameP, useReg(address.get(0)));
+			//TODO get array base address; same for load
+			System.err.println("Array Store shouldn't happen");
+//			PutF1(STW, useReg(ins.outputOp), FrameP,  -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array
-			List<VirtualRegister> address = ins.getInputOperands();
-			if (address == null || address.isEmpty()) {
-				return;
-			}
-			PutF1(STX, useReg(ins.outputOp), GlobalV, useReg(address.get(0)));
+			System.err.println("Global Array Store shouldn't happen");
+//			PutF1(STW, useReg(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
 		}
 	}
 
@@ -578,14 +566,31 @@ public class CodeGenerator {
 		return ret;
 	}
 
-//	private Result GetArrayAddress(int id) {
-//		int[] maxDim;
-//		CFG arrayCFG = currentCFG;
-//		if (!currentCFG.containsArray(id)) {
-//			arrayCFG = mainCFG;
+	private int GetArrayAddress(String ident) {
+		int ret = 0;
+
+		if (currentCFG != null && currentCFG.containsArray(ident)) {
+			ret = (currentCFG.getArrayOffset(ident));
+		} else if (mainCFG.containsArray(ident)) {
+			ret = (mainCFG.getArrayOffset(ident));
+		} else {
+			ret = Integer.MAX_VALUE;
+			Error("GetVarAddress: Var does not exist: " + ident);
+		}
+
+		return ret;
+	}
+
+//	private int GetArrayAddress(String ident) {
+////		int[] maxDim;
+////		CFG arrayCFG = currentCFG;
+//		if (!currentCFG.containsArray(ident)) {
+////			arrayCFG = mainCFG;
+//			System.err.println("GetArrayAddress can't find array");
 //		}
-//		maxDim = arrayCFG.getArrayDims(id);
-//
+//		return currentCFG.getArrayDims(ident);
+//		maxDim = arrayCFG.getArrayDims(ident);
+
 //		offset.setConst();
 //		offset.value = (arrayCFG.getArrayOffset(id) + arrayCFG.getVarNum()) * 4;
 //

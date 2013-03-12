@@ -57,7 +57,8 @@ public class RegisterAllocator {
 	}
 	
 	void spillAtInterval(VirtualRegister vRegI) {
-		 // spilling heuristic chooses last one in active, active is always sorted by increasing end point
+
+		// spilling heuristic chooses last one in active, active is always sorted by increasing end point
 		VirtualRegister spill = active.get(active.size() - 1);
 		if (spill.range.end > vRegI.range.end) {
 			vRegI.rReg = spill.rReg;

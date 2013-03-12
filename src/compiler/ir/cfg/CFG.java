@@ -330,17 +330,23 @@ public class CFG {
     }
 
     public int getArrayOffset(int id) {
-        int offset = 0;
-        int i=0;
-        while (arrays.get(i) != id){
+        int offset = vars.size() ;
+
+        System.err.println("vars "+vars.size()+" offset="+(offset*4));
+        
+        
+        for (int i=0;i < id; i++){
             int arraySize = 1;
             for (int dim=0;dim<arraysDims.get(id).size();dim++){
                 arraySize *=arraysDims.get(id).get(dim);
             }
+
+            System.err.println("arraySize="+arraySize);
+            
             offset += arraySize;
-            i++;
         }
 
+        System.err.println("offset="+(offset*4));
         return offset * 4;
     }
 
@@ -401,6 +407,10 @@ public class CFG {
 
     public int getArray(String ident) {
         return arrays.indexOf(String2Id(ident));
+    }
+
+    public int getArrayOffset(String ident) {
+        return getArrayOffset(String2Id(ident));
     }
     
     public List<Param> getParams(){
