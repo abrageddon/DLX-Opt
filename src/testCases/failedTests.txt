@@ -1,0 +1,26 @@
+Register conflict
+test1-7.tst
+test1-10.tst
+test1-14.tst
+test2-1.tst
+test2-3.tst
+test2-4.tst
+test2-8.tst
+test2-9.tst
+test2-10.tst
+
+2D Array problem
+test002.tst
+	57 : STORE (0)(56) 
+	[null, vr31]
+
+Function return result use problem (recursion/spill related?)
+test2-7.tst
+
+VirtualRegister with -1 endpoint
+test2-1.tst
+test2-2.tst
+test2-3.tst
+…many, not sure if its a problem
+
+Unclassified
