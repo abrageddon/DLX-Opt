@@ -109,8 +109,8 @@ public class TestRun {
 			}
 			read.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(1);
 		}
 		return convertIntegers(prog);
 	}

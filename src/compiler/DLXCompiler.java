@@ -37,7 +37,11 @@ public class DLXCompiler {
 
         new RegisterAllocator(parser.CFGs).allocateRegisters();
 
-        new CodeGenerator(parser.CFGs).generateCode(outFile);
+        try {
+            new CodeGenerator(parser.CFGs).generateCode(outFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 	}
 	
