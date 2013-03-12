@@ -47,7 +47,7 @@ public class VCGPrinter {
     
     public void generateCFGs(){
         String testFilesFolder = "src/testCases";
-        String[] testFiles = TestUtils.listFiles(testFilesFolder, "al.tst");// Edit here to run one test
+        String[] testFiles = TestUtils.listFiles(testFilesFolder, "-0.tst");// Edit here to run one test
 
         for (String testFile : testFiles) {
             // init output file and scanner
@@ -276,29 +276,31 @@ public class VCGPrinter {
         String edgeClass = "class: 2";
         Integer regNumber=0;
 
-        for (VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
+//        for (RealRegister rReg : RealRegisterPool.regs) {
+        for (VirtualRegister rReg : VirtualRegisterFactory.virtualRegisters) {
 //            System.err.println(vReg.regNumber + ":\t" + vReg.getRanges());
 
             //TODO make more efficient
             
             //Print reg node
-            regNumber = vReg.regNumber;
-            int startDepth = -1;
-            int endDepth = -1;
+            regNumber = rReg.regNumber;
+            int startDepth = -2;
+            int endDepth = -2;
             int startLine = Integer.MAX_VALUE;
-            int endLine = -1;
+            int endLine = -2;
             String sourceCode = "";
             String destCode = "";
             String edges = "";
 
             //Range start and ends
 //            List<Range> ranges = vReg.getRanges();
-            Range range = vReg.singleRange;
+            Range range = rReg.range;
             //Ignore empty ranges
 //            if(ranges == null || ranges.isEmpty() ){
 //                continue;
 //            }
             
+            //Search tree for matching line number; inefficient
             for (CFG cfg : CFGs) {
                 Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
                 while (blockIterator.hasNext()) {
@@ -347,9 +349,10 @@ public class VCGPrinter {
             }
             
             int depth = (startDepth + (endDepth-startDepth)/2);
-            if (startDepth == -1){
+            if (startDepth == -2){
                 depth=endDepth;
-            }else if (endDepth == -1){
+            }
+            if (endDepth == -2){
                 depth=startDepth;
             }
 

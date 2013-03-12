@@ -565,7 +565,7 @@ public class Parser {
 		
 		assume(Tokens.L_SQ_BRKT);
 		// load array base address
-		Instruction base = issue(new LoadValue(sym));
+		LoadValue base = (LoadValue)issue(new LoadValue(sym));
 		
 		// compute offset
 		List<Instruction> indexes = new ArrayList<Instruction>();

@@ -10,10 +10,10 @@ import compiler.back.regAloc.VirtualRegisterFactory;
 // adda x y
 public class Index extends Instruction {
 
-	public Instruction base;
+	public LoadValue base;
 	public Instruction offset;
 	
-	public Index(Instruction base, Instruction offset) {
+	public Index(LoadValue base, Instruction offset) {
 		this.base = base;
 		this.offset = offset;
 		this.outputOp = VirtualRegisterFactory.newRegister();
@@ -31,7 +31,7 @@ public class Index extends Instruction {
 	
 	public String toString(){
 		return getInstrNumber() + " : ADDA " +
-				"(@" + ((LoadValue)base).symbol.ident + ")" + 
+				"(@" + base.symbol.ident + ")" + 
 				"(" + offset.getInstrNumber() + ")" +
 				"\n [" + Instruction.resolve(base).outputOp + ", " +
 					  Instruction.resolve(offset).outputOp  + "] -> "+ outputOp;

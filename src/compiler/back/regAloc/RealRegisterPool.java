@@ -9,7 +9,7 @@ public class RealRegisterPool {
 	public static List<RealRegister> regs = new ArrayList<RealRegister>();
 	
 	static {
-		for(int regNo = 0; regNo < MAX_REGS; regNo++) {
+		for(int regNo = 1; regNo < MAX_REGS+1; regNo++) {
 			regs.add(new RealRegister(regNo));
 		}
 	}

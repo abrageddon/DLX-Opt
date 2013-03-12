@@ -10,13 +10,14 @@ import java.util.List;
 import java.util.Stack;
 
 import compiler.DLX;
+import compiler.back.regAloc.RealRegister;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
 
 public class CodeGenerator {
 
-	private static final int MAX_REG = 27;
+//	private static final int MAX_REG = 27;
 	private static final boolean DEBUG = true;
 	private HashMap<Integer, String> DEBUGMESG;
 	
@@ -220,14 +221,12 @@ public class CodeGenerator {
 		
 		if (instruction instanceof Immediate) {
 			Immediate ins = (Immediate) instruction;
-			PutF1(ADDI, (ins.outputOp.regNumber %MAX_REG)+1, 0, ins.value);
+			PutF1(ADDI, useReg(ins.outputOp) , 0, ins.value);
 
 		} else if (instruction instanceof StoreValue) {
 			StoreValue ins = (StoreValue) instruction;
 			// Global
-			PutF1(STW,
-					(Instruction.resolve(ins.value).outputOp.regNumber %MAX_REG)+1,
-					GlobalV, -GetVarAddress(ins.symbol.ident));
+			store(ins);
 			// TODO arrays, locals
 
 		} else if (instruction instanceof LoadValue) {
@@ -240,7 +239,13 @@ public class CodeGenerator {
 
         } else if (instruction instanceof Move) {
             Move ins = (Move) instruction;
-            PutF1(ADDI, Instruction.resolve(ins.dest).outputOp.regNumber, Instruction.resolve(ins.src).outputOp.regNumber, 0);
+        	List<VirtualRegister> operands = ins.getInputOperands();
+            PutF1(ADDI, useReg(Instruction.resolve(ins).outputOp), useReg(operands.get(0)), 0);
+
+        } else if (instruction instanceof Index) {
+        	Index ins = (Index) instruction;
+        	List<VirtualRegister> operands = ins.getInputOperands();
+            PutF1(ADD, useReg(ins.outputOp), useReg(operands.get(0)), useReg(operands.get(1)));
 
         } else if (instruction instanceof Return) {
 			Return ins = (Return) instruction;
@@ -248,7 +253,7 @@ public class CodeGenerator {
 			boolean isFunc = currentCFG.isFunc();
 
 			if (isFunc) {
-				PutF1(STW, (ins.inputOps.get(0).regNumber % MAX_REG) + 1, FrameP, 4);
+				PutF1(STW, useReg(ins.inputOps.get(0)) , FrameP, 4);
 			}
 
 			// Load RA
@@ -260,9 +265,9 @@ public class CodeGenerator {
 			ArithmeticBinary ins = (ArithmeticBinary) instruction;
 			List<VirtualRegister> inputs = ins.getInputOperands();
 			// System.err.println(ins.left.getClass());
-			PutF2(opCode(ins), (ins.outputOp.regNumber % MAX_REG) + 1,
-					(inputs.get(0).regNumber % MAX_REG) + 1,
-					(inputs.get(1).regNumber % MAX_REG) + 1);
+			PutF2(opCode(ins), useReg(ins.outputOp) ,
+					useReg(inputs.get(0)) ,
+					useReg(inputs.get(1)) );
 
 		} else if (instruction instanceof Call) {
 			Call ins = (Call) instruction;
@@ -282,11 +287,11 @@ public class CodeGenerator {
 			// Built in functions can be overridden
 			if (ins.function.ident.equalsIgnoreCase("outputnum")) {
 				PutF2(WRD, 0,
-						(ins.args.get(0).outputOp.regNumber %MAX_REG)+1, 0);
+						useReg(ins.args.get(0).outputOp) , 0);
 			} else if (ins.function.ident.equalsIgnoreCase("outputnewline")) {
 				PutF2(WRL, 0, 0, 0);
 			} else if (ins.function.ident.equalsIgnoreCase("inputnum")) {
-				PutF2(RDI, (ins.outputOp.regNumber %MAX_REG)+1, 0, 0);
+				PutF2(RDI, useReg(ins.outputOp) , 0, 0);
 			}
 
 		}
@@ -342,7 +347,7 @@ public class CodeGenerator {
 			
 				// load word to mem
 				//TODO load params to mem
-				Push((parms.get(i).regNumber%MAX_REG)+1);
+				Push(useReg(parms.get(i)));
 			}
 		}
 
@@ -386,7 +391,7 @@ public class CodeGenerator {
 		// IF func get return val
 		if (isFunc) {
 			// put ret val in x
-			Pop((ins.outputOp.regNumber%MAX_REG)+1);
+			Pop(useReg(ins.outputOp));
 		} else {
 			// remove empty return val
 			Pop();
@@ -451,25 +456,93 @@ public class CodeGenerator {
 	}
 
 	private void load(LoadValue ins) {
-		if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
+		if (ins.symbol == null && ins.address != null) {
+			// Load by address
+			System.err.println("Check: " + ins);
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty()) {
+				return;
+			}
+			PutF1(LDX, useReg(address.get(0)), GlobalV, useReg(ins.outputOp) );
+		} else if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
-			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, -GetVarAddress(ins.symbol.ident));
-		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
-			// Array
-			ins.getInputOperands();
-			PutF1(LDX, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, (ins.inputOps.get(0).regNumber % MAX_REG) + 1);
+			PutF1(LDW, useReg(ins.outputOp), FrameP, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsParam(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Param
-			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, FrameP, 8 + GetParamAddress(ins.symbol.ident));
+			PutF1(LDW, useReg(ins.outputOp), FrameP, 8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
-			PutF1(LDW, (ins.outputOp.regNumber % MAX_REG) + 1, GlobalV,
+			PutF1(LDW, useReg(ins.outputOp), GlobalV,
 					-GetVarAddress(ins.symbol.ident));
+		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
+			// Array
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty() ){
+				return;
+			}
+			PutF1(LDX, useReg(ins.outputOp), FrameP, useReg(address.get(0)));
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array
-			ins.getInputOperands();
-			PutF1(LDX, (ins.outputOp.regNumber % MAX_REG) + 1, GlobalV,
-					(ins.inputOps.get(0).regNumber % MAX_REG) + 1);
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty() ){
+				return;
+			}
+			PutF1(LDX, useReg(ins.outputOp), GlobalV,
+					useReg(address.get(0)));
+		}
+	}
+	
+	private int useReg(VirtualRegister vReg) {
+		// TODO IF !rReg.free THEN return spill(rReg) ELSE return rReg.regNumber
+		if(vReg.rReg == null){
+			return spill(vReg);
+		}
+		return vReg.rReg.regNumber;
+	}
+
+	private int spill(VirtualRegister rReg) {
+		System.err.println("spill: "+rReg);
+		return 0;
+	}
+
+	private void store(StoreValue ins) {
+		if (ins.symbol == null && ins.address != null) {
+			// Load by address
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty()) {
+				return;
+			}
+			PutF1(STX, useReg(address.get(0)), useReg(address.get(1)), 0);
+		} else if (currentCFG.containsVar(ins.symbol.ident)
+				&& !currentCFG.label.equals("main")) {
+			// Var
+			PutF1(STW, useReg(ins.outputOp), FrameP,
+					-GetVarAddress(ins.symbol.ident));
+		} else if (currentCFG.containsParam(ins.symbol.ident)
+				&& !currentCFG.label.equals("main")) {
+			// Param
+			PutF1(STW, useReg(ins.outputOp), FrameP,
+					8 + GetParamAddress(ins.symbol.ident));
+		} else if (mainCFG.containsVar(ins.symbol.ident)) {
+			// Global Var
+			//TODO resolve?
+			PutF1(STW, useReg(ins.value.outputOp),
+					GlobalV, -GetVarAddress(ins.symbol.ident));
+		} else if (currentCFG.containsArray(ins.symbol.ident)
+				&& !currentCFG.label.equals("main")) {
+			// Array
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty()) {
+				return;
+			}
+			PutF1(STX, useReg(ins.outputOp), FrameP, useReg(address.get(0)));
+		} else if (mainCFG.containsArray(ins.symbol.ident)) {
+			// Global Array
+			List<VirtualRegister> address = ins.getInputOperands();
+			if (address == null || address.isEmpty()) {
+				return;
+			}
+			PutF1(STX, useReg(ins.outputOp), GlobalV, useReg(address.get(0)));
 		}
 	}
 
@@ -500,23 +573,21 @@ public class CodeGenerator {
 		return ret;
 	}
 
-//	private Result GetArrayAddress(int id, Result[] coord) {
+//	private Result GetArrayAddress(int id) {
 //		int[] maxDim;
 //		CFG arrayCFG = currentCFG;
 //		if (!currentCFG.containsArray(id)) {
 //			arrayCFG = mainCFG;
 //		}
 //		maxDim = arrayCFG.getArrayDims(id);
-//		Result offset = new Result();
 //
 //		offset.setConst();
 //		offset.value = (arrayCFG.getArrayOffset(id) + arrayCFG.getVarNum()) * 4;
 //
-//		Result address = addAddress(0, maxDim, coord);
+//		address = addAddress(0, maxDim, coord);
 ////		load(address);// add offset to this reg
 //
 //		// Negate address
-//		Result neg = new Result();
 //		neg.setConst();
 //		neg.value = -4;
 //
@@ -617,7 +688,7 @@ public class CodeGenerator {
 	private void CondNegBraFwd(ControlFlowInstr ins) {
 		fixup.push(pc);
 		PutF1(negatedBranchOp(ins),
-				(ins.inputOps.get(0).regNumber % MAX_REG) + 1, 0, 0);
+				useReg(ins.inputOps.get(0)), 0, 0);
 	}
 
 	private void UnCondBraFwd(int loc) {

@@ -42,8 +42,8 @@ public class StoreValue extends Instruction {
 	public String toString(){
 		return getInstrNumber() + " : STORE " +
 				"(" + value.getInstrNumber() + ")" +
-				"(@" + (symbol != null ? symbol.ident  : address.getInstrNumber() ) + ")" + 
-				" \n [" + Instruction.resolve(value).outputOp +"]";
+				"(" + (symbol != null ? "@"+symbol.ident  : address.getInstrNumber() ) + ")" + 
+				" \n [" + Instruction.resolve(value).outputOp +  (symbol != null ?"": ", "+Instruction.resolve(address).outputOp ) +"]" ;
 	}
 
 }
