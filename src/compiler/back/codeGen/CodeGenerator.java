@@ -505,12 +505,7 @@ public class CodeGenerator {
 		//TODO if loading then load from mem to temp registers
 		//TODO if storing then save to temp register and move to mem
 		//Read offset loc
-		RealRegister tempReg = RealRegisterPool.getFreeRegister();
-		if (tempReg == null){
-			System.err.println("spill: NO MORE REGISTERS");
-			return 0;
-		}
-
+		RealRegister tempReg = new RealRegister(9);
 		System.err.println("spill: "+tempReg.regNumber);
 		return tempReg.regNumber;
 	}
