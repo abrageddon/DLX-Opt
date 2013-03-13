@@ -1,10 +1,10 @@
 
 
 Adding results of arrays/functions
-test3-3.tst
-test3-4.tst
+test3-3.tst // passed
+test3-4.tst // passed
 test3-7.tst
-test3-9.tst
+test3-9.tst // passed
 test3-11.tst*
 
 

@@ -579,15 +579,42 @@ public class Parser {
 			indexes.add(idxInstr);
 //	        addr = issue(new Index(addr, offset)); // index into array
 		}
+
+		// [X][Y] -> [i*Y + j]
+		// [X][Y][Z] -> [i*YZ + j*Z + k]
+		// [X][Y][Z][W] -> [i*YZW + j*ZW + k*Z + l]
 		
+
 		ArrayType type = (ArrayType) ((VarSymbol)sym).type;
 		Instruction offset = null;
-//		System.out.println(type.dim);
+
 		if (type.dim > 1) {
-			for (int i = 0; i < type.dim - 1; i++) {
-				Instruction mul = issue(new Mul(indexes.get(i), 
-						issue(new Immediate(type.dimSize.get(i+1)))));
-				offset = issue(new Add(mul, indexes.get(i+1)));
+			for (int i = 0; i < type.dim; i++) {
+				// compute the tile (YZW)
+				Instruction tile = null; // this will hold the YZW part
+				for (int k = i; k < type.dim - 1; k++) {
+					Instruction currentDim = issue(new Immediate(type.dimSize.get(k + 1)));
+					if (tile == null) {
+						tile = currentDim;
+					} else {
+						tile = issue(new Mul(tile, currentDim));						
+					}
+				}
+
+				// compute the idx (i*YZW)
+				Instruction idx = null; // this will hold idx*tile (i*YZW)
+				if (tile == null) {
+					idx = indexes.get(i); // no tile means we are at index j in a 2D access a[i][j]
+				} else {
+					idx = issue(new Mul(indexes.get(i), tile));
+				}
+
+				// compute the offset: offset += idx
+				if (offset == null) {
+					offset = idx; 
+				} else {
+					offset = issue(new Add(offset, idx));
+				}
 			}
 		} else {
 			offset = indexes.get(0);
