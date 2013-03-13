@@ -203,7 +203,7 @@ public class CodeGenerator {
 		
 		// Functions intro
 		if (currentBlock.label.equals("start")) {
-			AddDebug((currentCFG.isFunc()?"FUNCTION: ":"PROCEDURE: ")+currentCFG.label+"\n");
+			AddDebug((currentCFG.isFunc()?"FUNCTION: ":"PROCEDURE: ")+currentCFG.label);
 			if (!currentCFG.label.equals("main")){
 				// Store Return Address
 				int paramNum = currentCFG.getParamNum();
@@ -329,40 +329,47 @@ public class CodeGenerator {
 		boolean isFunc = callee.isFunc();
 		
 		// Store old FP
+		AddDebug(callee.label+": Save old FP");
 		Push(FrameP);
 
 		// Put RA space
+		AddDebug(callee.label+": Space for Return Address");
 		Push(0);
 
 		// Put Param, reverse order
 		if (paramNum > 0) {
-			List<VirtualRegister> parms = ins.getInputOperands();
-			for( int i = parms.size()-1; i>=0;i--){
-			
+			List<VirtualRegister> params = ins.getInputOperands();
+			for( int i = params.size()-1; i>=0;i--){
 				// load word to mem
-				Push(useReg(parms.get(i)));
+				AddDebug(callee.label+": Param");
+				Push(useReg(params.get(i)));
 			}
 		}
 
 		// Put RetVal on stack
+		AddDebug(callee.label+": Space for Return Value");
 		Push(0);
 
 		// Save FP
+		AddDebug(callee.label+": Save FP");
 		PutF1(ADDI, FrameP, StackP, 0);
 
 		// Put vars
 		if (varNum > 0) {
 			for (int i = 0; i < varNum; i++) {
+				AddDebug(callee.label+": Add Var");
 				Push(0);
 			}
 		}
 
 		if (arraySize > 0) {
 			for (int i = 0; i < arraySize; i++) {
+				AddDebug(callee.label+": Add Array");
 				Push(0);
 			}
 		}
 
+		AddDebug("Jump to "+callee.label);
 		if (callee.getStartLine() < 0) {
 			// jump to function
 			PutF1(JSR, 0, 0, callee.getStartLine() * 4);
@@ -376,17 +383,21 @@ public class CodeGenerator {
 		// Function Happens HERE
 
 		// pop vars
+		AddDebug(callee.label+": Remove Vars & Arrays");
 		PutF1(ADDI, StackP, FrameP, 0);
 
 		// Load prev FP
+		AddDebug(callee.label+": Load Previous FP");
 		PutF1(LDW, FrameP, FrameP, (paramNum + 3) * 4);
 
 		// IF func get return val
 		if (isFunc) {
 			// put ret val in x
+			AddDebug(callee.label+": Grab Return Value");
 			Pop(useReg(ins.outputOp));
 		} else {
 			// remove empty return val
+			AddDebug(callee.label+": Pop Return Value Space");
 			Pop();
 		}
 
@@ -394,14 +405,17 @@ public class CodeGenerator {
 		// TODO shorten?
 		if (paramNum > 0) {
 			for (int i = paramNum - 1; i >= 0; i--) {
+				AddDebug(callee.label+": Remove Parameters");
 				Pop();
 			}
 		}
 
 		// POP RA
+		AddDebug(callee.label+": Pop RA");
 		Pop();
 
 		// Restore oldFP
+		AddDebug(callee.label+": Restore old FP");
 		Pop(FrameP);
 	}
 
@@ -456,7 +470,6 @@ public class CodeGenerator {
 			if (address == null || address.isEmpty()) {
 				return;
 			}
-//            PutF1(LDX, useReg(address.get(0)), GlobalV, useReg(ins.outputOp) );
             PutF1(LDX, useReg(ins.outputOp), useReg(address.get(0)), 0 );
 		} else if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
@@ -466,17 +479,12 @@ public class CodeGenerator {
 			PutF1(LDW, useReg(ins.outputOp), FrameP, 8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
-			PutF1(LDW, useReg(ins.outputOp), GlobalV,
-					-GetVarAddress(ins.symbol.ident));
+			PutF1(LDW, useReg(ins.outputOp), GlobalV,-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Array base address
-//			PutF1(ADDI, useReg(ins.outputOp), FrameP , 0 );
-//			PutF1(ADD, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
 	          PutF1(ADDI, useReg(ins.outputOp), FrameP, -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array base address
-//			PutF1(ADDI, useReg(ins.outputOp), GlobalV , 0 );
-//          PutF1(ADD, useReg(ins.outputOp), useReg(ins.outputOp), -GetArrayAddress(ins.symbol.ident) );
           PutF1(ADDI, useReg(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
 		}
 	}
@@ -529,13 +537,10 @@ public class CodeGenerator {
 		} else if (currentCFG.containsArray(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Array
-			//TODO get array base address; same for load?
-			System.err.println("Array Store shouldn't happen");
-//			PutF1(STW, useReg(ins.outputOp), FrameP,  -GetArrayAddress(ins.symbol.ident) );
+			System.err.println("Array Store shouldn't happen: "+ins);
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array
-			System.err.println("Global Array Store shouldn't happen");
-//			PutF1(STW, useReg(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
+			System.err.println("Global Array Store shouldn't happen: "+ins);
 		}
 	}
 
@@ -580,13 +585,6 @@ public class CodeGenerator {
 
 		return ret;
 	}
-
-//	private int opCodeImm(int op) {
-//		if (op != ERR) {
-//			return op + 16;
-//		}
-//		return ERR;
-//	}
 
 	private static int negatedBranchOp(ControlFlowInstr instruction) {
 		if (instruction instanceof BranchEqual) {
@@ -688,14 +686,13 @@ public class CodeGenerator {
 				if (i > 0) {
 					out.write("\n");
 				}
+				out.write(nativeCode.get(i).toString());
+				
 				if (DEBUG && DEBUGMESG.containsKey(i)){
 					for (String line:DEBUGMESG.get(i).split(System.getProperty("line.separator")) ){
-						out.write("# "+line + "\n");
+						out.write("\n# "+line + "");
 					}
-				}
-				out.write(nativeCode.get(i).toString());
-				if (DEBUG){
-					out.write("\n# "+i+": "+DLX.disassemble(nativeCode.get(i)) );
+//					out.write("\n# "+i+": "+DLX.disassemble(nativeCode.get(i)) +"\n");
 				}
 			}
 			out.close();
@@ -710,6 +707,8 @@ public class CodeGenerator {
 	private void AddDebug(String string) {
 		if (!DEBUGMESG.containsKey(pc)){
 			DEBUGMESG.put(pc, "");
+		}else{
+			DEBUGMESG.put(pc, DEBUGMESG.get(pc) + "\n");
 		}
 		DEBUGMESG.put(pc, DEBUGMESG.get(pc) + string);
 	}

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 
 import org.junit.Test;
@@ -31,15 +32,18 @@ public class TestRun {
         try {
         	String fileName = args[0];
         	int prog[] = null;
+        	List<String> data = null;
         	if (fileName.endsWith(".bin")){
-        		new DLXCompiler(fileName.substring(0, fileName.length()-4)).compile();
         		prog = readBin(new File(fileName) );
+        		data = readDebug(new File(fileName) );
         	}else{
         	    new DLXCompiler(fileName).compile();
         		prog = readBin(new File(fileName + ".bin"));
+        		data = readDebug(new File(fileName + ".bin"));
         	}
             DLX dlx = new DLX();
             dlx.load(prog);
+            dlx.loadDebug(data);//Comment out to stop debugging data
             dlx.displayProgram();
             dlx.execute();
         } catch (IOException | ParserException | ScannerException e) {
@@ -113,6 +117,35 @@ public class TestRun {
 			System.exit(1);
 		}
 		return convertIntegers(prog);
+	}
+
+	private static List<String> readDebug(File binFile) {
+		ArrayList<String> data = new ArrayList<String>();
+		int lineNum = -1;
+		try {
+			BufferedReader read = new BufferedReader(
+			                new FileReader( binFile ));
+			while(read.ready()){
+				String line = read.readLine();
+				if(line.trim().startsWith("#")){
+					while(data.size()<=lineNum){
+						data.add("");
+					}
+					if (data.get(lineNum).equals("")){
+						data.set(lineNum, line);
+					}else{
+						data.set(lineNum, data.get(lineNum) +"\n"+ line);
+					}
+				}else if (line.trim().length() != 0){
+					lineNum++;
+				}
+			}
+			read.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return data;
 	}
 	
 	public static int[] convertIntegers(List<Integer> integers)

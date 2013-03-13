@@ -1,24 +1,28 @@
-Complex 2D array refs
 
+
+Adding results of arrays/functions
+test3-3.tst
 test3-4.tst
 test3-7.tst
 test3-9.tst
-test3-11.tst
+test3-11.tst*
 
 
 Function return result use problem (recursion/spill related?)
 test2-1.tst
-test2-3.tst
+test2-3.tst *
 test2-4.tst
 test2-7.tst
 test2-8.tst
 test2-9.tst
 test2-10.tst
 test2-11.tst
-test3-11.tst
+
+test3-11.tst*
+
 test002.tst
 
-VirtualRegister with -1 endpoint
+VirtualRegister with -1 endpoints
 test2-1.tst
 test2-2.tst
 test2-3.tst

@@ -3,6 +3,7 @@ package compiler;
 // chs / mf 2001-08-07
 
 import java.io.*;
+import java.util.List;
 
 // All variables and methods are realized as class variables/methods which
 // means that just one processor can be emulated at a time.
@@ -16,10 +17,17 @@ public class DLX {
 	// emulated memory
 	static final int MemSize = 10000; // bytes in memory (divisible by 4)
 	static int M[] = new int [MemSize/4];
+	
+	static List<String> debugData;
 
     
 //	public static void main(String argv[]) {
 //	}
+
+
+	public void loadDebug(List<String> debug) {
+		debugData = debug;
+	}
 
 	public void load(int program[]) {
 		int i;
@@ -43,22 +51,27 @@ public class DLX {
 			R[0] = 0;
 			disassem(M[PC]); // initializes op, a, b, c
 			
-            /*//DEBUG
-            System.out.print("\tMEM:");//DEBUG
-            for (int i = 0 ; i < 50 ; i++){
-                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)+")|":""));
-            }
-            System.out.println();
-            System.out.print("\tREG:");//DEBUG
-            for (int i = 0 ; i < 28 ; i++){
-                System.out.print(R[i] + "|" + ((i+1)%5 == 0 ? "("+(i+1)+")|":""));
-            }
-            System.out.print("\n\t");
-                System.out.print("FP:"+(10000-R[28])/4 + "|");
-                System.out.print("SP:"+(10000-R[29])/4 + "|");
-                System.out.print("RA:"+(R[31]) + "/" + (R[31])/4);
-            System.out.println();
-            System.out.print(PC + ":" + disassemble(M[PC]));//DEBUG
+            //DEBUG
+			if(debugData != null){
+	            System.out.print("\tMEM:");//DEBUG
+	            for (int i = 0 ; i < 50 ; i++){
+	                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)+")|":""));
+	            }
+	            System.out.println();
+	            System.out.print("\tREG:");//DEBUG
+	            for (int i = 0 ; i < 28 ; i++){
+	                System.out.print(R[i] + "|" + ((i+1)%5 == 0 ? "("+(i+1)+")|":""));
+	            }
+	            System.out.print("\n\t");
+	                System.out.print("FP:"+(10000-R[28])/4 + "|");
+	                System.out.print("SP:"+(10000-R[29])/4 + "|");
+	                System.out.print("RA:"+(R[31]) + "/" + (R[31])/4);
+	            System.out.println();
+	            System.out.print(PC + ":" + disassemble(M[PC]));//DEBUG
+	            if (debugData.size() > PC && !debugData.get(PC).equals("")){
+	            	System.out.println(debugData.get(PC));
+	            }
+			}
              //*/
             
 			int nextPC = PC + 1;
