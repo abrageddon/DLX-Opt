@@ -43,8 +43,8 @@ public class TestRun {
         	}
             DLX dlx = new DLX();
             dlx.load(prog);
-            dlx.loadDebug(data);//Comment out to stop debugging data
-            dlx.displayProgram();
+//            dlx.loadDebug(data);//Comment out to stop debugging data
+//            dlx.displayProgram();
             dlx.execute();
         } catch (IOException | ParserException | ScannerException e) {
             System.err.println("Error reading input files!: \n" + e);

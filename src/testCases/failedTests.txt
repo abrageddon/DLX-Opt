@@ -1,6 +1,5 @@
 Adding results of arrays/functions
 test3-7.tst
-test3-9.tst
 
 Spills
 test2-9.tst
