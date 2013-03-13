@@ -1,33 +1,19 @@
-Register conflict
-test1-7.tst
-test1-10.tst
-test1-14.tst
+Complex 2D array refs
+
+test3-4.tst
+test3-7.tst
+test3-9.tst
+test3-11.tst
+
+
+Function return result use problem (recursion/spill related?)
 test2-1.tst
 test2-3.tst
 test2-4.tst
+test2-7.tst
 test2-8.tst
 test2-9.tst
 test2-10.tst
-test2-12.tst
-test3-1.tst
-test3-2.tst
-test3-3.tst
-test3-4.tst
-test3-5.tst
-test3-6.tst
-test3-7.tst
-test3-8.tst
-test3-9.tst
-test3-10.tst
-test3-12.tst
-test3-13.tst
-test3-14.tst
-
-Missing RET
-test2-14.tst
-
-Function return result use problem (recursion/spill related?)
-test2-7.tst
 test2-11.tst
 test3-11.tst
 test002.tst
@@ -39,3 +25,4 @@ test2-3.tst
 …many, not sure if its a problem
 
 Unclassified
+
