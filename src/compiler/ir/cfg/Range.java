@@ -65,6 +65,13 @@ public class Range {
     public String toString() {
     	return "[" + begin + " - " + end + "]";
     }
+
+	public boolean conflictsWith(int lineNum) {
+		if(begin < lineNum && lineNum < end){
+			return true;
+		}
+		return false;
+	}
 }
 
 

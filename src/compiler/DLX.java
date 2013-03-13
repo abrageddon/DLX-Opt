@@ -55,7 +55,7 @@ public class DLX {
 			if(debugData != null){
 	            System.out.print("\tMEM:");//DEBUG
 	            for (int i = 0 ; i < 50 ; i++){
-	                System.out.print(M[(R[30]-(i*4))/4] + "|" + ((i+1)%10 == 0 ? "("+(i+1)+")|":""));
+	                System.out.print(M[(R[30]-(i*4))/4] + ((10000-R[28])/4==i?"F":"") + ((10000-R[28])/4==i?"S":"")+ "|" + ((i+1)%10 == 0 ? "("+(i+1)+")|":""));
 	            }
 	            System.out.println();
 	            System.out.print("\tREG:");//DEBUG

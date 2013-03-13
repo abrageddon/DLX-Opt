@@ -43,7 +43,7 @@ public class TestRun {
         	}
             DLX dlx = new DLX();
             dlx.load(prog);
-            dlx.loadDebug(data);//Comment out to stop debugging data
+//            dlx.loadDebug(data);//Comment out to stop debugging data
             dlx.displayProgram();
             dlx.execute();
         } catch (IOException | ParserException | ScannerException e) {

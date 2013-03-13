@@ -12,6 +12,7 @@ import java.util.Stack;
 import compiler.DLX;
 import compiler.back.regAloc.RealRegister;
 import compiler.back.regAloc.VirtualRegister;
+import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
 
@@ -328,6 +329,13 @@ public class CodeGenerator {
 
 		boolean isFunc = callee.isFunc();
 		
+		//TODO push all live registers...
+		List<RealRegister> liveRegs = getLiveRegs(ins);
+		for (RealRegister reg:liveRegs){
+			AddDebug(callee.label+": Store Live Register "+reg.regNumber);
+			Push(reg.regNumber);
+		}
+		
 		// Store old FP
 		AddDebug(callee.label+": Save old FP");
 		Push(FrameP);
@@ -417,6 +425,25 @@ public class CodeGenerator {
 		// Restore oldFP
 		AddDebug(callee.label+": Restore old FP");
 		Pop(FrameP);
+
+		//TODO pop all live registers...
+		for (RealRegister reg:liveRegs){
+			AddDebug(callee.label+": Restore Live Register "+reg.regNumber);
+			Pop(reg.regNumber);
+		}
+	}
+
+	private List<RealRegister> getLiveRegs(Call ins) {
+		List<RealRegister> liveRegs = new ArrayList<RealRegister>();
+		int lineNum = ins.getInstrNumber();
+		
+		for(VirtualRegister vReg:VirtualRegisterFactory.virtualRegisters){
+			if(vReg.range.conflictsWith(lineNum)){
+				liveRegs.add(vReg.rReg);
+			}
+		}
+		
+		return liveRegs;
 	}
 
 	private void setupProgram() {
