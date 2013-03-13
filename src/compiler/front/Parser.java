@@ -317,6 +317,8 @@ public class Parser {
 		if(currentIsFirstOf(NonTerminals.EXPRESSION)) {
 			Instruction ret = expression();
 			issue(new Return(ret));
+		} else {
+			issue(new Return());
 		}
 	}
 

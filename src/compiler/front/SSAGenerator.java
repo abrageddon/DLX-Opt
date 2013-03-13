@@ -140,7 +140,9 @@ public class SSAGenerator {
 				} else if (instr instanceof ArithmeticUnary) {
 					((ArithmeticUnary) instr).operand = resolve(((ArithmeticUnary) instr).operand, bb);
 				} else if (instr instanceof Return) {
-					((Return) instr).returnValue = resolve(((Return) instr).returnValue, bb);
+					if(((Return) instr).returnValue != null){
+						((Return) instr).returnValue = resolve(((Return) instr).returnValue, bb);
+					}
 				} else if (instr instanceof Call) {
 					List<Instruction> ssaArgs = new ArrayList<Instruction>();
 					for(Instruction arg : ((Call)instr).args) {
