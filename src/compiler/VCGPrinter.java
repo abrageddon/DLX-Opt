@@ -273,11 +273,9 @@ public class VCGPrinter {
         String edgeClass = "class: 2";
         Integer regNumber=0;
 
-//        for (RealRegister rReg : RealRegisterPool.regs) {
         for (VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
 //            System.err.println(vReg.regNumber + ":\t" + vReg.getRanges());
 
-            //TODO make more efficient
             
             //Print reg node
             regNumber = vReg.regNumber;
@@ -301,6 +299,7 @@ public class VCGPrinter {
 //            System.err.println(rReg.regNumber +" " + startLine + " "+ endLine);
             
             //Search tree for matching line number; inefficient
+            //TODO make more efficient?
             for (CFG cfg : CFGs) {
                 Iterator<BasicBlock> blockIterator = cfg.topDownIterator();
                 while (blockIterator.hasNext()) {

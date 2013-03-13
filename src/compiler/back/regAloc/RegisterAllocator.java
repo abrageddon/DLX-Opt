@@ -217,7 +217,7 @@ public class RegisterAllocator {
 					// in the linear block order, it is sufficient to add one live range, 
 					// spanning the entire loop, for each register that is live at the beginning 
 					// of the loop header."
-					// TODO make sure that "that all blocks of a loop are contiguous 
+					// make sure that "that all blocks of a loop are contiguous 
 					// in the linear block order" 
 
 					// the loop header should have two predecessors,

@@ -241,13 +241,11 @@ public class SSAGenerator {
 				bb.removePHIs(bb.getPHIs());
 			}
 		}
-
-//		renumberInstructions();
 	}
 
-	private void topoSortMoves(List<Instruction> moves) {
-
-	}
+//	private void topoSortMoves(List<Instruction> moves) {
+//
+//	}
 
 	static class Graph {
 		HashMap<VirtualRegister, Edges> graph;

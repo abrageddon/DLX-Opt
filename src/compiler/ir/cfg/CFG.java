@@ -147,7 +147,7 @@ public class CFG {
 //	          Remove any node Y from WorkList
             BasicBlock workNode = workList.pop();
 //	          New = {Y} U intersects Dom(X);X in Pred(Y)
-            HashSet<BasicBlock> newDom = (HashSet<BasicBlock>) allNodeSet.clone();// TODO figure out this part
+            HashSet<BasicBlock> newDom = (HashSet<BasicBlock>) allNodeSet.clone();
             if (!workNode.pred.isEmpty()){
                 for (BasicBlock pred: workNode.pred){
                     newDom.retainAll( pred.semiDom );

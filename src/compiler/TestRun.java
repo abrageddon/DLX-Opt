@@ -85,7 +85,7 @@ public class TestRun {
 				
 				
 			} catch (ParserException | ScannerException | IOException e) {
-				// TODO Auto-generated catch block
+				System.err.println(testFile);
 				e.printStackTrace();
 			}
 		}

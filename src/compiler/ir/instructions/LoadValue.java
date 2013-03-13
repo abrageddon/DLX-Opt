@@ -9,7 +9,7 @@ import compiler.front.symbolTable.Symbol;
 
 public class LoadValue extends Instruction {
 	
-	public Symbol symbol; // TODO why do we need the symbol?
+	public Symbol symbol;
 	public Index address;
 	
 	public LoadValue(Index address) {

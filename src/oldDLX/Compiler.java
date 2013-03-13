@@ -100,7 +100,7 @@ public class Compiler {
 
     private static boolean computation() {
         //computation = “main” [ varDecl ] { funcDecl } “{” statSequence “}” “.” .
-        //TODO computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.” .
+        //computation = “main” { varDecl } { funcDecl } “{” statSequence “}” “.” .
         boolean rtn = true;
 
         for (int i = 0; i < R.length; i++) {
@@ -123,7 +123,6 @@ public class Compiler {
             rtn = rtn & varDecl();
         }
 
-        //TODO make one output
         //Setup Global Variables
         for (int i = 0; i < funcs.get(scope).getVarNum(); i++) {
             Push(new Result());
@@ -169,11 +168,11 @@ public class Compiler {
 
     private static boolean varDecl() {
         //varDecl = “var” ident { “,” ident } “;” .
-        //TODO varDecl = typeDecl ident { “,” ident } “;” .
+        //varDecl = typeDecl ident { “,” ident } “;” .
 
         boolean rtn = true;
 
-        //TODO typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
+        //typeDecl = “var” | “array” “[“ number “]” { “[“ number “]” }.
         if (scn.sym == Scanner.varToken) { // var
             scn.Next();
 
@@ -473,7 +472,6 @@ public class Compiler {
                 while (scn.sym == Scanner.commaToken) {// ","
                     scn.Next();
 
-                    //TODO fix
                     funcArgs.add(expression());
                     i++;
 
@@ -627,7 +625,7 @@ public class Compiler {
 
     private static Result assignment() {
         //assignment = ident “<-” expression.
-        //TODO assignment = ident { “[“ expression “]” } “<-” expression.
+        //assignment = ident { “[“ expression “]” } “<-” expression.
 
         Result x = new Result();
 
@@ -747,7 +745,6 @@ public class Compiler {
         Result address = new Result();
 
         if (dim == maxDim.length - 1) {//last dim
-            //TODO make neg
             address = coord[dim];
 
             return address;//just use regular value
@@ -877,8 +874,7 @@ public class Compiler {
 
     private static Result factor() {
         //factor = ident | number | “(“ expression “)” | funcCall .
-
-        //TODO factor = ident { “[“ expression “]” } | number | “(“ expression “)” | funcCall .
+        //factor = ident { “[“ expression “]” } | number | “(“ expression “)” | funcCall .
 
         Result x = new Result();
         boolean rtn = true;
@@ -897,7 +893,6 @@ public class Compiler {
                 x.address = GetVarAddress(scn.id);
                 scn.Next();
             } else if (funcs.get(scope).containsArray(scn.id)) {
-                //TODO get coord
                 int identID = scn.id;
                 Result[] coord = readCoord(identID);
                 x = GetArrayAddress(identID, coord);
@@ -907,7 +902,6 @@ public class Compiler {
                 x.address = GetVarAddress(scn.id);
                 scn.Next();
             } else if (funcs.get("main").containsArray(scn.id)) {
-                //TODO get coord
                 int identID = scn.id;
                 Result[] coord = readCoord(identID);
                 x = GetArrayAddress(identID, coord);
@@ -951,7 +945,6 @@ public class Compiler {
                     break;
             }
         } else {
-            //TODO load array vals properly
             load(x);
             if (!x.isReg() && x.regno == 0) {
                 x.regno = AllocateReg();//if regno zero?
@@ -997,13 +990,9 @@ public class Compiler {
             PutF1(LDW, x.regno, GV, -x.address);
             x.setReg();
         } else if (x.isArray()) {
-            //TODO calculate array to reg
-
             PutF1(LDX, x.regno, FP, x.regno);
             x.setReg();
         } else if (x.isGlobalArray()) {
-            //TODO calculate array to reg
-
             PutF1(LDX, x.regno, GV, x.regno);
             x.setReg();
         } else if (x.isParam()) {

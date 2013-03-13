@@ -40,6 +40,7 @@ public class DLXCompiler {
         try {
             new CodeGenerator(parser.CFGs).generateCode(outFile);
         } catch (Exception e) {
+            System.err.println("outFile: " + outFile);
             e.printStackTrace();
         }
 

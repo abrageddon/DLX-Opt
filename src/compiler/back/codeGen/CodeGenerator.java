@@ -11,7 +11,6 @@ import java.util.Stack;
 
 import compiler.DLX;
 import compiler.back.regAloc.RealRegister;
-import compiler.back.regAloc.RealRegisterPool;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.ir.cfg.*;
 import compiler.ir.instructions.*;
@@ -93,7 +92,6 @@ public class CodeGenerator {
 
 	private int pc;
 	private ArrayList<Integer> nativeCode;
-	private String outFile;
 	private Stack<Integer> fixup;
 	private Stack<Integer> functionFixup;
 	private Stack<CFG> functionsToFixup;
@@ -103,7 +101,6 @@ public class CodeGenerator {
 	}
 
 	public void generateCode(String outFile) {
-		this.outFile = outFile;
 		setupProgram();
 		setupGlobals();
 
@@ -217,7 +214,6 @@ public class CodeGenerator {
 	}
 
 	private void produceCode(Instruction instruction) {
-		// TODO remove when real allocator exists (reg %MAX_REG)+1
 		AddDebug(instruction.toString());
 		
 		if (instruction instanceof Immediate) {
@@ -228,7 +224,6 @@ public class CodeGenerator {
 			StoreValue ins = (StoreValue) instruction;
 			// Global
 			store(ins);
-			// TODO arrays, locals
 
 		} else if (instruction instanceof LoadValue) {
 			LoadValue ins = (LoadValue) instruction;
@@ -241,9 +236,6 @@ public class CodeGenerator {
         } else if (instruction instanceof Move) {
             Move ins = (Move) instruction;
         	List<VirtualRegister> operands = ins.getInputOperands();
-        	
-        	//TODO find bug
-        	
             PutF1(ADDI, useReg(Instruction.resolve(ins).outputOp), useReg(operands.get(0)), 0);
 
         } else if (instruction instanceof Index) {
@@ -290,8 +282,8 @@ public class CodeGenerator {
 
 			// Built in functions can be overridden
 			if (ins.function.ident.equalsIgnoreCase("outputnum")) {
-				PutF2(WRD, 0,
-						useReg(ins.args.get(0).outputOp) , 0);
+			    List<VirtualRegister> inputs = ins.getInputOperands();
+				PutF2(WRD, 0,useReg(inputs.get(0)) , 0);
 			} else if (ins.function.ident.equalsIgnoreCase("outputnewline")) {
 				PutF2(WRL, 0, 0, 0);
 			} else if (ins.function.ident.equalsIgnoreCase("inputnum")) {
@@ -335,8 +327,6 @@ public class CodeGenerator {
 		int arraySize = callee.getArraysSize();
 
 		boolean isFunc = callee.isFunc();
-		// TODO WORK IN PROGRESS
-
 		
 		// Store old FP
 		Push(FrameP);
@@ -350,7 +340,6 @@ public class CodeGenerator {
 			for( int i = parms.size()-1; i>=0;i--){
 			
 				// load word to mem
-				//TODO load params to mem
 				Push(useReg(parms.get(i)));
 			}
 		}
@@ -402,7 +391,7 @@ public class CodeGenerator {
 		}
 
 		// Pop Parms
-		// TODO shorten
+		// TODO shorten?
 		if (paramNum > 0) {
 			for (int i = paramNum - 1; i >= 0; i--) {
 				Pop();
@@ -517,8 +506,8 @@ public class CodeGenerator {
 				return;
 			}
 			
-			//TODO fix bug
-			System.err.println("store: " + ins);
+			//TODO fix bug?
+//			System.err.println("store: " + ins);
 			
 			PutF1(STX, useReg(address.get(0)), useReg(address.get(1)), 0);
 		} else if (currentCFG.containsVar(ins.symbol.ident)
@@ -534,14 +523,13 @@ public class CodeGenerator {
 					8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
-			//TODO resolve?
             List<VirtualRegister> inputs = ins.getInputOperands();
 			PutF1(STW, useReg(inputs.get(0)),
 					GlobalV, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Array
-			//TODO get array base address; same for load
+			//TODO get array base address; same for load?
 			System.err.println("Array Store shouldn't happen");
 //			PutF1(STW, useReg(ins.outputOp), FrameP,  -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
@@ -593,73 +581,12 @@ public class CodeGenerator {
 		return ret;
 	}
 
-//	private int GetArrayAddress(String ident) {
-////		int[] maxDim;
-////		CFG arrayCFG = currentCFG;
-//		if (!currentCFG.containsArray(ident)) {
-////			arrayCFG = mainCFG;
-//			System.err.println("GetArrayAddress can't find array");
+//	private int opCodeImm(int op) {
+//		if (op != ERR) {
+//			return op + 16;
 //		}
-//		return currentCFG.getArrayDims(ident);
-//		maxDim = arrayCFG.getArrayDims(ident);
-
-//		offset.setConst();
-//		offset.value = (arrayCFG.getArrayOffset(id) + arrayCFG.getVarNum()) * 4;
-//
-//		address = addAddress(0, maxDim, coord);
-////		load(address);// add offset to this reg
-//
-//		// Negate address
-//		neg.setConst();
-//		neg.value = -4;
-//
-//		// TODO output code
-//		// Compute(Scanner.timesToken, address, neg);
-//		// add offset to the calculated address
-//		// Compute(Scanner.minusToken, address, offset);
-//
-//		return address;
+//		return ERR;
 //	}
-
-//	private static Result addAddress(int dim, int[] maxDim, Result[] coord) {
-//		if (dim >= maxDim.length) {
-//			return new Result();
-//		}
-//
-//		Result address = new Result();
-//
-//		if (dim == maxDim.length - 1) {// last dim
-//			address = coord[dim];
-//
-//			return address;// just use regular value
-//		}
-//
-//		address = coord[dim];
-//
-//		Result tailDataSize = new Result();
-//		tailDataSize.setConst();
-//		tailDataSize.value = 1;
-//
-//		for (int i = dim + 1; i < maxDim.length; i++) {
-//			tailDataSize.value *= maxDim[i];
-//		}
-//
-//		Result subAddress = addAddress(dim + 1, maxDim, coord);
-//
-//		// TODO output code
-//		// Compute(Scanner.timesToken, address, tailDataSize);
-//
-//		// Compute(Scanner.plusToken, address, subAddress);
-//
-//		return address;
-//	}
-
-	private int opCodeImm(int op) {
-		if (op != ERR) {
-			return op + 16;
-		}
-		return ERR;
-	}
 
 	private static int negatedBranchOp(ControlFlowInstr instruction) {
 		if (instruction instanceof BranchEqual) {
@@ -718,7 +645,7 @@ public class CodeGenerator {
 		// fixup.push(pc - 1);
 	}
 
-	private void Fixup(int loc) {// TODO builtin pop
+	private void Fixup(int loc) {
 		int part = (0xffff0000 + (pc - loc));
 		int fixed = (nativeCode.get(loc) | 0x0000ffff) & part;
 		nativeCode.set(loc, fixed);
@@ -773,7 +700,7 @@ public class CodeGenerator {
 			}
 			out.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		    System.err.println(outFile);
 			e.printStackTrace();
 		}
 
@@ -781,7 +708,6 @@ public class CodeGenerator {
 
 
 	private void AddDebug(String string) {
-		// TODO Auto-generated method stub
 		if (!DEBUGMESG.containsKey(pc)){
 			DEBUGMESG.put(pc, "");
 		}

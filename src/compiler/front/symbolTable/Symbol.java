@@ -39,12 +39,5 @@ public abstract class Symbol {
 	public String toString(){
 		return ident;
 	}
-
-//    @Override
-//    public boolean equals(Object obj) {
-//        //TODO check that this works.
-//        
-//        return ident.equals(((Symbol)obj).ident);
-//    }
 }
 
