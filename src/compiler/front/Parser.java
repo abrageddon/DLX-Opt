@@ -585,7 +585,7 @@ public class Parser {
 //		System.out.println(type.dim);
 		if (type.dim > 1) {
 			for (int i = 0; i < type.dim - 1; i++) {
-				Instruction mul = issue(new Mul(indexes.get(i), 
+				Instruction mul = issue(new Mul(indexes.get(i+1), 
 						issue(new Immediate(type.dimSize.get(i)))));
 				offset = issue(new Add(mul, indexes.get(i+1)));
 			}
