@@ -274,13 +274,13 @@ public class VCGPrinter {
         Integer regNumber=0;
 
 //        for (RealRegister rReg : RealRegisterPool.regs) {
-        for (VirtualRegister rReg : VirtualRegisterFactory.virtualRegisters) {
+        for (VirtualRegister vReg : VirtualRegisterFactory.virtualRegisters) {
 //            System.err.println(vReg.regNumber + ":\t" + vReg.getRanges());
 
             //TODO make more efficient
             
             //Print reg node
-            regNumber = rReg.regNumber;
+            regNumber = vReg.regNumber;
             int startDepth = -2;
             int endDepth = -2;
             int startLine = Integer.MAX_VALUE;
@@ -290,7 +290,7 @@ public class VCGPrinter {
             String edges = "";
 
             //Range start and ends
-            Range range = rReg.range;
+            Range range = vReg.range;
             if (range.begin >= 0){
                 startLine = range.begin;
             }
@@ -354,7 +354,8 @@ public class VCGPrinter {
                     "\nStart: " + startLine + "\" ") +
                     (endLine==Integer.MIN_VALUE?"":"info2: \"Dest: " + destCode +
             		"\nEnd: " + endLine + "\" ") +
-            		"info3: \"Depth: "+depth+"\"}\n" + edges);
+            		"info3: \"Depth: "+depth+"\n" +
+            				"rReg: "+(vReg.rReg==null?"null":"r"+vReg.rReg.regNumber)+"\"}\n" + edges);
         }
     }
 }
