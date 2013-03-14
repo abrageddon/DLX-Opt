@@ -40,11 +40,28 @@ public class TestRun {
         		prog = readBin(new File(fileName + ".bin"));
         		data = readDebug(new File(fileName + ".bin"));
         	}
+        	
             DLX dlx = new DLX();
-            dlx.load(prog);
-//            dlx.loadDebug(data);//Comment out to stop debugging data
-//            dlx.displayProgram();
-            dlx.execute();
+            
+            File inFile = new File( fileName.substring(0, fileName.length()-4)+".in" );
+            if (inFile.exists()){
+	            InputStream origIn = System.in,
+	                        newIn = new BufferedInputStream(
+	                                new FileInputStream( inFile ));
+	            System.setIn(newIn);
+
+	            dlx.load(prog);
+//	            dlx.loadDebug(data);//Comment out to stop debugging data
+//	            dlx.displayProgram();
+	            dlx.execute();
+	            
+	            System.setIn(origIn);
+	            newIn.close();
+	            
+	            //TODO Diff with given correct answers
+			}
+            
+            
         } catch (IOException | ParserException | ScannerException e) {
             System.err.println("Error reading input files!: \n" + e);
         }
@@ -69,16 +86,17 @@ public class TestRun {
 
 	            DLX dlx = new DLX();
 	            dlx.load(readBin(binFile));
-	            dlx.displayProgram();
 				
 	            // Redirect System.in from DLX to data file
 				File inFile = new File( testFilesFolder + "/" + testFile.substring(0, testFile.length()-4)+".in" );
-				if (inFile.exists()){
+	            if (inFile.exists()){
 		            InputStream origIn = System.in,
 		                        newIn = new BufferedInputStream(
 		                                new FileInputStream( inFile ));
 		            System.setIn(newIn);
+
 		            dlx.execute();
+		            
 		            System.setIn(origIn);
 		            newIn.close();
 		            
