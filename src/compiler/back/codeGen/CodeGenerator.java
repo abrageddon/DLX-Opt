@@ -9,8 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import compiler.back.regAloc.RealRegister;
-import compiler.back.regAloc.RealRegisterPool;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.ir.cfg.*;
@@ -357,7 +355,6 @@ public class CodeGenerator {
 		// push all live registers...
 		List<VirtualRegister> liveRegs = getLiveRegs(ins);
 		for (VirtualRegister vReg:liveRegs){
-			//store spilled reg
 			if (vReg.rReg!=null){
 				AddDebug(callee.label+": Store Live Register "+vReg.rReg.regNumber);
 				Push(vReg.rReg.regNumber);
@@ -514,6 +511,21 @@ public class CodeGenerator {
 		int arraySize = mainCFG.getArraysSize();
 //		System.err.println("arraySize: "+ arraySize);
 		for (int i = 0; i < arraySize; i++) {
+			// Allocate memory
+			PutF1(STW, 0, StackP, 0);
+			PutF1(ADDI, StackP, StackP, -4);
+		}
+
+		AddDebug("Initalizing Spill Area");
+		int numberOfSpills=0;
+		
+		for(VirtualRegister vReg:VirtualRegisterFactory.virtualRegisters){
+			if (vReg.rReg==null){
+				numberOfSpills++;
+			}
+		}
+		
+		for (int i = 0; i < numberOfSpills; i++) {
 			// Allocate memory
 			PutF1(STW, 0, StackP, 0);
 			PutF1(ADDI, StackP, StackP, -4);
@@ -714,12 +726,11 @@ public class CodeGenerator {
 	}
 
 	private void storeSpill(int reg, VirtualRegister vReg) {
-		PutF1(STW, reg, 0, vReg.spillLocation*4);
-		
+		PutF1(STW, reg, GlobalV, -(mainCFG.getVarNum() + mainCFG.getArraysSize()+ vReg.spillLocation)*4);
 	}
 
 	private void loadSpill(int reg, VirtualRegister vReg) {
-		PutF1(LDW, reg, 0, vReg.spillLocation*4);
+		PutF1(LDW, reg, GlobalV, -(mainCFG.getVarNum() + mainCFG.getArraysSize()+ vReg.spillLocation)*4);
 	}
 
 	private void Pop() {

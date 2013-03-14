@@ -89,22 +89,23 @@ public class TestRun {
 			try {
 				compiler.compile();
 				File binFile = new File(testFilesFolder + "/" + testFile + ".bin");
-
+				System.err.println(testFile);
 	            DLX dlx = new DLX();
 	            dlx.load(readBin(binFile));
 				
 	            // Redirect System.in from DLX to data file
 				File inFile = new File( testFilesFolder + "/" + testFile.substring(0, testFile.length()-4)+".in" );
 	            if (inFile.exists()){
-		            InputStream origIn = System.in,
-		                        newIn = new BufferedInputStream(
-		                                new FileInputStream( inFile ));
-		            System.setIn(newIn);
+//		            InputStream origIn = System.in,
+//		                        newIn = new BufferedInputStream(
+//		                                new FileInputStream( inFile ));
+//		            System.setIn(newIn);
 
+		            dlx.loadInputs(inFile);
 		            dlx.execute();
 		            
-		            System.setIn(origIn);
-		            newIn.close();
+//		            System.setIn(origIn);
+//		            newIn.close();
 		            
 		            //TODO Diff with given correct answers
 				}
