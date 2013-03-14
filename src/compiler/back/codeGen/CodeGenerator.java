@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Stack;
 
 import compiler.back.regAloc.RealRegister;
+import compiler.back.regAloc.RealRegisterPool;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.back.regAloc.VirtualRegisterFactory;
 import compiler.ir.cfg.*;
@@ -277,7 +278,6 @@ public class CodeGenerator {
 		} else if (instruction instanceof ArithmeticBinary) {
 			ArithmeticBinary ins = (ArithmeticBinary) instruction;
 			List<VirtualRegister> inputs = ins.getInputOperands();
-			// System.err.println(ins.left.getClass());
 			PutF2(opCode(ins), useRegA(ins.outputOp) ,
 					useRegB(inputs.get(0)) ,
 					useRegC(inputs.get(1)) );
@@ -354,11 +354,14 @@ public class CodeGenerator {
 
 		boolean isFunc = callee.isFunc();
 		
-		//TODO push all live registers...
-		List<RealRegister> liveRegs = getLiveRegs(ins);
-		for (RealRegister reg:liveRegs){
-			AddDebug(callee.label+": Store Live Register "+reg.regNumber);
-			Push(reg.regNumber);
+		// push all live registers...
+		List<VirtualRegister> liveRegs = getLiveRegs(ins);
+		for (VirtualRegister vReg:liveRegs){
+			//store spilled reg
+			if (vReg.rReg!=null){
+				AddDebug(callee.label+": Store Live Register "+vReg.rReg.regNumber);
+				Push(vReg.rReg.regNumber);
+			}
 		}
 		
 		// Store old FP
@@ -458,19 +461,21 @@ public class CodeGenerator {
 		Pop(FrameP);
 
 		//TODO pop all live registers...
-		for (RealRegister reg:liveRegs){
-			AddDebug(callee.label+": Restore Live Register "+reg.regNumber);
-			Pop(reg.regNumber);
+		for (VirtualRegister vReg:liveRegs){
+			if (vReg.rReg!=null){
+				AddDebug(callee.label+": Restore Live Register "+vReg.rReg.regNumber);
+				Pop(vReg.rReg.regNumber);
+			}
 		}
 	}
 
-	private List<RealRegister> getLiveRegs(Call ins) {
-		List<RealRegister> liveRegs = new ArrayList<RealRegister>();
+	private List<VirtualRegister> getLiveRegs(Call ins) {
+		List<VirtualRegister> liveRegs = new ArrayList<VirtualRegister>();
 		int lineNum = ins.getInstrNumber();
 		
 		for(VirtualRegister vReg:VirtualRegisterFactory.virtualRegisters){
 			if(vReg.range.conflictsWith(lineNum)){
-				liveRegs.add(vReg.rReg);
+				liveRegs.add(vReg);
 			}
 		}
 		
@@ -551,6 +556,9 @@ public class CodeGenerator {
 
 	private int useRegA(VirtualRegister vReg) {
 		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
+		if(vReg==null){
+			return 0;
+		}
 		if(vReg.rReg == null){
 			return 9;
 		}
@@ -558,6 +566,10 @@ public class CodeGenerator {
 	}
 	private int useRegB(VirtualRegister vReg) {
 		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
+		//TODO bug?
+		if(vReg==null){
+			return 0;
+		}
 		if(vReg.rReg == null){
 			return 10;
 		}
@@ -565,20 +577,15 @@ public class CodeGenerator {
 	}
 	private int useRegC(VirtualRegister vReg) {
 		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
+		if(vReg==null){
+			return 0;
+		}
 		if(vReg.rReg == null){
 			return 11;
 		}
 		return vReg.rReg.regNumber;
 	}
 
-	private int spill(VirtualRegister rReg) {
-		//TODO if loading then load from mem to temp registers
-		//TODO if storing then save to temp register and move to mem
-		//Read offset loc
-		RealRegister tempReg = new RealRegister(9);
-		System.err.println("spill: "+tempReg.regNumber);
-		return tempReg.regNumber;
-	}
 
 	private void store(StoreValue ins) {
 		if (ins.symbol == null) {

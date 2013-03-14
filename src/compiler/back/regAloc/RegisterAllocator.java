@@ -25,7 +25,7 @@ public class RegisterAllocator {
 	    RealRegisterPool.resetPool();
 		buildLiveRangesSimplified();
 		linearScanRegAlloc();
-		VirtualRegisterFactory.printAllVirtualRegisters();
+//		VirtualRegisterFactory.printAllVirtualRegisters();
 	}
 
 	public int noOfReg = 8; 

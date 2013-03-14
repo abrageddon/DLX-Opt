@@ -73,11 +73,12 @@ public class Instruction {
 	}
 
 	public boolean hasInputSpill() {
-		if (getInputOperands() == null){
+		List<VirtualRegister> inputs = getInputOperands();
+		if (inputs == null){
 			return false;
 		}
-		for(VirtualRegister vReg:getInputOperands()){
-			if(vReg.rReg==null){
+		for(VirtualRegister vReg:inputs){
+			if(vReg!=null && vReg.rReg==null){
 				return true;
 			}
 		}

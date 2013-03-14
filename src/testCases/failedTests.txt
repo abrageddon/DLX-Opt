@@ -1,7 +1,4 @@
 Adding results of arrays/functions
 test3-7.tst
 
-Spills
-test2-9.tst
-
 Unclassified

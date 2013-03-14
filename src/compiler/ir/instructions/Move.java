@@ -22,11 +22,11 @@ public class Move extends Instruction {
 		
 		this.inputOps = new ArrayList<VirtualRegister>();
 		VirtualRegister outputOp = Instruction.resolve(src).outputOp;	
-		if(outputOp == null) {
-			this.inputOps.add(VirtualRegisterFactory.newRegister(RealRegisterPool.REG_0));
-		} else {
+//		if(outputOp == null) {
+//			this.inputOps.add(VirtualRegisterFactory.newRegister(RealRegisterPool.REG_0));
+//		} else {
 			this.inputOps.add(outputOp);
-		}
+//		}
 
 	}
 	
