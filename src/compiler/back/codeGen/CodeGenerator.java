@@ -394,19 +394,21 @@ public class CodeGenerator {
 		PutF1(ADDI, FrameP, StackP, 0);
 
 		// Put vars
-		if (varNum > 0) {
-			for (int i = 0; i < varNum; i++) {
+//		if (varNum > 0) {
+//			for (int i = 0; i < varNum; i++) {
 				AddDebug(callee.label+": Add Var");
-				Push(0);
-			}
-		}
-
-		if (arraySize > 0) {
-			for (int i = 0; i < arraySize; i++) {
+//				Push(0);
+//			}
+//		}
+//
+//		if (arraySize > 0) {
+//			for (int i = 0; i < arraySize; i++) {
 				AddDebug(callee.label+": Add Array");
-				Push(0);
-			}
-		}
+//				Push(0);
+//			}
+//		}
+
+		PutF1(ADDI, StackP, StackP, -(varNum + arraySize)*4);
 
 		AddDebug("Jump to "+callee.label);
 		if (callee.getStartLine() < 0) {
@@ -441,13 +443,13 @@ public class CodeGenerator {
 		}
 
 		// Pop Parms
-		// TODO shorten?
-		if (paramNum > 0) {
-			for (int i = paramNum - 1; i >= 0; i--) {
+//		if (paramNum > 0) {
+//			for (int i = paramNum - 1; i >= 0; i--) {
 				AddDebug(callee.label+": Remove Parameters");
-				Pop();
-			}
-		}
+//				Pop();
+//			}
+//		}
+		PutF1(ADDI, StackP, StackP, paramNum*4);
 
 		// POP RA
 		AddDebug(callee.label+": Pop RA");
@@ -501,20 +503,21 @@ public class CodeGenerator {
 		// Zero out memory, could be reduced
 		// Setup Global Variables
 		AddDebug("Initalizing Global Vars");
-		for (int i = 0; i < mainCFG.getVarNum(); i++) {
+//		for (int i = 0; i < mainCFG.getVarNum(); i++) {
 			// Allocate memory
-			PutF1(STW, 0, StackP, 0);
+//			PutF1(STW, 0, StackP, 0);
 			PutF1(ADDI, StackP, StackP, -4);
-		}
+//		}
+			
 		// Setup Global Arrays
 		AddDebug("Initalizing Global Arrays");
 		int arraySize = mainCFG.getArraysSize();
 //		System.err.println("arraySize: "+ arraySize);
-		for (int i = 0; i < arraySize; i++) {
+//		for (int i = 0; i < arraySize; i++) {
 			// Allocate memory
-			PutF1(STW, 0, StackP, 0);
-			PutF1(ADDI, StackP, StackP, -4);
-		}
+//			PutF1(STW, 0, StackP, 0);
+//			PutF1(ADDI, StackP, StackP, -4);
+//		}
 
 		AddDebug("Initalizing Spill Area");
 		int numberOfSpills=0;
@@ -525,11 +528,14 @@ public class CodeGenerator {
 			}
 		}
 		
-		for (int i = 0; i < numberOfSpills; i++) {
-			// Allocate memory
-			PutF1(STW, 0, StackP, 0);
-			PutF1(ADDI, StackP, StackP, -4);
-		}
+//		for (int i = 0; i < numberOfSpills; i++) {
+//			// Allocate memory
+//			PutF1(STW, 0, StackP, 0);
+//			PutF1(ADDI, StackP, StackP, -4);
+//		}
+		
+
+		PutF1(ADDI, StackP, StackP, -(mainCFG.getVarNum() + arraySize + numberOfSpills)*4);
 	}
 
 	private void fixupFunctions() {

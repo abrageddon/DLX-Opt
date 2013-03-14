@@ -1,11 +1,8 @@
 package compiler;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -89,7 +86,7 @@ public class TestRun {
 			try {
 				compiler.compile();
 				File binFile = new File(testFilesFolder + "/" + testFile + ".bin");
-				System.err.println(testFile);
+				System.out.println(testFile);
 	            DLX dlx = new DLX();
 	            dlx.load(readBin(binFile));
 				
@@ -106,7 +103,7 @@ public class TestRun {
 		            
 //		            System.setIn(origIn);
 //		            newIn.close();
-		            
+		            System.out.println("\n\n");
 		            //TODO Diff with given correct answers
 				}
 	            
