@@ -19,6 +19,7 @@ public class DLX {
 	static int M[] = new int [MemSize/4];
 	
 	static List<String> debugData;
+	private BufferedReader inputs;
 
     
 //	public static void main(String argv[]) {
@@ -240,7 +241,12 @@ public class DLX {
 					break;
 				case RDI:
 					System.out.print("?: ");
-					String line = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+					String line;
+					if (inputs!=null){
+						line=inputs.readLine();
+					}else{
+						line = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+					}
 					R[a] = Integer.parseInt(line);
 					break;
 				case WRD:
@@ -611,5 +617,13 @@ public class DLX {
             System.out.print("["+i+"] " + disassemble(M[i]));
         }
     }
+
+	public void loadInputs(File inFile) {
+		 try {
+			inputs = new BufferedReader(new FileReader( inFile ));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 }

@@ -45,20 +45,26 @@ public class TestRun {
             
             File inFile = new File( fileName.substring(0, fileName.length()-4)+".in" );
             if (inFile.exists()){
-	            InputStream origIn = System.in,
-	                        newIn = new BufferedInputStream(
-	                                new FileInputStream( inFile ));
-	            System.setIn(newIn);
+//	            InputStream origIn = System.in,
+//	                        newIn = new BufferedInputStream(
+//	                                new FileInputStream( inFile ));
+//	            System.setIn(newIn);
 
 	            dlx.load(prog);
+	            dlx.loadInputs(inFile);
 //	            dlx.loadDebug(data);//Comment out to stop debugging data
 //	            dlx.displayProgram();
 	            dlx.execute();
 	            
-	            System.setIn(origIn);
-	            newIn.close();
+//	            System.setIn(origIn);
+//	            newIn.close();
 	            
 	            //TODO Diff with given correct answers
+			}else{
+	            dlx.load(prog);
+//	            dlx.loadDebug(data);//Comment out to stop debugging data
+//	            dlx.displayProgram();
+	            dlx.execute();
 			}
             
             
