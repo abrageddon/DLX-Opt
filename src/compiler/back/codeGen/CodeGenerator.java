@@ -503,13 +503,17 @@ public class CodeGenerator {
 	private void setupGlobals() {
 		// Zero out memory, could be reduced
 		// Setup Global Variables
+		AddDebug("Initalizing Global Vars");
 		for (int i = 0; i < mainCFG.getVarNum(); i++) {
 			// Allocate memory
 			PutF1(STW, 0, StackP, 0);
 			PutF1(ADDI, StackP, StackP, -4);
 		}
 		// Setup Global Arrays
-		for (int i = 0; i < mainCFG.getArraysSize(); i++) {
+		AddDebug("Initalizing Global Arrays");
+		int arraySize = mainCFG.getArraysSize();
+//		System.err.println("arraySize: "+ arraySize);
+		for (int i = 0; i < arraySize; i++) {
 			// Allocate memory
 			PutF1(STW, 0, StackP, 0);
 			PutF1(ADDI, StackP, StackP, -4);
