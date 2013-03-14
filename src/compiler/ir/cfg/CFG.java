@@ -331,23 +331,17 @@ public class CFG {
 
     public int getArrayOffset(int id) {
         int offset = vars.size() ;
-
-//        System.err.println("vars "+vars.size());
-//        System.err.println(Id2String(id)+"="+id);
         
         for (int i=0;i < id; i++){
             int arraySize = 1;
+            if(!arraysDims.containsKey(i)){
+            	continue;
+            }
             for (int dim=0;dim<arraysDims.get(i).size();dim++){
                 arraySize *=arraysDims.get(i).get(dim);
-//                System.err.println(i+": arrayDim="+arraySize);
             }
-
-//            System.err.println("arraySize="+arraySize);
-            
             offset += arraySize;
         }
-
-//        System.err.println("offset="+(offset)+"\n");
         return offset * 4;
     }
 
