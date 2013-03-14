@@ -67,7 +67,7 @@ public class Range {
     }
 
 	public boolean conflictsWith(int lineNum) {
-		if(begin <= lineNum && lineNum < end){
+		if(begin < lineNum && lineNum < end){
 			return true;
 		}
 		return false;

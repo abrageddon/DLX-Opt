@@ -71,5 +71,27 @@ public class Instruction {
 	public String toString() {
 		return getInstrLabel();
 	}
+
+	public boolean hasInputSpill() {
+		if (getInputOperands() == null){
+			return false;
+		}
+		for(VirtualRegister vReg:getInputOperands()){
+			if(vReg.rReg==null){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasOutputSpill() {
+		if(outputOp==null){
+			return false;
+		}
+		if(outputOp.rReg==null){
+			return true;
+		}
+		return false;
+	}
 	
 }

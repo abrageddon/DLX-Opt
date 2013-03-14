@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import compiler.DLX;
 import compiler.back.regAloc.RealRegister;
 import compiler.back.regAloc.VirtualRegister;
 import compiler.back.regAloc.VirtualRegisterFactory;
@@ -212,14 +211,31 @@ public class CodeGenerator {
 			}
 		}
 
+
 	}
 
 	private void produceCode(Instruction instruction) {
 		AddDebug(instruction.toString());
+
+		//if outputOp has spill setup temp
+		if(instruction.hasInputSpill()){
+			//load b or c if spilled
+			List<VirtualRegister> vReg = instruction.getInputOperands();
+			if (vReg.size() >= 1){
+				if(vReg.get(0).rReg==null){
+					loadSpill(10, vReg.get(0));//B=10
+				}
+			}
+			if (vReg.size() >= 2){
+				if(vReg.get(1).rReg==null){
+					loadSpill(11, vReg.get(1));//C=11
+				}
+			}
+		}
 		
 		if (instruction instanceof Immediate) {
 			Immediate ins = (Immediate) instruction;
-			PutF1(ADDI, useReg(ins.outputOp) , 0, ins.value);
+			PutF1(ADDI, useRegA(ins.outputOp) , 0, ins.value);
 
 		} else if (instruction instanceof StoreValue) {
 			StoreValue ins = (StoreValue) instruction;
@@ -237,12 +253,12 @@ public class CodeGenerator {
         } else if (instruction instanceof Move) {
             Move ins = (Move) instruction;
         	List<VirtualRegister> operands = ins.getInputOperands();
-            PutF1(ADDI, useReg(Instruction.resolve(ins).outputOp), useReg(operands.get(0)), 0);
+            PutF1(ADDI, useRegA(Instruction.resolve(ins).outputOp), useRegB(operands.get(0)), 0);
 
         } else if (instruction instanceof Index) {
         	Index ins = (Index) instruction;
         	List<VirtualRegister> operands = ins.getInputOperands();
-            PutF1(SUB, useReg(ins.outputOp), useReg(operands.get(0)), useReg(operands.get(1)));
+            PutF1(SUB, useRegA(Instruction.resolve(ins).outputOp), useRegB(operands.get(0)), useRegC(operands.get(1)));
 
         } else if (instruction instanceof Return) {
 			Return ins = (Return) instruction;
@@ -250,7 +266,7 @@ public class CodeGenerator {
 			boolean isFunc = currentCFG.isFunc();
 
 			if (isFunc) {
-				PutF1(STW, useReg(ins.inputOps.get(0)) , FrameP, 4);
+				PutF1(STW, useRegA(ins.inputOps.get(0)) , FrameP, 4);
 			}
 
 			// Load RA
@@ -262,9 +278,9 @@ public class CodeGenerator {
 			ArithmeticBinary ins = (ArithmeticBinary) instruction;
 			List<VirtualRegister> inputs = ins.getInputOperands();
 			// System.err.println(ins.left.getClass());
-			PutF2(opCode(ins), useReg(ins.outputOp) ,
-					useReg(inputs.get(0)) ,
-					useReg(inputs.get(1)) );
+			PutF2(opCode(ins), useRegA(ins.outputOp) ,
+					useRegB(inputs.get(0)) ,
+					useRegC(inputs.get(1)) );
 
 		} else if (instruction instanceof Call) {
 			Call ins = (Call) instruction;
@@ -284,19 +300,28 @@ public class CodeGenerator {
 			// Built in functions can be overridden
 			if (ins.function.ident.equalsIgnoreCase("outputnum")) {
 			    List<VirtualRegister> inputs = ins.getInputOperands();
-				PutF2(WRD, 0,useReg(inputs.get(0)) , 0);
+				PutF2(WRD, 0,useRegB(inputs.get(0)) , 0);
 			} else if (ins.function.ident.equalsIgnoreCase("outputnewline")) {
 				PutF2(WRL, 0, 0, 0);
 			} else if (ins.function.ident.equalsIgnoreCase("inputnum")) {
-				PutF2(RDI, useReg(ins.outputOp) , 0, 0);
+				PutF2(RDI, useRegA(ins.outputOp) , 0, 0);
 			}
 
 		}
+		
 
+		//TODO if outputOp has spill store temp
+
+		if(instruction.hasOutputSpill()){
+			//if spilled, store A
+			storeSpill(9, instruction.outputOp);//A=9
+		}
 	}
 
 	private void postBlockProcessing(BasicBlock currentBlock) {
 
+		
+		
 		// While loop fixup
 		BasicBlock whileStart = null;
 		for (BasicBlock block : currentBlock.succ) {
@@ -350,7 +375,13 @@ public class CodeGenerator {
 			for( int i = params.size()-1; i>=0;i--){
 				// load word to mem
 				AddDebug(callee.label+": Param");
-				Push(useReg(params.get(i)));
+				// check each param for spill
+				if(params.get(i).rReg!=null){
+					Push(useRegB(params.get(i)));
+				}else{
+					loadSpill(10, params.get(i));//B=10
+					Push(10);
+				}
 			}
 		}
 
@@ -402,7 +433,7 @@ public class CodeGenerator {
 		if (isFunc) {
 			// put ret val in x
 			AddDebug(callee.label+": Grab Return Value");
-			Pop(useReg(ins.outputOp));
+			Pop(useRegA(ins.outputOp));
 		} else {
 			// remove empty return val
 			AddDebug(callee.label+": Pop Return Value Space");
@@ -452,6 +483,7 @@ public class CodeGenerator {
 		functionFixup = new Stack<Integer>();
 		functionsToFixup = new Stack<CFG>();
 		DEBUGMESG = new HashMap<Integer, String>();
+		
 		pc = 0;
 		// Setup Frame Pointer at global value pointer
 		PutF1(ADDI, FrameP, GlobalV, 0);
@@ -490,6 +522,7 @@ public class CodeGenerator {
 	}
 
 	private void load(LoadValue ins) {
+		
 		if (ins.symbol == null && ins.address != null) {
 			// Load by address
 //			System.err.println("Check: " + ins);
@@ -497,29 +530,43 @@ public class CodeGenerator {
 			if (address == null || address.isEmpty()) {
 				return;
 			}
-            PutF1(LDX, useReg(ins.outputOp), useReg(address.get(0)), 0 );
+            PutF1(LDX, useRegA(ins.outputOp), useRegB(address.get(0)), 0 );
 		} else if (currentCFG.containsVar(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Var
-			PutF1(LDW, useReg(ins.outputOp), FrameP, -GetVarAddress(ins.symbol.ident));
+			PutF1(LDW, useRegA(ins.outputOp), FrameP, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsParam(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Param
-			PutF1(LDW, useReg(ins.outputOp), FrameP, 8 + GetParamAddress(ins.symbol.ident));
+			PutF1(LDW, useRegA(ins.outputOp), FrameP, 8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
-			PutF1(LDW, useReg(ins.outputOp), GlobalV,-GetVarAddress(ins.symbol.ident));
+			PutF1(LDW, useRegA(ins.outputOp), GlobalV,-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident) && !currentCFG.label.equals("main")) {
 			// Array base address
-	          PutF1(ADDI, useReg(ins.outputOp), FrameP, -GetArrayAddress(ins.symbol.ident) );
+	        PutF1(ADDI, useRegA(ins.outputOp), FrameP, -GetArrayAddress(ins.symbol.ident) );
 		} else if (mainCFG.containsArray(ins.symbol.ident)) {
 			// Global Array base address
-          PutF1(ADDI, useReg(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
+          PutF1(ADDI, useRegA(ins.outputOp), GlobalV, -GetArrayAddress(ins.symbol.ident) );
 		}
 	}
-	
-	private int useReg(VirtualRegister vReg) {
+
+	private int useRegA(VirtualRegister vReg) {
 		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
 		if(vReg.rReg == null){
-			return spill(vReg);
+			return 9;
+		}
+		return vReg.rReg.regNumber;
+	}
+	private int useRegB(VirtualRegister vReg) {
+		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
+		if(vReg.rReg == null){
+			return 10;
+		}
+		return vReg.rReg.regNumber;
+	}
+	private int useRegC(VirtualRegister vReg) {
+		// IF !rReg THEN return spill(rReg) ELSE return rReg.regNumber
+		if(vReg.rReg == null){
+			return 11;
 		}
 		return vReg.rReg.regNumber;
 	}
@@ -544,22 +591,22 @@ public class CodeGenerator {
 			//TODO fix bug?
 //			System.err.println("store: " + ins);
 			
-			PutF1(STX, useReg(address.get(0)), useReg(address.get(1)), 0);
+			PutF1(STX, useRegA(address.get(0)), useRegB(address.get(1)), 0);
 		} else if (currentCFG.containsVar(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Var
 		    List<VirtualRegister> inputs = ins.getInputOperands();
-			PutF1(STW, useReg(inputs.get(0)), FrameP,
+			PutF1(STW, useRegA(inputs.get(0)), FrameP,
 					-GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsParam(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
 			// Param
-			PutF1(STW, useReg(ins.outputOp), FrameP,
+			PutF1(STW, useRegA(ins.outputOp), FrameP,
 					8 + GetParamAddress(ins.symbol.ident));
 		} else if (mainCFG.containsVar(ins.symbol.ident)) {
 			// Global Var
             List<VirtualRegister> inputs = ins.getInputOperands();
-			PutF1(STW, useReg(inputs.get(0)),
+			PutF1(STW, useRegA(inputs.get(0)),
 					GlobalV, -GetVarAddress(ins.symbol.ident));
 		} else if (currentCFG.containsArray(ins.symbol.ident)
 				&& !currentCFG.label.equals("main")) {
@@ -655,6 +702,15 @@ public class CodeGenerator {
 		PutF1(LDW, regNo, StackP, 0);
 	}
 
+	private void storeSpill(int reg, VirtualRegister vReg) {
+		PutF1(STW, reg, 0, vReg.spillLocation*4);
+		
+	}
+
+	private void loadSpill(int reg, VirtualRegister vReg) {
+		PutF1(LDW, reg, 0, vReg.spillLocation*4);
+	}
+
 	private void Pop() {
 		PutF1(ADDI, StackP, StackP, 4);
 	}
@@ -662,7 +718,7 @@ public class CodeGenerator {
 	private void CondNegBraFwd(ControlFlowInstr ins) {
 		fixup.push(pc);
 		PutF1(negatedBranchOp(ins),
-				useReg(ins.inputOps.get(0)), 0, 0);
+				useRegA(ins.inputOps.get(0)), 0, 0);
 	}
 
 	private void UnCondBraFwd(int loc) {
