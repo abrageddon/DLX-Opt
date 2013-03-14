@@ -13,9 +13,7 @@ function fibo(n);
 
 {
   call outputnum(call fibo(8));
-  call outputnewline();
   call outputnum(call fibo(10));
-  call outputnewline();
   call outputnum(call fibo(12))
 }.
 
