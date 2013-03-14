@@ -19,7 +19,7 @@ import compiler.ir.instructions.*;
 public class CodeGenerator {
 
 //	private static final int MAX_REG = 27;
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	private HashMap<Integer, String> DEBUGMESG;
 	
 	
